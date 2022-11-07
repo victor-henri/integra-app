@@ -69,8 +69,11 @@ class Ui(tk.Tk):
         self.conexoes_frame = ttk.Frame(self.abas_notebook)
         self.conexoes_frame.pack(side=tk.TOP)
         self.conexoes_frame.grid_anchor(tk.CENTER)
-        self.abas_notebook.add(
-            self.conexoes_frame, compound=tk.CENTER, state=tk.NORMAL, sticky=tk.NSEW, text="Conexões")
+        self.abas_notebook.add(self.conexoes_frame,
+                               compound=tk.CENTER,
+                               state=tk.NORMAL,
+                               sticky=tk.NSEW,
+                               text="Conexões")
 
         # Banco de Origem
         self.borigem_lframe = ttk.Labelframe(self.conexoes_frame)
@@ -79,7 +82,7 @@ class Ui(tk.Tk):
         self.borigem_lframe.columnconfigure(8, weight=1)
         self.borigem_lframe.grid_anchor(tk.CENTER)
 
-        # Banco de Origem - Labels
+        # Banco de Origem - Label
         self.oipservidor_label = ttk.Label(self.borigem_lframe, font=self.fonte_corpo)
         self.oipservidor_label.configure(text="Ip do Servidor")
         self.oipservidor_label.grid(column=0, row=0)
@@ -99,7 +102,7 @@ class Ui(tk.Tk):
         self.oid_label.configure(text="ID Filial")
         self.oid_label.grid(column=0, row=8, sticky=tk.E, ipadx=6)
 
-        # Banco de Origem - Entrys
+        # Banco de Origem - Entry
         self.oipservidor_entry = ttk.Entry(self.borigem_lframe, justify=tk.CENTER)
         self.oipservidor_entry.grid(column=0, row=1)
         self.obanco_entry = ttk.Entry(self.borigem_lframe, justify=tk.CENTER)
@@ -115,20 +118,19 @@ class Ui(tk.Tk):
         self.oid_entry.configure(width=8)
         self.oid_entry.grid(column=0, row=9, sticky=tk.E)
 
-        # Temporario
-        self.oalerta_button = ttk.Button()
-        self.dalerta_button = ttk.Button()
-
-        # Banco de Origem - Buttons
+        # Banco de Origem - Button
         self.oconectar_button = ttkb.Button(self.borigem_lframe, command=self.conexao_origem)
         self.oconectar_button.configure(text="Conectar", width=15)
         self.oconectar_button.grid(column=0, pady=10, row=11)
+        self.oalerta_button = ttk.Button()
 
-        # Banco de Origem - Messages
+        # Banco de Origem - Message
         self.omensagem_message = tk.Message(self.borigem_lframe, font=self.fonte_corpo)
-        self.omensagem_message.configure(
-            text="Desconectado", width=100, foreground='red', relief=tk.FLAT, borderwidth=1
-        )
+        self.omensagem_message.configure(text="Desconectado",
+                                         width=100,
+                                         foreground='red',
+                                         relief=tk.FLAT,
+                                         borderwidth=1)
         self.omensagem_message.grid(column=0, row=12)
 
         # Banco de Destino
@@ -138,7 +140,7 @@ class Ui(tk.Tk):
         self.bdestino_lframe.columnconfigure(8, weight=1)
         self.bdestino_lframe.grid_anchor(tk.CENTER)
 
-        # Banco de Destino - Labels
+        # Banco de Destino - Label
         self.dipservidor_label = ttk.Label(self.bdestino_lframe, font=self.fonte_corpo)
         self.dipservidor_label.configure(text="Ip do Servidor")
         self.dipservidor_label.grid(column=0, row=0)
@@ -158,7 +160,7 @@ class Ui(tk.Tk):
         self.did_label.configure(text="ID Filial")
         self.did_label.grid(column=0, row=8, sticky=tk.E, ipadx=6)
 
-        # Banco de Destino - Entrys
+        # Banco de Destino - Entry
         self.dipservidor_entry = ttk.Entry(self.bdestino_lframe, justify=tk.CENTER)
         self.dipservidor_entry.grid(column=0, row=1)
         self.dbanco_entry = ttk.Entry(self.bdestino_lframe, justify=tk.CENTER)
@@ -174,19 +176,22 @@ class Ui(tk.Tk):
         self.did_entry.configure(width=8)
         self.did_entry.grid(column=0, row=9, sticky=tk.E)
 
-        # Banco de Destino - Buttons
+        # Banco de Destino - Button
         self.dconectar_button = ttk.Button(self.bdestino_lframe, command=self.conexao_destino)
         self.dconectar_button.configure(text="Conectar", width=15)
         self.dconectar_button.grid(column=0, pady=10, row=11)
+        self.dalerta_button = ttk.Button()
 
-        # Banco de Destino - Messages
+        # Banco de Destino - Message
         self.dmensagem_message = tk.Message(self.bdestino_lframe, font=self.fonte_corpo)
-        self.dmensagem_message.configure(
-            text="Desconectado", width=100, foreground='red', relief=tk.FLAT, borderwidth=1
-        )
+        self.dmensagem_message.configure(text="Desconectado",
+                                         width=100,
+                                         foreground='red',
+                                         relief=tk.FLAT,
+                                         borderwidth=1)
         self.dmensagem_message.grid(column=0, row=12)
 
-        # Banco de Destino - Separators
+        # Banco de Destino - Separator
         self.sbanco_separator = ttk.Separator(self.conexoes_frame)
         self.sbanco_separator.configure(orient=tk.VERTICAL)
         self.sbanco_separator.place(anchor=tk.CENTER, height=350, x=470, y=230)
@@ -203,27 +208,30 @@ class Ui(tk.Tk):
         self.configuracoes_lframe.columnconfigure(4, weight=1)
         self.configuracoes_frame.configure(height=200, padding=15, width=200)
         self.configuracoes_frame.pack(side=tk.TOP)
-        self.abas_notebook.add(
-            self.configuracoes_frame, compound=tk.TOP, state=tk.NORMAL, sticky=tk.NSEW, text="Configurações de Produtos")
+        self.abas_notebook.add(self.configuracoes_frame,
+                               compound=tk.TOP,
+                               state=tk.NORMAL,
+                               sticky=tk.NSEW,
+                               text="Configurações de Produtos")
 
-        # Configurações de Produtos - Frames
+        # Configurações de Produtos - Frame
         self.grupoconfig1_frame = ttk.Frame(self.configuracoes_lframe)
         self.grupoconfig1_frame.configure(height=250, padding=5)
         self.grupoconfig1_frame.place(height=250, width=400, x=15, y=60)
 
-        self.grupoconfig3_frame = ttk.Frame(self.configuracoes_lframe)
-        self.grupoconfig3_frame.configure(height=250, padding=5)
-        self.grupoconfig3_frame.place(height=250, width=400, x=450, y=60)
+        self.grupoconfig2_frame = ttk.Frame(self.configuracoes_lframe)
+        self.grupoconfig2_frame.configure(height=250, padding=5)
+        self.grupoconfig2_frame.place(height=250, width=400, x=450, y=60)
 
         self.principio_lframe = ttk.Labelframe(self.grupoconfig1_frame)
         self.principio_lframe.configure(text="Principio Ativo", height=80, labelanchor=tk.N)
         self.principio_lframe.pack(fill=tk.X)
 
-        self.fabricante_lframe = ttk.Labelframe(self.grupoconfig3_frame)
+        self.fabricante_lframe = ttk.Labelframe(self.grupoconfig2_frame)
         self.fabricante_lframe.configure(text="Fabricantes", height=80, labelanchor=tk.N)
         self.fabricante_lframe.pack(fill=tk.X)
 
-        # Configurações de Produtos - Labels
+        # Configurações de Produtos - Label
         self.zeros_label = ttk.Label(self.configuracoes_lframe)
         self.zeros_label.configure(text="ou mais zero(s).")
         self.zeros_label.place(anchor=tk.NW, x=415, y=322)
@@ -236,7 +244,7 @@ class Ui(tk.Tk):
         self.id_principio_label.configure(text="Id de Destino")
         self.id_principio_label.place(anchor=tk.NW, x=280, y=20)
 
-        # Configurações de Produtos - Entrys
+        # Configurações de Produtos - Entry
         self.id_fabricante_entry = ttk.Entry(self.fabricante_lframe, justify=tk.CENTER)
         self.id_fabricante_entry.configure(width=5)
         self.id_fabricante_entry.place(anchor=tk.NW, height=26, width=30, x=245, y=17)
@@ -245,7 +253,7 @@ class Ui(tk.Tk):
         self.id_principio_entry.configure(width=5)
         self.id_principio_entry.place(anchor=tk.NW, height=26, width=30, x=245, y=17)
 
-        # Configurações de Produtos - Buttons
+        # Configurações de Produtos - Button
         self.selprodutos_cbutton = tk.BooleanVar()
         self.selprodutos_cbutton.set(False)
         self.produtos_cbutton = ttk.Checkbutton(self.configuracoes_lframe,
@@ -332,13 +340,13 @@ class Ui(tk.Tk):
                                          textvariable=self.valor_zeros_spinbox)
         self.zeros_spinbox.place(anchor=tk.NW, width=50, x=360, y=317)
 
-        # Configurações de Produtos - Separators
+        # Configurações de Produtos - Separator
         self.config1_separator = ttk.Separator(self.configuracoes_lframe)
         self.config1_separator.configure(orient=tk.HORIZONTAL)
         self.config1_separator.place(anchor=tk.CENTER, width=850, x=430, y=40)
-        self.config3_separator = ttk.Separator(self.configuracoes_lframe)
-        self.config3_separator.configure(orient=tk.HORIZONTAL)
-        self.config3_separator.place(anchor=tk.CENTER, width=850, x=430, y=310)
+        self.config2_separator = ttk.Separator(self.configuracoes_lframe)
+        self.config2_separator.configure(orient=tk.HORIZONTAL)
+        self.config2_separator.place(anchor=tk.CENTER, width=850, x=430, y=310)
 
         # Grupos de Produtos
         self.grupo_prod_frame = ttk.Frame(self.abas_notebook)
@@ -439,7 +447,6 @@ class Ui(tk.Tk):
         self.selfornecedores_cbutton.set(False)
         self.fornecedores_cbutton = ttk.Checkbutton(self.opcoes_fornecedores_frame,
                                                     variable=self.selfornecedores_cbutton)
-
         self.fornecedores_cbutton.configure(text="Fornecedores")
         self.fornecedores_cbutton.grid(column=0, row=0, sticky=tk.W, padx=160)
 
@@ -447,7 +454,6 @@ class Ui(tk.Tk):
         self.selpagar_cbutton.set(False)
         self.pagar_cbutton = ttk.Checkbutton(self.opcoes_fornecedores_frame,
                                              variable=self.selpagar_cbutton)
-
         self.pagar_cbutton.configure(text="Pagar")
         self.pagar_cbutton.grid(column=1, row=0, sticky=tk.E, padx=160)
 
@@ -456,7 +462,6 @@ class Ui(tk.Tk):
         self.todos_fornecedores_cbutton = ttk.Checkbutton(self.fornecedores_frame,
                                                           variable=self.seltodos_fornecedores_cbutton,
                                                           command=self.marca_fornecedores)
-
         self.todos_fornecedores_cbutton.configure(text="Selecionar todos")
         self.todos_fornecedores_cbutton.place(anchor=tk.NW, x=770, y=413)
 
@@ -487,7 +492,6 @@ class Ui(tk.Tk):
         self.selempresas_cbutton.set(False)
         self.empresas_cbutton = ttk.Checkbutton(self.opcoesempresas_frame,
                                                 variable=self.selempresas_cbutton)
-
         self.empresas_cbutton.configure(text="Empresas (Clientes e Dependentes)")
         self.empresas_cbutton.grid(column=0, row=0, sticky=tk.W, padx=120)
 
@@ -495,7 +499,6 @@ class Ui(tk.Tk):
         self.selreceber_cbutton.set(False)
         self.receber_cbutton = ttk.Checkbutton(self.opcoesempresas_frame,
                                                variable=self.selreceber_cbutton)
-
         self.receber_cbutton.configure(text="Receber")
         self.receber_cbutton.grid(column=1, row=0, sticky=tk.E, padx=120)
 
@@ -504,7 +507,6 @@ class Ui(tk.Tk):
         self.todosempresas_cbutton = ttk.Checkbutton(self.empresas_frame,
                                                      variable=self.seltodosempresas_cbutton,
                                                      command=self.marca_empresas)
-
         self.todosempresas_cbutton.configure(text="Selecionar todos")
         self.todosempresas_cbutton.place(anchor=tk.NW, x=770, y=413)
 
@@ -521,10 +523,12 @@ class Ui(tk.Tk):
         self.logs_scrtext.configure(borderwidth=5, font=self.fonte_corpo)
         self.logs_scrtext.place(anchor=tk.NW, width=940, height=383, x=0, y=0)
 
+        # Logs - Button
         self.iniciar_button = ttk.Button(self.logs_frame, command=self.iniciar)
         self.iniciar_button.configure(text="Iniciar", width=20)
         self.iniciar_button.place(anchor=tk.NW, height=30, x=30, y=395)
 
+        # Logs - ProgressBar
         self.progressbar = ttk.Progressbar(self.logs_frame, mode='determinate', bootstyle='success')
         self.progressbar.configure(length=600, orient=tk.HORIZONTAL)
         self.progressbar.place(anchor=tk.NW, width=470, x=250, y=404)
@@ -536,7 +540,7 @@ class Ui(tk.Tk):
         self.abas_notebook.add(self.documentacao_frame, text="Documentação")
         self.abas_notebook.configure(height=450, padding=5, width=800)
 
-        # Documentação - Não sei
+        # Documentação - Text
         self.documentacao_text = ScrolledText(self.documentacao_frame)
         self.documentacao_text.configure(borderwidth=5, font=self.fonte_corpo)
         self.documentacao_text.insert(tk.END, documentacao.informacao_doc)
@@ -554,13 +558,12 @@ class Ui(tk.Tk):
         # Binds
         self.gr_prod_origem_treeview.bind("<Double-1>", self.duplo_clique_grp)
 
-    # Metodos de Binds
+    # Métodos de Binds.
     @staticmethod
     def fora_foco(event):
         event.widget.destroy()
 
     def duplo_clique_grp(self, event):
-
         regiao_clique = self.gr_prod_origem_treeview.identify_region(event.x, event.y)
 
         if regiao_clique not in ("tree", "cell"):
@@ -597,7 +600,6 @@ class Ui(tk.Tk):
 
     def pressiona_enter_grp(self, event):
         novo_texto = event.widget.get()
-
         iid_selecionado = event.widget.identificador_item_iid
         index_coluna = event.widget.identificador_coluna
 
@@ -607,7 +609,7 @@ class Ui(tk.Tk):
             self.gr_prod_origem_treeview.item(iid_selecionado, values=valor_atual)
         event.widget.destroy()
 
-    # Metodos de chamada de conexões
+    # Métodos de conexão.
     def conexao_origem(self):
         self.dados_origem = {'host': self.oipservidor_entry.get(),
                              'user': self.ousuario_entry.get(),
@@ -730,7 +732,7 @@ class Ui(tk.Tk):
             logging.warning(f"{ident} {retorno_erro}")
             logging.warning(separador)
 
-    # Métodos de listagem automática ao conectar
+    # Métodos de listagem automática e exibição dos dados ao conectar.
     def lista_grupo_origem(self):
         iterador = IteradorSql()
         iterador.conexao_origem(self.dados_origem)
@@ -739,7 +741,7 @@ class Ui(tk.Tk):
             if self.selapagado_grupo_origem_cbutton.get():
                 grupos = iterador.select_grupo_origem_sapagado()
 
-                index = 0
+                index = None
                 self.iid_lista_grupo_origem = []
 
                 for grupo in grupos:
@@ -751,7 +753,7 @@ class Ui(tk.Tk):
             else:
                 grupos = iterador.select_grupo_origem_capagado()
 
-                index = 0
+                index = None
                 self.iid_lista_grupo_origem = []
 
                 for grupo in grupos:
@@ -771,7 +773,7 @@ class Ui(tk.Tk):
             if self.selapagado_grupo_destino_cbutton.get():
                 grupos = iterador.select_grupo_destino_sapagado()
 
-                index = 0
+                index = None
                 iid_lista_grupos_destino = []
 
                 for grupo in grupos:
@@ -783,7 +785,7 @@ class Ui(tk.Tk):
             else:
                 grupos = iterador.select_grupo_destino_capagado()
 
-                index = 0
+                index = None
                 iid_lista_grupos_destino = []
 
                 for grupo in grupos:
@@ -803,7 +805,7 @@ class Ui(tk.Tk):
         try:
             empresas = iterador.select_listagem_empresa()
 
-            index = 0
+            index = None
             self.iid_lista_empresas = []
 
             for empresa in empresas:
@@ -823,40 +825,39 @@ class Ui(tk.Tk):
         try:
             fornecedores = iterador.select_listagem_fornecedor()
 
-            index = 0
+            index = None
             self.iid_lista_fornecedores = []
 
             for fornecedor in fornecedores:
-                self.fornecedores_treeview.insert(
-                    "", index='end', iid=index, text='', values=(fornecedor['id_fornecedor'], fornecedor['razao_social']))
+                self.fornecedores_treeview.insert("",
+                                                  index='end',
+                                                  iid=index,
+                                                  text='',
+                                                  values=(fornecedor['id_fornecedor'],
+                                                          fornecedor['razao_social']))
                 self.iid_lista_fornecedores.append(index)
                 index += 1
 
         except Exception as err_lista_fornecedores:
             print(f"Exceção no método lista_fornecedores: {err_lista_fornecedores}")
 
+    # Métodos de marcação de todos os registros na Interface.
     def marca_empresas(self):
-
         for iid in self.iid_lista_empresas:
             self.empresas_treeview.change_state(item=iid, state='checked')
 
     def marca_fornecedores(self):
-
         for iid in self.iid_lista_fornecedores:
             self.fornecedores_treeview.change_state(item=iid, state='checked')
 
     def marca_grupos_origem(self):
-
         for iid in self.iid_lista_grupo_origem:
             self.gr_prod_origem_treeview.change_state(item=iid, state='checked')
 
+    # Métodos de coleta dos registros selecionados na Interface.
     def checa_empresas(self):
-
-        # Obtém os valores de checagem=sim das checkbox's da treeview de empresas,
-        # passa por cada registro e obtém o conteudo, e então armazena os ids das
-        # empresas selecionadas em uma lista que é passada para o metodo de select_empresas.
-
         empresas_selecionadas_l = []
+
         for empresa in self.empresas_treeview.get_checked():
             id_empresa = self.empresas_treeview.item(item=empresa, option='values')
             empresas_selecionadas_l.append(id_empresa[0])
@@ -865,12 +866,8 @@ class Ui(tk.Tk):
         return empresas_selecionadas
 
     def checa_fornecedores(self):
-
-        # Obtém os valores de checagem=sim das checkbox's da treeview de fornecedores,
-        # passa por cada registro e obtém o conteudo, e então armazena os ids das
-        # fornecedores selecionados em uma lista que é passada para o metodo de select_fornecedores.
-
         fornecedores_selecionadas_l = []
+
         for fornecedor in self.fornecedores_treeview.get_checked():
             id_fornecedor = self.fornecedores_treeview.item(item=fornecedor, option='values')
             fornecedores_selecionadas_l.append(id_fornecedor[0])
@@ -888,6 +885,7 @@ class Ui(tk.Tk):
 
         return grupos_selecionados
 
+    # Métodos de retorno de dados da Interface.
     def retorna_comunicador_destino(self):
         filial_id = str(self.did_entry.get())
 
@@ -908,7 +906,7 @@ class Ui(tk.Tk):
 
         comunicador = tabela_comunicador.get(filial_id, 'not found')
         if comunicador == 'not found':
-            print("lojas_leram não encontrado")
+            print("caracter de comunicação não encontrado")
 
         return comunicador
 
@@ -922,10 +920,7 @@ class Ui(tk.Tk):
 
         return filial_id_destino
 
-    def barra_progresso(self):
-        self.progressbar['value'] += 5
-        self.update_idletasks()
-
+    # Métodos de troca automática de estado dos botões.
     def troca_opcao_fabricante(self):
 
         if self.selfabricante_cnpj_cbutton.get():
@@ -968,6 +963,12 @@ class Ui(tk.Tk):
             self.lotes_cbutton.configure(state=tk.DISABLED)
             self.preco_filial_cbutton.configure(state=tk.DISABLED)
 
+    # Método de incremento da barra de progresso
+    def barra_progresso(self):
+        self.progressbar['value'] += 5
+        self.update_idletasks()
+
+    # Método de execução
     def iniciar(self):
         comunicador = self.retorna_comunicador_destino()
         filial_id_origem = int(self.retorna_filial_id_origem())
@@ -1001,7 +1002,6 @@ class Ui(tk.Tk):
                 for fabricante in fabricantes_log:
                     self.log(registro_erro=fabricante['registro_erro'], retorno_erro=fabricante['retorno_erro'])
             self.log(metodo='Processamento de Fabricantes Finalizado.')
-
         self.barra_progresso()
 
         if self.selprincipio_desc_cbutton.get():
@@ -1019,7 +1019,6 @@ class Ui(tk.Tk):
 
         if self.selprodutos_cbutton.get():
             grupos_selecionados = self.checa_grupos_origem()
-
             self.log(metodo='Processamento de Produtos Iniciado.')
             produto = Produto(dados_origem=self.dados_origem,
                               dados_destino=self.dados_destino,
@@ -1147,7 +1146,6 @@ class Ui(tk.Tk):
 
         if self.selempresas_cbutton.get():
             self.empresas_selecionadas = self.checa_empresas()
-
             self.log(metodo='Processamento de Empresas Iniciado.')
             empresa = Empresa(dados_origem=self.dados_origem,
                               dados_destino=self.dados_destino,
@@ -1172,7 +1170,6 @@ class Ui(tk.Tk):
             self.log(metodo='Processamento de Clientes Finalizado.')
 
         if self.selreceber_cbutton.get():
-
             self.log(metodo='Processamento do Receber Iniciado.')
             receber = Receber(dados_origem=self.dados_origem,
                               dados_destino=self.dados_destino,

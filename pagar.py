@@ -33,7 +33,8 @@ class Pagar:
 
         return pagar_log
 
-    def remove_pagar_baixado(self, pagar_origem):
+    @staticmethod
+    def remove_pagar_baixado(pagar_origem):
         pagars_nao_baixados = []
         for pagar in pagar_origem:
             if pagar['dt_pgto'] is None:

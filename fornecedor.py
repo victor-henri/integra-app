@@ -54,7 +54,8 @@ class Fornecedor:
         return {'fornecedores_encontrados': fornecedores_encontrados,
                 'fornecedores_nencontrados': fornecedores_nencontrados}
 
-    def retorna_fornecedor(self, cnpj_origem, fornecedor_destino):
+    @staticmethod
+    def retorna_fornecedor(cnpj_origem, fornecedor_destino):
         for fornecedor in fornecedor_destino:
             cnpj_destino = fornecedor['cnpj']
             fornecedor_id = int(fornecedor['id_fornecedor'])
