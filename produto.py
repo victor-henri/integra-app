@@ -14,7 +14,6 @@ class Produto:
                  dados_destino,
                  comunicador):
 
-        self.produtos_pre_insert = None
         self.dados_origem = dados_origem
         self.dados_destino = dados_destino
         self.comunicador = comunicador
@@ -23,6 +22,7 @@ class Produto:
         self.id_fabricante = id_fabricante
         self.id_principio = id_principio
         self.grupos_selecionados = grupos_selecionados
+        self.produtos_pre_insert = None
         self.produtos_ids_separados = None
 
     def inicia_produtos(self, marcador_produto, apagado):

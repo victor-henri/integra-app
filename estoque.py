@@ -25,9 +25,9 @@ class EstoqueMinimo:
                     continue
 
         estoque_minimo_selecionados = self.separa_estmin_selecionados(estoque_minimo_origem)
-        estoque_minimo = self.tratamento_estoque_minimo(estoque_minimo_selecionados)
+        estoque_minimo_tratado = self.tratamento_estoque_minimo(estoque_minimo_selecionados)
+        estoque_minimo_log = iterador.insert_estoque(estoque_minimo_tratado)
 
-        estoque_minimo_log = iterador.insert_estoque(estoque_minimo)
         return estoque_minimo_log
 
     def separa_estmin_selecionados(self, estoque_minimo_origem):
@@ -47,7 +47,8 @@ class EstoqueMinimo:
     def tratamento_estoque_minimo(self, estoque_minimo_selecionados):
         iterador = IteradorSql()
         iterador.conexao_destino(self.dados_destino)
-        produtos_pos_insert = iterador.select_produto_pos_insert()
+        tabela_produto = {'tabela': 'produto'}
+        produtos_pos_insert = iterador.consulta_pos_insert(tabela_produto)
 
         for estoque in estoque_minimo_selecionados:
 

@@ -25,8 +25,9 @@ class Lote:
                     continue
 
         lotes_selecionados = self.separa_lotes_selecionados(lotes_origem)
-        lotes = self.tratamento_lote(lotes_selecionados)
-        lotes_log = iterador.insert_lote(lotes)
+        lotes_tratados = self.tratamento_lote(lotes_selecionados)
+        lotes_atualizados = self.atualiza_id_produto(lotes_tratados)
+        lotes_log = iterador.insert_lote(lotes_atualizados)
 
         return lotes_log
 
@@ -56,6 +57,32 @@ class Lote:
             lote.update({'id_filial': self.filial_id_destino})
 
         return lotes_selecionados
+
+    def atualiza_id_produto(self, lotes):
+        iterador = IteradorSql()
+        iterador.conexao_destino(self.dados_destino)
+
+        tabela_produto = {'tabela': 'produto'}
+        produtos_pos_insert = iterador.consulta_pos_insert(tabela_produto)
+
+        for lote in lotes:
+            id_produto_ant = int(lote['id_produto'])
+
+            novo_id = self.busca_id_atual(id_produto_ant, produtos_pos_insert)
+            lote.update({'id_produto_ant': id_produto_ant, 'id_produto': novo_id})
+
+        return lotes
+
+    @staticmethod
+    def busca_id_atual(id_produto_ant, produtos):
+        for produto in produtos:
+            antigo_id = int(produto['campo_auxiliar'])
+            novo_id = int(produto['id_produto'])
+
+            if id_produto_ant == antigo_id:
+                return novo_id
+            else:
+                continue
 
     @staticmethod
     def trata_campo_data(datas):

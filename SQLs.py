@@ -37,19 +37,19 @@ query_insert_estoque = 'INSERT INTO estoque ' \
 query_select_lote = 'SELECT * FROM lote;'
 
 query_insert_lote = 'INSERT INTO lote ' \
-                    '(campo_auxiliar, id_filial, lote_descricao, lote_estoque, ' \
+                    '(id_produto, campo_auxiliar, id_filial, lote_descricao, lote_estoque, ' \
                     'data_fabricacao, data_validade, apagado, data_alteracao) ' \
-                    'VALUES (%(id_produto)s, %(id_filial)s, %(lote_descricao)s, %(lote_estoque)s, ' \
-                    '%(data_fabricacao)s, %(data_validade)s, %(apagado)s, %(data_alteracao)s);'
+                    'VALUES (%(id_produto)s, %(id_produto_ant)s, %(id_filial)s, %(lote_descricao)s, ' \
+                    '%(lote_estoque)s, %(data_fabricacao)s, %(data_validade)s, %(apagado)s, %(data_alteracao)s);'
 
 query_select_preco = 'SELECT * FROM preco_filial;'
 
 query_insert_preco = 'INSERT INTO preco_filial ' \
-                     '(campo_auxiliar, id_filial, preco_compra_cx, und_por_cx, preco_compra_und, ' \
+                     '(id_produto, campo_auxiliar, id_filial, preco_compra_cx, und_por_cx, preco_compra_und, ' \
                      'margem, preco_venda, desconto_avista, margem_promocao, desconto_promocao, preco_promocao, ' \
                      'inicio_promocao, final_promocao, apagado, data_cadastro, data_alteracao, ' \
                      'usuario_cadastro, usuario_alteracao) ' \
-                     'VALUES (%(id_produto)s, %(id_filial)s, %(preco_compra_cx)s, %(und_por_cx)s, ' \
+                     'VALUES (%(id_produto)s, %(id_produto_ant)s, %(id_filial)s, %(preco_compra_cx)s, %(und_por_cx)s, ' \
                      '%(preco_compra_und)s, %(margem)s, %(preco_venda)s, %(desconto_avista)s, %(margem_promocao)s, ' \
                      '%(desconto_promocao)s, %(preco_promocao)s, %(inicio_promocao)s, ' \
                      '%(final_promocao)s, %(apagado)s, %(data_cadastro)s, %(data_alteracao)s, ' \

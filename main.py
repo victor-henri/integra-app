@@ -6,6 +6,7 @@ from ttkwidgets import CheckboxTreeview
 from tkinter.scrolledtext import ScrolledText
 from PIL import ImageTk, Image
 import logging
+import documentacao
 from iteradorSQL import IteradorSql
 from fabricante import Fabricante
 from principioativo import PrincipioAtivo
@@ -19,7 +20,6 @@ from cliente import Cliente
 from receber import Receber
 from fornecedor import Fornecedor
 from pagar import Pagar
-import documentacao
 
 
 class Ui(tk.Tk):
@@ -741,7 +741,7 @@ class Ui(tk.Tk):
             if self.selapagado_grupo_origem_cbutton.get():
                 grupos = iterador.select_grupo_origem_sapagado()
 
-                index = None
+                index = 0
                 self.iid_lista_grupo_origem = []
 
                 for grupo in grupos:
@@ -753,7 +753,7 @@ class Ui(tk.Tk):
             else:
                 grupos = iterador.select_grupo_origem_capagado()
 
-                index = None
+                index = 0
                 self.iid_lista_grupo_origem = []
 
                 for grupo in grupos:
@@ -773,7 +773,7 @@ class Ui(tk.Tk):
             if self.selapagado_grupo_destino_cbutton.get():
                 grupos = iterador.select_grupo_destino_sapagado()
 
-                index = None
+                index = 0
                 iid_lista_grupos_destino = []
 
                 for grupo in grupos:
@@ -785,7 +785,7 @@ class Ui(tk.Tk):
             else:
                 grupos = iterador.select_grupo_destino_capagado()
 
-                index = None
+                index = 0
                 iid_lista_grupos_destino = []
 
                 for grupo in grupos:
@@ -805,7 +805,7 @@ class Ui(tk.Tk):
         try:
             empresas = iterador.select_listagem_empresa()
 
-            index = None
+            index = 0
             self.iid_lista_empresas = []
 
             for empresa in empresas:
@@ -825,7 +825,7 @@ class Ui(tk.Tk):
         try:
             fornecedores = iterador.select_listagem_fornecedor()
 
-            index = None
+            index = 0
             self.iid_lista_fornecedores = []
 
             for fornecedor in fornecedores:

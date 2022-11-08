@@ -76,7 +76,7 @@ class IteradorSql:
 
         return produtos_log
 
-    def consulta__produto_pos_insert(self, dados_tabela):
+    def consulta_produto_pos_insert(self, dados_tabela):
         cursor_destino = self.destino_conexao.cursor()
 
         if dados_tabela['tabela'] == 'produto':
