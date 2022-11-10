@@ -24,28 +24,45 @@ class Lote:
                 else:
                     continue
 
-        lotes_selecionados = self.separa_lotes_selecionados(lotes_origem)
-        lotes_tratados = self.tratamento_lote(lotes_selecionados)
-        lotes_atualizados = self.atualiza_id_produto(lotes_tratados)
-        lotes_log = iterador.insert_lote(lotes_atualizados)
+        id_produtos = self.produtos_ids['id_produtos']
+        produtos_encontrados = self.produtos_ids['produtos_encontrados']
+
+        lotes_selecionados = self.separa_lotes_selecionados(id_produtos, lotes_origem)
+        lotes_tratados = self.tratamento_lote(produtos_encontrados, lotes_selecionados)
+        lotes_log = iterador.insert_lote(lotes_tratados)
 
         return lotes_log
 
-    def separa_lotes_selecionados(self, lotes_origem):
+    def separa_lotes_selecionados(self, id_produtos, lotes_origem):
         lotes_selecionados = []
 
         for lote in lotes_origem:
             id_produto = int(lote['id_produto'])
             lote_filial = int(lote['id_filial'])
-            if id_produto in self.produtos_ids and lote_filial == self.filial_id_origem:
+            if id_produto in id_produtos and lote_filial == self.filial_id_origem:
                 lotes_selecionados.append(lote)
             else:
                 continue
 
         return lotes_selecionados
 
-    def tratamento_lote(self, lotes_selecionados):
+    def tratamento_lote(self, produtos_encontrados, lotes_selecionados):
+        iterador = IteradorSql()
+        iterador.conexao_destino(self.dados_destino)
+        tabela_produto = {'tabela': 'produto'}
+        produtos_pos_insert = iterador.consulta_pos_insert(tabela_produto)
+
         for lote in lotes_selecionados:
+            antigo_id = int(lote['id_produto'])
+            id_encontrado = self.compara_produto(antigo_id, produtos_encontrados)
+
+            if id_encontrado is None:
+                novo_id = self.busca_id_atual(antigo_id, produtos_pos_insert)
+                lote.update({'id_produto_ant': antigo_id})
+                lote.update({'id_produto': novo_id})
+            else:
+                lote.update({'id_produto_ant': lote['id_produto']})
+                lote.update({'id_produto': id_encontrado})
 
             datas = {'validade': lote['data_validade'], 'fabricacao': lote['data_fabricacao']}
 
@@ -53,25 +70,21 @@ class Lote:
 
             lote.update({'data_validade': datas_tratadas['validade']})
             lote.update({'data_fabricacao': datas_tratadas['fabricacao']})
-            lote.update({'comunicador': self.comunicador})
             lote.update({'id_filial': self.filial_id_destino})
+            lote.update({'comunicador': self.comunicador})
 
         return lotes_selecionados
 
-    def atualiza_id_produto(self, lotes):
-        iterador = IteradorSql()
-        iterador.conexao_destino(self.dados_destino)
+    @staticmethod
+    def compara_produto(antigo_id, produtos_encontrados):
+        for produto in produtos_encontrados:
+            id_produto = int(produto['id_produto'])
+            novo_id = int(produto['novo_id'])
 
-        tabela_produto = {'tabela': 'produto'}
-        produtos_pos_insert = iterador.consulta_pos_insert(tabela_produto)
-
-        for lote in lotes:
-            id_produto_ant = int(lote['id_produto'])
-
-            novo_id = self.busca_id_atual(id_produto_ant, produtos_pos_insert)
-            lote.update({'id_produto_ant': id_produto_ant, 'id_produto': novo_id})
-
-        return lotes
+            if antigo_id == id_produto:
+                return novo_id
+            else:
+                continue
 
     @staticmethod
     def busca_id_atual(id_produto_ant, produtos):

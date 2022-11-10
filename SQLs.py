@@ -84,32 +84,16 @@ query_insert_fornecedor = 'INSERT INTO fornecedor ' \
                           '%(cep)s, %(telefone)s, %(email)s, %(apagado)s, %(data_cadastro)s, ' \
                           '%(data_alteracao)s, %(usuario_cadastro)s, %(usuario_alteracao)s);'
 
-query_consulta_pos_insert_fornecedor = 'SELECT id_fornecedor, campo_auxiliar ' \
-                                       'FROM fornecedor ' \
-                                       'WHERE campo_auxiliar IS NOT NULL;'
-
-query_consulta_pos_insert_produto = 'SELECT id_produto, campo_auxiliar ' \
-                                    'FROM produto ' \
-                                    'WHERE campo_auxiliar IS NOT NULL;'
-
-query_consulta_pos_insert_fabricante = 'SELECT id_fabricante, campo_auxiliar ' \
-                                       'FROM fabricante ' \
-                                       'WHERE campo_auxiliar IS NOT NULL;'
-
-query_consulta_pos_insert_principio = 'SELECT id_principio_ativo, campo_auxiliar ' \
-                                      'FROM principio_ativo ' \
-                                      'WHERE campo_auxiliar IS NOT NULL;'
-
 query_select_pagar = 'SELECT * FROM contas_pagar WHERE id_fornecedor IN %s;'
 
 query_insert_pagar = 'INSERT INTO contas_pagar ' \
-                     '(campo_auxiliar, id_filial, id_fornecedor, data_emissao, data_vencimento, ' \
-                     'nota_fiscal, valor, pago, data_pagamento, apagado, data_cadastro, data_alteracao, ' \
-                     'usuario_cadastro, usuario_alteracao) ' \
+                     '(campo_auxiliar, id_filial, id_fornecedor, data_emissao, data_vencimento, data_previsao_pgto,' \
+                     'nota_fiscal, duplicata, parcela, valor, valor_doc, pago, valor_pago, data_pagamento, apagado, ' \
+                     'data_cadastro, data_alteracao, usuario_cadastro, usuario_alteracao) ' \
                      'VALUES (%(id_pagar)s, %(id_filial)s, %(id_fornecedor)s, %(data_emissao)s, ' \
-                     '%(data_vencimento)s, %(nota_fiscal)s, %(valor)s, %(pago)s, %(data_pagamento)s, ' \
-                     '%(apagado)s, %(data_cadastro)s, %(data_alteracao)s, ' \
-                     '%(usuario_cadastro)s, %(usuario_alteracao)s);'
+                     '%(data_vencimento)s, %(data_previsao_pgto)s, %(nota_fiscal)s, %(duplicata)s, %(parcela)s, ' \
+                     '%(valor)s, %(valor_doc)s, %(pago)s, %(valor_pago)s, %(data_pagamento)s, ' \
+                     '%(apagado)s, %(data_cadastro)s, %(data_alteracao)s, %(usuario_cadastro)s, %(usuario_alteracao)s);'
 
 query_select_empresa = 'SELECT * FROM empresa WHERE id_empresa IN %s;'
 
@@ -147,3 +131,25 @@ query_insert_receber = 'INSERT INTO contas_receber ' \
                        '%(descricao_produto)s, %(quantidade)s, %(valor)s, %(valor_total)s, %(numero_nota)s, ' \
                        '%(vencimento)s, %(data_baixa)s, %(apagado)s, %(data_cadastro)s, %(data_alteracao)s, ' \
                        '%(usuario_cadastro)s, %(usuario_alteracao)s, %(comunicador)s);'
+
+query_consulta_pos_insert_fornecedor = 'SELECT id_fornecedor, campo_auxiliar ' \
+                                       'FROM fornecedor ' \
+                                       'WHERE campo_auxiliar IS NOT NULL;'
+
+query_consulta_pos_insert_produto = 'SELECT id_produto, campo_auxiliar ' \
+                                    'FROM produto ' \
+                                    'WHERE campo_auxiliar IS NOT NULL;'
+
+query_consulta_pos_insert_fabricante = 'SELECT id_fabricante, campo_auxiliar ' \
+                                       'FROM fabricante ' \
+                                       'WHERE campo_auxiliar IS NOT NULL;'
+
+query_consulta_pos_insert_principio = 'SELECT id_principio_ativo, campo_auxiliar ' \
+                                      'FROM principio_ativo ' \
+                                      'WHERE campo_auxiliar IS NOT NULL;'
+
+query_consulta_comparacao_produto = 'SELECT id_produto, barras FROM produto;'
+
+query_select_atualizacao_estoque = 'SELECT id_produto, estoque FROM estoque WHERE id_produto = %(id_produto)s;'
+
+query_update_estoque = 'UPDATE estoque SET estoque = %(estoque)s WHERE id_produto = %(id_produto)s;'

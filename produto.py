@@ -7,21 +7,21 @@ class Produto:
     def __init__(self,
                  fabricantes_encontrados_tratados,
                  principios_encontrados_tratados,
+                 grupos_selecionados,
                  id_fabricante,
                  id_principio,
-                 grupos_selecionados,
                  dados_origem,
                  dados_destino,
                  comunicador):
 
+        self.principios_encontrados_tratados = principios_encontrados_tratados
+        self.fabricantes_encontrados_tratados = fabricantes_encontrados_tratados
+        self.grupos_selecionados = grupos_selecionados
+        self.id_fabricante = id_fabricante
+        self.id_principio = id_principio
         self.dados_origem = dados_origem
         self.dados_destino = dados_destino
         self.comunicador = comunicador
-        self.principios_encontrados_tratados = principios_encontrados_tratados
-        self.fabricantes_encontrados_tratados = fabricantes_encontrados_tratados
-        self.id_fabricante = id_fabricante
-        self.id_principio = id_principio
-        self.grupos_selecionados = grupos_selecionados
         self.produtos_pre_insert = None
         self.produtos_ids_separados = None
 
@@ -53,20 +53,20 @@ class Produto:
         if marcador_produto['principio_por_id'] == 'sim':
             produtos_processamento = self.atualizacao_principio_por_id(produtos_processamento)
 
-        self.produtos_pre_insert = self.tratamento_produtos(produtos_processamento)
+        produtos_tratados = self.tratamento_produtos(produtos_processamento)
+        self.produtos_ids_separados = self.separa_produtos_ids(produtos_tratados)
+        produtos_log = iterador.insert_produto(produtos_tratados)
+        self.atualizacao_pos_insert(produtos_tratados)
 
-        self.produtos_ids_separados = self.separa_produtos_ids(self.produtos_pre_insert)
-        produtos_log = iterador.insert_produto(self.produtos_pre_insert)
-        self.atualizacao_pos_insert()
         return produtos_log
 
     def separa_produtos_selecionados(self, produtos_origem, grupos_selecionados):
-        lista_grupos = []  # Saída → Lista
+        lista_grupos = []  # → Lista
 
         for grupo in grupos_selecionados:
             lista_grupos.append(int(grupo['antigo_id']))
 
-        produtos_selecionados = []  # Saída → Lista de Dicionários.
+        produtos_selecionados = []  # → Lista de Dicionários.
         for produto in produtos_origem:
             atual_grupo_id = int(produto['id_grupo'])
             if atual_grupo_id in lista_grupos:
@@ -177,22 +177,44 @@ class Produto:
         return produtos
 
     def tratamento_produtos(self, produtos):
+        iterador = IteradorSql()
+        iterador.conexao_destino(self.dados_destino)
+
+        produtos_comparacao = iterador.consulta_produto_comparacao()
+
         for produto in produtos:
+            barras_origem = int(produto['barras'])
+            id_existente = self.compara_produtos(barras_origem, produtos_comparacao)
 
-            datas = {'inicio_promocao': produto['inicio_promocao'],
-                     'final_promocao': produto['final_promocao'],
-                     'data_cadastro': produto['data_cadastro'],
-                     'data_alteracao': produto['data_alteracao']}
+            if id_existente is None:
+                datas = {'inicio_promocao': produto['inicio_promocao'],
+                         'final_promocao': produto['final_promocao'],
+                         'data_cadastro': produto['data_cadastro'],
+                         'data_alteracao': produto['data_alteracao']}
 
-            datas_tratadas = self.trata_campo_data(datas)
+                datas_tratadas = self.trata_campo_data(datas)
 
-            produto.update({'inicio_promocao': datas_tratadas['inicio_promocao']})
-            produto.update({'final_promocao': datas_tratadas['final_promocao']})
-            produto.update({'data_cadastro': datas_tratadas['data_cadastro']})
-            produto.update({'data_alteracao': datas_tratadas['data_alteracao']})
-            produto.update({'comunicador': self.comunicador})
+                produto.update({'inicio_promocao': datas_tratadas['inicio_promocao']})
+                produto.update({'final_promocao': datas_tratadas['final_promocao']})
+                produto.update({'data_cadastro': datas_tratadas['data_cadastro']})
+                produto.update({'data_alteracao': datas_tratadas['data_alteracao']})
+                produto.update({'novo_id': None})
+                produto.update({'comunicador': self.comunicador})
+            else:
+                produto.update({'novo_id': id_existente})
 
         return produtos
+
+    @staticmethod
+    def compara_produtos(barras_origem, produtos_comparacao):
+        for produto in produtos_comparacao:
+            barras_destino = int(produto['barras'])
+            id_produto_destino = int(produto['id_produto'])
+
+            if barras_origem == barras_destino:
+                return id_produto_destino
+            else:
+                continue
 
     @staticmethod
     def trata_campo_data(datas):
@@ -211,19 +233,26 @@ class Produto:
 
     @staticmethod
     def separa_produtos_ids(produtos_processados):
-        lista_produtos_ids = []
+        id_produtos = []
+        produtos_encontrados = []
 
         for produto in produtos_processados:
             produto_id = int(produto['id_produto'])
-            lista_produtos_ids.append(produto_id)
+            id_produtos.append(produto_id)
 
-        return lista_produtos_ids
+            if produto['novo_id'] is None:
+                continue
+            else:
+                produtos_encontrados.append(produto)
+
+        return {'id_produtos': id_produtos,
+                'produtos_encontrados': produtos_encontrados}
 
     def retorna_produtos_ids(self):
         produtos_ids_separados = self.produtos_ids_separados
         return produtos_ids_separados
 
-    def atualizacao_pos_insert(self):
+    def atualizacao_pos_insert(self, produtos_tratados):
         iterador = IteradorSql()
         iterador.conexao_destino(self.dados_destino)
 
@@ -235,7 +264,7 @@ class Produto:
         fabricantes_pos_insert = iterador.consulta_pos_insert(tabela_fabricante)
         principio_pos_insert = iterador.consulta_pos_insert(tabela_principio)
 
-        for produto in self.produtos_pre_insert:
+        for produto in produtos_tratados:
             produto_id = int(produto['id_produto'])
             novo_produto_id = self.retorna_id_produto_pos_insert(produto_id, produtos_pos_insert)
 

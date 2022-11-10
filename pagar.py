@@ -2,10 +2,11 @@ from iteradorSQL import IteradorSql
 
 
 class Pagar:
-    def __init__(self, dados_origem, dados_destino, filial_id_destino,
+    def __init__(self, dados_origem, dados_destino, filial_id_origem, filial_id_destino,
                  fornecedores_selecionados, fornecedores_encontrados, fornecedores_pos_insert, comunicador):
         self.dados_origem = dados_origem
         self.dados_destino = dados_destino
+        self.filial_id_origem = filial_id_origem
         self.filial_id_destino = filial_id_destino
         self.fornecedores_selecionados = fornecedores_selecionados
         self.fornecedores_encontrados = fornecedores_encontrados
@@ -26,38 +27,31 @@ class Pagar:
                 else:
                     continue
 
-        # pagar_nao_baixado = self.remove_pagar_baixado(pagar_origem)
         pagar_tratado = self.trata_pagar(pagar_origem)
         pagar = self.atualiza_id_fornecedores(pagar_tratado)
         pagar_log = iterador.insert_pagar(pagar)
 
         return pagar_log
 
-    @staticmethod
-    def remove_pagar_baixado(pagar_origem):
-        pagars_nao_baixados = []
-        for pagar in pagar_origem:
-            if pagar['dt_pgto'] is None:
-                pagars_nao_baixados.append(pagar)
-                continue
-            else:
-                continue
-        return pagars_nao_baixados
-
     def trata_pagar(self, pagar_origem):
-        for pagar in pagar_origem:
+        for pagar in pagar_origem[:]:
+            id_filial = int(pagar['id_filial'])
 
-            datas = {'data_emissao': pagar['data_emissao'],
-                     'data_vencimento': pagar['data_vencimento'],
-                     'data_pagamento': pagar['data_pagamento']}
+            if id_filial != self.filial_id_origem:
+                pagar_origem.remove(pagar)
 
-            datas_tratadas = self.trata_campo_data(datas)
+            else:
+                datas = {'data_emissao': pagar['data_emissao'],
+                         'data_vencimento': pagar['data_vencimento'],
+                         'data_pagamento': pagar['data_pagamento']}
 
-            pagar.update({'data_emissao': datas_tratadas['data_emissao']})
-            pagar.update({'data_vencimento': datas_tratadas['data_vencimento']})
-            pagar.update({'data_pagamento': datas_tratadas['data_pagamento']})
-            pagar.update({'id_filial': self.filial_id_destino})
-            pagar.update({'comunicador': self.comunicador})
+                datas_tratadas = self.trata_campo_data(datas)
+
+                pagar.update({'data_emissao': datas_tratadas['data_emissao']})
+                pagar.update({'data_vencimento': datas_tratadas['data_vencimento']})
+                pagar.update({'data_pagamento': datas_tratadas['data_pagamento']})
+                pagar.update({'id_filial': self.filial_id_destino})
+                pagar.update({'comunicador': self.comunicador})
 
         return pagar_origem
 

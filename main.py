@@ -194,7 +194,7 @@ class Ui(tk.Tk):
         # Banco de Destino - Separator
         self.sbanco_separator = ttk.Separator(self.conexoes_frame)
         self.sbanco_separator.configure(orient=tk.VERTICAL)
-        self.sbanco_separator.place(anchor=tk.CENTER, height=350, x=470, y=230)
+        self.sbanco_separator.place(anchor=tk.CENTER, height=350, x=482, y=230)
 
         # Configurações de Produtos
         self.configuracoes_frame = ttk.Frame(self.abas_notebook)
@@ -228,7 +228,7 @@ class Ui(tk.Tk):
         self.principio_lframe.pack(fill=tk.X)
 
         self.fabricante_lframe = ttk.Labelframe(self.grupoconfig2_frame)
-        self.fabricante_lframe.configure(text="Fabricantes", height=80, labelanchor=tk.N)
+        self.fabricante_lframe.configure(text="Fabricante", height=80, labelanchor=tk.N)
         self.fabricante_lframe.pack(fill=tk.X)
 
         # Configurações de Produtos - Label
@@ -972,7 +972,7 @@ class Ui(tk.Tk):
     def iniciar(self):
         comunicador = self.retorna_comunicador_destino()
         filial_id_origem = int(self.retorna_filial_id_origem())
-        filial_id_destino = self.retorna_filial_id_destino()
+        filial_id_destino = int(self.retorna_filial_id_destino())
         id_fabricante = self.id_fabricante_entry.get()
         id_principio = self.id_principio_entry.get()
         zeros_barras = int(self.zeros_spinbox.get())
@@ -990,6 +990,16 @@ class Ui(tk.Tk):
 
         if self.seldesconsiderar_apagados_cbutton.get():
             marcador_apagado.update({'apagado': 'sim'})
+
+        self.progressbar['value'] = 0
+        self.concluido_message = tk.Message(self.logs_frame, font=self.fonte_corpo)
+        self.concluido_message.configure(text="Em Andamento",
+                                         width=125,
+                                         foreground='orange',
+                                         relief=tk.FLAT,
+                                         borderwidth=1)
+        self.concluido_message.place(anchor=tk.NW, x=750, y=398)
+        self.log(metodo='Integração Iniciada.')
 
         if self.selfabricante_cnpj_cbutton.get():
             self.log(metodo='Processamento de Fabricantes Iniciado.')
@@ -1132,6 +1142,7 @@ class Ui(tk.Tk):
             self.log(metodo='Processamento de Pagar Iniciado.')
             pagar = Pagar(dados_origem=self.dados_origem,
                           dados_destino=self.dados_destino,
+                          filial_id_origem=filial_id_origem,
                           filial_id_destino=filial_id_destino,
                           fornecedores_encontrados=self.fornecedores_encontrados_tratados,
                           fornecedores_selecionados=self.fornecedores_selecionados,
@@ -1173,6 +1184,7 @@ class Ui(tk.Tk):
             self.log(metodo='Processamento do Receber Iniciado.')
             receber = Receber(dados_origem=self.dados_origem,
                               dados_destino=self.dados_destino,
+                              filial_id_origem=filial_id_origem,
                               filial_id_destino=filial_id_destino,
                               empresas_selecionadas=self.empresas_selecionadas,
                               clientes_selecionados=self.clientes_selecionados,
@@ -1184,12 +1196,9 @@ class Ui(tk.Tk):
             self.log(metodo='Processamento do Receber Finalizado.')
         self.barra_progresso()
 
-        self.concluido_message = tk.Message(self.logs_frame, font=self.fonte_corpo)
-        self.concluido_message.configure(text="Concluído", width=90, foreground='green', relief=tk.FLAT, borderwidth=1)
-        self.concluido_message.place(anchor=tk.NW, x=750, y=398)
-
+        self.concluido_message.configure(text="Concluído", foreground='green')
         self.progressbar['value'] = 100
-        self.log(metodo='Integração concluída.')
+        self.log(metodo='Integração Concluída.')
         print("Integracao Concluida")
 
 

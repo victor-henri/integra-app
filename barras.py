@@ -22,45 +22,60 @@ class BarrasAdicional:
                 else:
                     continue
 
-        barras_selecionados = self.separa_barras_selecionados(barras_origem)
-        barras_tratados = self.tratamento_barras(barras_selecionados)
-        barras_atualizados = self.atualiza_id_produto(barras_tratados)
-        barras_log = iterador.insert_barras(barras_atualizados)
+        id_produtos = self.produtos_ids['id_produtos']
+        produtos_encontrados = self.produtos_ids['produtos_encontrados']
+
+        barras_selecionados = self.separa_barras_selecionados(id_produtos, barras_origem)
+        barras_tratados = self.tratamento_barras(produtos_encontrados, barras_selecionados)
+        barras_log = iterador.insert_barras(barras_tratados)
 
         return barras_log
 
-    def separa_barras_selecionados(self, barras_origem):
+    @staticmethod
+    def separa_barras_selecionados(id_produtos, barras_origem):
         barras_selecionados = []
 
         for barras in barras_origem:
             id_produto = int(barras['id_produto'])
-            if id_produto in self.produtos_ids:
+            if id_produto in id_produtos:
                 barras_selecionados.append(barras)
             else:
                 continue
 
         return barras_selecionados
 
-    def tratamento_barras(self, barras_selecionados):
-        for barras in barras_selecionados:
-            barras['comunicador'] = self.comunicador
-
-        return barras_selecionados
-
-    def atualiza_id_produto(self, barras_selecionados):
+    def tratamento_barras(self, produtos_encontrados, barras_selecionados):
         iterador = IteradorSql()
         iterador.conexao_destino(self.dados_destino)
-
         tabela_produto = {'tabela': 'produto'}
         produtos_pos_insert = iterador.consulta_pos_insert(tabela_produto)
 
         for barras in barras_selecionados:
-            id_produto_ant = int(barras['id_produto'])
+            antigo_id = int(barras['id_produto'])
+            id_encontrado = self.compara_produto(antigo_id, produtos_encontrados)
 
-            novo_id = self.busca_id_atual(id_produto_ant, produtos_pos_insert)
-            barras.update({'id_produto_ant': id_produto_ant, 'id_produto': novo_id})
+            if id_encontrado is None:
+                novo_id = self.busca_id_atual(antigo_id, produtos_pos_insert)
+                barras.update({'id_produto_ant': antigo_id})
+                barras.update({'id_produto': novo_id})
+            else:
+                barras.update({'id_produto_ant': barras['id_produto']})
+                barras.update({'id_produto': id_encontrado})
+
+            barras['comunicador'] = self.comunicador
 
         return barras_selecionados
+
+    @staticmethod
+    def compara_produto(antigo_id, produtos_encontrados):
+        for produto in produtos_encontrados:
+            id_produto = int(produto['id_produto'])
+            novo_id = int(produto['novo_id'])
+
+            if antigo_id == id_produto:
+                return novo_id
+            else:
+                continue
 
     @staticmethod
     def busca_id_atual(id_produto_ant, produtos):

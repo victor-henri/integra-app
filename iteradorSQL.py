@@ -57,21 +57,24 @@ class IteradorSql:
         produtos_log = []
 
         for produto in produtos:
-            try:
-                cursor_destino.execute(SQLs.query_insert_produto, produto)
-            except UnicodeEncodeError as uni_err:
-                registro_erro = f"Produto ID: {produto['id_produto']} " \
-                                f"| Descrição: {produto['descricao']} não importado."
-                retorno_erro = f"Erro na codificação de caracteres - Descrição: {uni_err}"
-                produto_log = {'registro_erro': registro_erro, 'retorno_erro': retorno_erro}
-                produtos_log.append(produto_log)
-                continue
-            except Exception as err:
-                registro_erro = f"Produto ID: {produto['id_produto']} " \
-                                f"| Descrição: {produto['descricao']} não importado."
-                retorno_erro = f"Descrição: {err}"
-                produto_log = {'registro_erro': registro_erro, 'retorno_erro': retorno_erro}
-                produtos_log.append(produto_log)
+            if produto['novo_id'] is None:
+                try:
+                    cursor_destino.execute(SQLs.query_insert_produto, produto)
+                except UnicodeEncodeError as uni_err:
+                    registro_erro = f"Produto ID: {produto['id_produto']} " \
+                                    f"| Descrição: {produto['descricao']} não importado."
+                    retorno_erro = f"Erro na codificação de caracteres - Descrição: {uni_err}"
+                    produto_log = {'registro_erro': registro_erro, 'retorno_erro': retorno_erro}
+                    produtos_log.append(produto_log)
+                    continue
+                except Exception as err:
+                    registro_erro = f"Produto ID: {produto['id_produto']} " \
+                                    f"| Descrição: {produto['descricao']} não importado."
+                    retorno_erro = f"Descrição: {err}"
+                    produto_log = {'registro_erro': registro_erro, 'retorno_erro': retorno_erro}
+                    produtos_log.append(produto_log)
+                    continue
+            else:
                 continue
 
         return produtos_log
@@ -231,22 +234,46 @@ class IteradorSql:
         estoques_log = []
 
         for estoque in estoques:
-            try:
-                cursor_destino.execute(SQLs.query_insert_estoque, estoque)
-            except UnicodeEncodeError as uni_err:
-                registro_erro = f"Estoque do Produto ID: {estoque['id_produto']} " \
-                                f"| Estoque: {estoque['estoque']} não importado."
-                retorno_erro = f"Erro na codificação de caracteres - Descrição: {uni_err}"
-                estoque_log = {'registro_erro': registro_erro, 'retorno_erro': retorno_erro}
-                estoques_log.append(estoque_log)
-                continue
-            except Exception as err:
-                registro_erro = f"Estoque do Produto ID: {estoque['id_produto']} " \
-                                f"| Estoque: {estoque['estoque']} não importado."
-                retorno_erro = f"Descrição: {err}"
-                estoque_log = {'registro_erro': registro_erro, 'retorno_erro': retorno_erro}
-                estoques_log.append(estoque_log)
-                continue
+
+            if estoque['existe'] == 'S':
+                estoque_atual = int(estoque['estoque'])
+                try:
+                    cursor_destino.execute(SQLs.query_select_atualizacao_estoque, estoque)
+                    estoque_existente = cursor_destino.fetchone()
+                    estoque_existente.update({'estoque': estoque_existente['estoque'] + estoque_atual})
+                    cursor_destino.execute(SQLs.query_update_estoque, estoque_existente)
+                except UnicodeEncodeError as uni_err:
+                    registro_erro = f"Estoque do Produto ID: {estoque['id_produto']} " \
+                                    f"| Estoque: {estoque['estoque']} não atualizado."
+                    retorno_erro = f"Erro na codificação de caracteres - Descrição: {uni_err}"
+                    estoque_log = {'registro_erro': registro_erro, 'retorno_erro': retorno_erro}
+                    estoques_log.append(estoque_log)
+                    continue
+                except Exception as err:
+                    registro_erro = f"Estoque do Produto ID: {estoque['id_produto']} " \
+                                    f"| Estoque: {estoque['estoque']} não atualizado."
+                    retorno_erro = f"Descrição: {err}"
+                    estoque_log = {'registro_erro': registro_erro, 'retorno_erro': retorno_erro}
+                    estoques_log.append(estoque_log)
+                    continue
+
+            else:
+                try:
+                    cursor_destino.execute(SQLs.query_insert_estoque, estoque)
+                except UnicodeEncodeError as uni_err:
+                    registro_erro = f"Estoque do Produto ID: {estoque['id_produto']} " \
+                                    f"| Estoque: {estoque['estoque']} não importado."
+                    retorno_erro = f"Erro na codificação de caracteres - Descrição: {uni_err}"
+                    estoque_log = {'registro_erro': registro_erro, 'retorno_erro': retorno_erro}
+                    estoques_log.append(estoque_log)
+                    continue
+                except Exception as err:
+                    registro_erro = f"Estoque do Produto ID: {estoque['id_produto']} " \
+                                    f"| Estoque: {estoque['estoque']} não importado."
+                    retorno_erro = f"Descrição: {err}"
+                    estoque_log = {'registro_erro': registro_erro, 'retorno_erro': retorno_erro}
+                    estoques_log.append(estoque_log)
+                    continue
 
         return estoques_log
 
@@ -464,6 +491,13 @@ class IteradorSql:
         fornecedores = cursor_destino.fetchall()
 
         return fornecedores
+
+    def consulta_produto_comparacao(self):
+        cursor_destino = self.destino_conexao.cursor()
+        cursor_destino.execute(SQLs.query_consulta_comparacao_produto)
+        produtos = cursor_destino.fetchall()
+
+        return produtos
 
     def consulta_pos_insert(self, produto):
         cursor_destino = self.destino_conexao.cursor()

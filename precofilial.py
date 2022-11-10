@@ -24,28 +24,44 @@ class PrecoFilial:
                 else:
                     continue
 
-        precos_filial_selecionados = self.separa_precos_selecionados(precos_origem)
-        precos_filial_tratados = self.tratamento_precos_filial(precos_filial_selecionados)
-        precos_filial_atualizados = self.atualiza_id_produto(precos_filial_tratados)
-        preco_filial_log = iterador.insert_precos_filial(precos_filial_atualizados)
+        id_produtos = self.produtos_ids['id_produtos']
+        produtos_encontrados = self.produtos_ids['produtos_encontrados']
+
+        precos_filial_selecionados = self.separa_precos_selecionados(id_produtos, precos_origem)
+        precos_filial_tratados = self.tratamento_precos_filial(produtos_encontrados, precos_filial_selecionados)
+        preco_filial_log = iterador.insert_precos_filial(precos_filial_tratados)
 
         return preco_filial_log
 
-    def separa_precos_selecionados(self, precos_origem):
+    def separa_precos_selecionados(self, id_produtos, precos_origem):
         precos_selecionados = []
 
         for preco in precos_origem:
             produto_id = int(preco['id_produto'])
             preco_filial = int(preco['id_filial'])
-            if produto_id in self.produtos_ids and preco_filial == self.filial_id_origem:
+            if produto_id in id_produtos and preco_filial == self.filial_id_origem:
                 precos_selecionados.append(preco)
             else:
                 continue
 
         return precos_selecionados
 
-    def tratamento_precos_filial(self, precos_filial_selecionados):
-        for preco in precos_filial_selecionados:
+    def tratamento_precos_filial(self, produtos_encontrados, precos_filial_selecionados):
+        iterador = IteradorSql()
+        iterador.conexao_destino(self.dados_destino)
+        tabela_produto = {'tabela': 'produto'}
+        produtos_pos_insert = iterador.consulta_pos_insert(tabela_produto)
+
+        for preco in precos_filial_selecionados[:]:
+            antigo_id = int(preco['id_produto'])
+            id_encontrado = self.compara_produto(antigo_id, produtos_encontrados)
+
+            if id_encontrado is None:
+                novo_id = self.busca_id_atual(antigo_id, produtos_pos_insert)
+                preco.update({'id_produto_ant': antigo_id})
+                preco.update({'id_produto': novo_id})
+            else:
+                precos_filial_selecionados.remove(preco)
 
             datas = {'inicio': preco['inicio_promocao'],
                      'final': preco['final_promocao']}
@@ -59,20 +75,16 @@ class PrecoFilial:
 
         return precos_filial_selecionados
 
-    def atualiza_id_produto(self, precos):
-        iterador = IteradorSql()
-        iterador.conexao_destino(self.dados_destino)
+    @staticmethod
+    def compara_produto(antigo_id, produtos_encontrados):
+        for produto in produtos_encontrados:
+            id_produto = int(produto['id_produto'])
+            novo_id = int(produto['novo_id'])
 
-        tabela_produto = {'tabela': 'produto'}
-        produtos_pos_insert = iterador.consulta_pos_insert(tabela_produto)
-
-        for preco in precos:
-            id_produto_ant = int(preco['id_produto'])
-
-            novo_id = self.busca_id_atual(id_produto_ant, produtos_pos_insert)
-            preco.update({'id_produto_ant': id_produto_ant, 'id_produto': novo_id})
-
-        return precos
+            if antigo_id == id_produto:
+                return novo_id
+            else:
+                continue
 
     @staticmethod
     def busca_id_atual(id_produto_ant, produtos):
