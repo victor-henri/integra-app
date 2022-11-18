@@ -111,11 +111,11 @@ query_insert_empresa = 'INSERT INTO empresa ' \
 query_select_cliente = 'SELECT * FROM cliente WHERE id_empresa IN %s;'
 
 query_insert_cliente = 'INSERT INTO cliente ' \
-                       '(campo_auxiliar, id_empresa, nome, status_cliente, data_nascimento, ' \
+                       '(campo_auxiliar, campo_auxiliar2, id_empresa, nome, status_cliente, data_nascimento, ' \
                        'endereco, numero, bairro, cidade, estado, cep, telefone, celular, cpf, rg, ' \
                        'apagado, saldo_mes, saldo_total, limite_mes, limite_total, data_cadastro, ' \
                        'data_alteracao, usuario_cadastro, usuario_alteracao, comunicador) ' \
-                       'VALUES (%(id_cliente)s, %(id_empresa)s, %(nome)s, %(status_cliente)s, ' \
+                       'VALUES (%(id_cliente)s, %(id_empresa)s, %(id_empresa)s, %(nome)s, %(status_cliente)s, ' \
                        '%(data_nascimento)s, %(endereco)s, %(numero)s, %(bairro)s, %(cidade)s, %(estado)s, ' \
                        '%(cep)s, %(telefone)s, %(celular)s, %(cpf)s, %(rg)s, %(apagado)s, %(saldo_mes)s, ' \
                        '%(saldo_total)s, %(limite_mes)s, %(limite_total)s, %(data_cadastro)s, ' \
@@ -153,3 +153,56 @@ query_consulta_comparacao_produto = 'SELECT id_produto, barras FROM produto;'
 query_select_atualizacao_estoque = 'SELECT id_produto, estoque FROM estoque WHERE id_produto = %(id_produto)s;'
 
 query_update_estoque = 'UPDATE estoque SET estoque = %(estoque)s WHERE id_produto = %(id_produto)s;'
+
+query_update_cliente = 'UPDATE cliente ' \
+                       'INNER JOIN empresa ' \
+                       'ON cliente.campo_auxiliar2 = empresa.campo_auxiliar ' \
+                       'SET cliente.id_empresa = empresa.id_empresa;'
+
+query_atualiza_receber_cliente = 'UPDATE contas_receber ' \
+                                 'INNER JOIN cliente ' \
+                                 'ON contas_receber.campo_auxiliar = cliente.campo_auxiliar ' \
+                                 'SET contas_receber.id_cliente = cliente.id_cliente;'
+
+query_atualiza_receber_empresa = 'UPDATE contas_receber ' \
+                                 'INNER JOIN cliente ' \
+                                 'ON contas_receber.id_cliente = cliente.id_cliente ' \
+                                 'SET contas_receber.id_empresa = cliente.id_empresa;'
+
+query_select_grporigem_sapagado = 'SELECT id_grupo, descricao FROM grupo WHERE apagado = "N" ORDER BY id_grupo;'
+
+query_select_grporigem_capagado = 'SELECT id_grupo, descricao FROM grupo ORDER BY id_grupo;'
+
+query_select_grpdestino_sapagado = 'SELECT id_grupo, descricao FROM grupo WHERE apagado = "N" ORDER BY id_grupo;'
+
+query_select_grpdestino_capagado = 'SELECT id_grupo, descricao FROM grupo ORDER BY id_grupo;'
+
+query_select_listagem_empresa = 'SELECT id_empresa, nome_fantasia FROM empresa ORDER BY id_empresa;'
+
+query_select_listagem_fornecedor = 'SELECT id_fornecedor, razao_social FROM fornecedor ORDER BY id_fornecedor;'
+
+query_update_limpeza_fabricante = 'UPDATE fabricante SET campo_auxiliar = NULL;'
+
+query_update_limpeza_principio_ativo = 'UPDATE principio_ativo SET campo_auxiliar = NULL;'
+
+query_update_limpeza_produto = 'UPDATE produto SET campo_auxiliar = NULL;'
+
+query_update_limpeza_barras = 'UPDATE barras_adicional SET campo_auxiliar = NULL;'
+
+query_update_limpeza_estoque = 'UPDATE estoque SET campo_auxiliar = NULL;'
+
+query_update_limpeza_lote = 'UPDATE lote SET campo_auxiliar = NULL;'
+
+query_update_limpeza_preco_filial = 'UPDATE preco_filial SET campo_auxiliar = NULL;'
+
+query_update_limpeza_fornecedor = 'UPDATE fornecedor SET campo_auxiliar = NULL;'
+
+query_update_limpeza_pagar = 'UPDATE contas_pagar SET campo_auxiliar = NULL;'
+
+query_update_limpeza_empresa = 'UPDATE empresa SET campo_auxiliar = NULL;'
+
+query_update_limpeza_cliente = 'UPDATE cliente SET campo_auxiliar = NULL;'
+
+query_update_limpeza_cliente2 = 'UPDATE cliente SET campo_auxiliar2 = NULL;'
+
+query_update_limpeza_receber = 'UPDATE contas_receber SET campo_auxiliar = NULL;'

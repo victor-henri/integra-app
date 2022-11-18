@@ -26,20 +26,16 @@ class Produto:
         self.produtos_ids_separados = None
 
     def inicia_produtos(self, marcador_produto, apagado):
+
         iterador = IteradorSql()
         iterador.conexao_origem(self.dados_origem)
         iterador.conexao_destino(self.dados_destino)
-
-        produtos_origem = iterador.select_produto()
+        produtos = iterador.select_produto()
 
         if apagado['apagado'] == 'sim':
-            for produto in produtos_origem:
-                if produto['apagado'] == 'S':
-                    produtos_origem.remove(produto)
-                else:
-                    continue
+            produtos = self.remove_apagado(produtos)
 
-        produtos_processamento = self.separa_produtos_selecionados(produtos_origem, self.grupos_selecionados)
+        produtos_processamento = self.separa_produtos_selecionados(produtos, self.grupos_selecionados)
 
         if marcador_produto['remover_produtos_barras_zerados'] == 'sim':
             quantidade_zeros = marcador_produto['quantidade_zeros_barras']
@@ -60,14 +56,27 @@ class Produto:
 
         return produtos_log
 
-    def separa_produtos_selecionados(self, produtos_origem, grupos_selecionados):
-        lista_grupos = []  # → Lista
+    @staticmethod
+    def remove_apagado(produtos):
+
+        for registro in produtos:
+            if registro['apagado'] == 'S':
+                produtos.remove(registro)
+            else:
+                continue
+
+        return produtos
+
+    def separa_produtos_selecionados(self, produtos, grupos_selecionados):
+
+        lista_grupos = []
 
         for grupo in grupos_selecionados:
             lista_grupos.append(int(grupo['antigo_id']))
 
-        produtos_selecionados = []  # → Lista de Dicionários.
-        for produto in produtos_origem:
+        produtos_selecionados = []
+
+        for produto in produtos:
             atual_grupo_id = int(produto['id_grupo'])
             if atual_grupo_id in lista_grupos:
                 produtos_selecionados.append(produto)
@@ -82,8 +91,9 @@ class Produto:
         return produtos_selecionados
 
     @staticmethod
-    def retorna_grupo(atual_id, grupos_selecionados):
-        for grupo in grupos_selecionados:
+    def retorna_grupo(atual_id, grupos):
+
+        for grupo in grupos:
             antigo_id = int(grupo['antigo_id'])
             novo_id = int(grupo['novo_id'])
             if atual_id == antigo_id:
@@ -92,6 +102,7 @@ class Produto:
                 continue
 
     def remove_produtos_barras_zerados(self, produtos, quantidade_zeros):
+
         for produto in produtos:
             retorno = self.conta_zeros(produto['barras'], quantidade_zeros)
             if retorno is True:
@@ -103,6 +114,7 @@ class Produto:
 
     @staticmethod
     def conta_zeros(barras, quantidade_zeros):
+
         contador = 0
         zeros = ''
 
@@ -116,14 +128,13 @@ class Produto:
         return resultado
 
     def atualizacao_fabricantes_por_cnpj(self, produtos):
-        for produto in produtos:
 
+        for produto in produtos:
             if produto['id_fabricante'] is None:
                 produto['id_fabricante_ant'] = None
             else:
                 atual_id = int(produto['id_fabricante'])
-                novo_id = self.retorna_novoid_fabricante(atual_id)
-
+                novo_id = self.retorna_novoid_fabricante(atual_id, self.fabricantes_encontrados_tratados)
                 if novo_id:
                     produto.update({'id_fabricante': novo_id, 'id_fabricante_ant': None})
                 else:
@@ -131,8 +142,10 @@ class Produto:
 
         return produtos
 
-    def retorna_novoid_fabricante(self, atual_id):
-        for fabricante in self.fabricantes_encontrados_tratados:
+    @staticmethod
+    def retorna_novoid_fabricante(atual_id, fabricantes):
+
+        for fabricante in fabricantes:
             fabricante_id = int(fabricante['id_fabricante'])
             novo_id = int(fabricante['novo_id'])
             if atual_id == fabricante_id:
@@ -147,14 +160,13 @@ class Produto:
         return produtos
 
     def atualizacao_principio_por_desc(self, produtos):
-        for produto in produtos:
 
+        for produto in produtos:
             if produto['id_principio_ativo'] is None:
                 produto['id_principio_ant'] = None
             else:
                 atual_id = int(produto['id_principio_ativo'])
-                novo_id = self.retorna_novo_id_principios(atual_id)
-
+                novo_id = self.retorna_novo_id_principios(atual_id, self.principios_encontrados_tratados)
                 if novo_id:
                     produto.update({'id_principio_ativo': novo_id, 'id_principio_ant': None})
                 else:
@@ -162,8 +174,10 @@ class Produto:
 
         return produtos
 
-    def retorna_novo_id_principios(self, atual_id):
-        for principio in self.principios_encontrados_tratados:
+    @staticmethod
+    def retorna_novo_id_principios(atual_id, principios):
+
+        for principio in principios:
             principio_ativo_id = int(principio['id_principio_ativo'])
             if atual_id == principio_ativo_id:
                 return principio_ativo_id
@@ -171,15 +185,16 @@ class Produto:
                 continue
 
     def atualizacao_principio_por_id(self, produtos):
+
         for produto in produtos:
             produto['id_principio_ativo'] = int(self.id_principio)
 
         return produtos
 
     def tratamento_produtos(self, produtos):
+
         iterador = IteradorSql()
         iterador.conexao_destino(self.dados_destino)
-
         produtos_comparacao = iterador.consulta_produto_comparacao()
 
         for produto in produtos:
@@ -206,11 +221,11 @@ class Produto:
         return produtos
 
     @staticmethod
-    def compara_produtos(barras_origem, produtos_comparacao):
-        for produto in produtos_comparacao:
+    def compara_produtos(barras_origem, produtos):
+
+        for produto in produtos:
             barras_destino = int(produto['barras'])
             id_produto_destino = int(produto['id_produto'])
-
             if barras_origem == barras_destino:
                 return id_produto_destino
             else:
@@ -218,6 +233,7 @@ class Produto:
 
     @staticmethod
     def trata_campo_data(datas):
+
         for chave, data in datas.items():
             if data is None:
                 pass
@@ -229,14 +245,16 @@ class Produto:
                 else:
                     data_formatada = data.strftime('%Y-%m-%d')
                     datas.update({chave: data_formatada})
+
         return datas
 
     @staticmethod
-    def separa_produtos_ids(produtos_processados):
+    def separa_produtos_ids(produtos):
+
         id_produtos = []
         produtos_encontrados = []
 
-        for produto in produtos_processados:
+        for produto in produtos:
             produto_id = int(produto['id_produto'])
             id_produtos.append(produto_id)
 
@@ -249,10 +267,10 @@ class Produto:
                 'produtos_encontrados': produtos_encontrados}
 
     def retorna_produtos_ids(self):
-        produtos_ids_separados = self.produtos_ids_separados
-        return produtos_ids_separados
+        return self.produtos_ids_separados
 
-    def atualizacao_pos_insert(self, produtos_tratados):
+    def atualizacao_pos_insert(self, produtos):
+
         iterador = IteradorSql()
         iterador.conexao_destino(self.dados_destino)
 
@@ -264,7 +282,7 @@ class Produto:
         fabricantes_pos_insert = iterador.consulta_pos_insert(tabela_fabricante)
         principio_pos_insert = iterador.consulta_pos_insert(tabela_principio)
 
-        for produto in produtos_tratados:
+        for produto in produtos:
             produto_id = int(produto['id_produto'])
             novo_produto_id = self.retorna_id_produto_pos_insert(produto_id, produtos_pos_insert)
 
@@ -289,8 +307,9 @@ class Produto:
                 iterador.atualiza_campo_produto_pos_insert(dados_principio)
 
     @staticmethod
-    def retorna_id_produto_pos_insert(produto_id, produtos_pos_insert):
-        for produto in produtos_pos_insert:
+    def retorna_id_produto_pos_insert(produto_id, produtos):
+
+        for produto in produtos:
             antigo_produto_id = int(produto['campo_auxiliar'])
             novo_produto_id = int(produto['id_produto'])
             if produto_id == antigo_produto_id:
@@ -299,8 +318,9 @@ class Produto:
                 continue
 
     @staticmethod
-    def retorna_id_fabricante_pos_insert(fabricante_id, fabricantes_pos_insert):
-        for fabricante in fabricantes_pos_insert:
+    def retorna_id_fabricante_pos_insert(fabricante_id, fabricantes):
+
+        for fabricante in fabricantes:
             antigo_fabricante_id = int(fabricante['campo_auxiliar'])
             novo_fabricante_id = int(fabricante['id_fabricante'])
             if fabricante_id == antigo_fabricante_id:
@@ -309,8 +329,9 @@ class Produto:
                 continue
 
     @staticmethod
-    def retorna_id_principio_pos_insert(principio_id, principio_pos_insert):
-        for principio in principio_pos_insert:
+    def retorna_id_principio_pos_insert(principio_id, principios):
+
+        for principio in principios:
             antigo_principio_id = int(principio['campo_auxiliar'])
             novo_principio_id = int(principio['id_principio_ativo'])
             if principio_id == antigo_principio_id:

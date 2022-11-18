@@ -3,6 +3,7 @@ from iteradorSQL import IteradorSql
 
 class Cliente:
     def __init__(self, dados_origem, dados_destino, empresas_selecionadas, comunicador):
+
         self.dados_origem = dados_origem
         self.dados_destino = dados_destino
         self.empresas_selecionadas = empresas_selecionadas
@@ -10,28 +11,24 @@ class Cliente:
         self.clientes_selecionados = None
 
     def inicia_clientes(self, apagado):
+
         iterador = IteradorSql()
         iterador.conexao_origem(self.dados_origem)
         iterador.conexao_destino(self.dados_destino)
-
-        clientes_origem = iterador.select_cliente(self.empresas_selecionadas)
+        clientes = iterador.select_cliente(self.empresas_selecionadas)
 
         if apagado['apagado'] == 'sim':
-            for cliente in clientes_origem:
-                if cliente['apagado'] == 'S':
-                    clientes_origem.remove(cliente)
-                else:
-                    continue
+            clientes = self.remove_apagado(clientes)
 
-        clientes = self.trata_clientes(clientes_origem)
-        self.clientes_selecionados = self.separa_clientes_ids(clientes)
-        clientes_log = iterador.insert_cliente(clientes)
+        clientes_tratados = self.trata_clientes(clientes)
+        self.clientes_selecionados = self.separa_clientes_ids(clientes_tratados)
+        clientes_log = iterador.insert_cliente(clientes_tratados)
 
         return clientes_log
 
     def trata_clientes(self, clientes):
-        for cliente in clientes:
 
+        for cliente in clientes:
             datas = {'data_nascimento': cliente['data_nascimento'],
                      'data_cadastro': cliente['data_cadastro'],
                      'data_alteracao': cliente['data_alteracao']}
@@ -52,7 +49,19 @@ class Cliente:
         return clientes
 
     @staticmethod
+    def remove_apagado(clientes):
+
+        for registro in clientes:
+            if registro['apagado'] == 'S':
+                clientes.remove(registro)
+            else:
+                continue
+
+        return clientes
+
+    @staticmethod
     def trata_campo_data(datas):
+
         for chave, data in datas.items():
             if data is None:
                 pass
@@ -63,6 +72,7 @@ class Cliente:
 
     @staticmethod
     def trata_campo_especial(campos_especiais):
+
         caracteres = ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p',
                       'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F',
                       'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
@@ -82,11 +92,11 @@ class Cliente:
 
     @staticmethod
     def separa_clientes_ids(clientes):
+
         clientes_selecionados_l = []
 
         for cliente in clientes:
             clientes_selecionados_l.append(cliente['id_cliente'])
-
         clientes_selecionados = tuple(clientes_selecionados_l)
 
         return clientes_selecionados

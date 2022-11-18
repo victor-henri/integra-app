@@ -1,8 +1,9 @@
 from iteradorSQL import IteradorSql
 
 
-class EstoqueMinimo:
+class Estoque:
     def __init__(self, dados_origem, dados_destino, comunicador, filial_id_origem, filial_id_destino, produtos_ids):
+
         self.dados_origem = dados_origem
         self.dados_destino = dados_destino
         self.comunicador = comunicador
@@ -10,81 +11,89 @@ class EstoqueMinimo:
         self.filial_id_destino = filial_id_destino
         self.produtos_ids = produtos_ids
 
-    def inicia_estoque_minimo(self, apagado):
+    def inicia_estoque(self, apagado):
+
         iterador = IteradorSql()
         iterador.conexao_origem(self.dados_origem)
         iterador.conexao_destino(self.dados_destino)
-
-        estoque_minimo_origem = iterador.select_estoque()
+        estoque = iterador.select_estoque()
 
         if apagado['apagado'] == 'sim':
-            for estoque in estoque_minimo_origem:
-                if estoque['apagado'] == 'S':
-                    estoque_minimo_origem.remove(estoque)
-                else:
-                    continue
+            estoque = self.remove_apagado(estoque)
 
         id_produtos = self.produtos_ids['id_produtos']
         produtos_encontrados = self.produtos_ids['produtos_encontrados']
 
-        estoque_minimo_selecionados = self.separa_estmin_selecionados(id_produtos, estoque_minimo_origem)
-        estoque_minimo_tratado = self.tratamento_estoque_minimo(produtos_encontrados, estoque_minimo_selecionados)
-        estoque_minimo_log = iterador.insert_estoque(estoque_minimo_tratado)
+        estoque_selecionados = self.separa_selecionados(id_produtos, estoque)
+        estoque_tratado = self.tratamento_estoque(produtos_encontrados, estoque_selecionados)
+        estoque_log = iterador.insert_estoque(estoque_tratado)
 
-        return estoque_minimo_log
+        return estoque_log
 
-    def separa_estmin_selecionados(self, id_produtos, estoque_minimo_origem):
-        estmin_selecionados = []
+    @staticmethod
+    def remove_apagado(estoque):
 
-        for estoque in estoque_minimo_origem:
-            produto_id = int(estoque['id_produto'])
-            estoque_filial_id = int(estoque['id_filial'])
-
-            if produto_id in id_produtos and estoque_filial_id == self.filial_id_origem:
-                estmin_selecionados.append(estoque)
+        for registro in estoque:
+            if registro['apagado'] == 'S':
+                estoque.remove(registro)
             else:
                 continue
 
-        return estmin_selecionados
+        return estoque
 
-    def tratamento_estoque_minimo(self, produtos_encontrados, estoque_minimo_selecionados):
+    def separa_selecionados(self, id_produtos, estoque):
+
+        estoque_selecionados = []
+
+        for registro in estoque:
+            produto_id = int(registro['id_produto'])
+            estoque_filial_id = int(registro['id_filial'])
+
+            if produto_id in id_produtos and estoque_filial_id == self.filial_id_origem:
+                estoque_selecionados.append(registro)
+            else:
+                continue
+
+        return estoque_selecionados
+
+    def tratamento_estoque(self, produtos_encontrados, estoque):
+
         iterador = IteradorSql()
         iterador.conexao_destino(self.dados_destino)
         tabela_produto = {'tabela': 'produto'}
         produtos_pos_insert = iterador.consulta_pos_insert(tabela_produto)
 
-        for estoque in estoque_minimo_selecionados:
-            antigo_id = int(estoque['id_produto'])
+        for registro in estoque:
+            antigo_id = int(registro['id_produto'])
             id_encontrado = self.compara_produto(antigo_id, produtos_encontrados)
-
             if id_encontrado is None:
                 novo_produto_id = self.procura_id_produto(antigo_id, produtos_pos_insert)
-                estoque.update({'id_produto_ant': estoque['id_produto']})
-                estoque.update({'id_produto': novo_produto_id})
-                estoque.update({'existe': 'N'})
+                registro.update({'id_produto_ant': registro['id_produto']})
+                registro.update({'id_produto': novo_produto_id})
+                registro.update({'existe': 'N'})
             else:
-                estoque.update({'id_produto_ant': estoque['id_produto']})
-                estoque.update({'id_produto': id_encontrado})
-                estoque.update({'existe': 'S'})
+                registro.update({'id_produto_ant': registro['id_produto']})
+                registro.update({'id_produto': id_encontrado})
+                registro.update({'existe': 'S'})
 
-            datas = {'data_cadastro': estoque['data_cadastro'],
-                     'data_alteracao': estoque['data_alteracao']}
+            datas = {'data_cadastro': registro['data_cadastro'],
+                     'data_alteracao': registro['data_alteracao']}
 
             datas_tratadas = self.trata_campo_data(datas)
 
-            estoque.update({'data_cadastro': datas_tratadas['data_cadastro']})
-            estoque.update({'data_alteracao': datas_tratadas['data_alteracao']})
-            estoque.update({'id_filial': self.filial_id_destino})
-            estoque.update({'comunicador': self.comunicador})
+            registro.update({'data_cadastro': datas_tratadas['data_cadastro']})
+            registro.update({'data_alteracao': datas_tratadas['data_alteracao']})
+            registro.update({'id_filial': self.filial_id_destino})
+            registro.update({'comunicador': self.comunicador})
 
-        return estoque_minimo_selecionados
+        return estoque
 
     @staticmethod
-    def compara_produto(antigo_id, produtos_encontrados):
-        for produto in produtos_encontrados:
+    def compara_produto(antigo_id, produtos):
+
+        for produto in produtos:
             id_produto = int(produto['id_produto'])
             novo_id = int(produto['novo_id'])
-
             if antigo_id == id_produto:
                 return novo_id
             else:
@@ -92,16 +101,19 @@ class EstoqueMinimo:
 
     @staticmethod
     def trata_campo_data(datas):
+
         for chave, data in datas.items():
             if data is None:
                 pass
             else:
                 data_formatada = data.strftime('%Y-%m-%d')
                 datas.update({chave: data_formatada})
+
         return datas
 
     @staticmethod
     def procura_id_produto(produto_id_antigo, produtos):
+
         for produto in produtos:
             if produto['campo_auxiliar'] is None:
                 pass

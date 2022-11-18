@@ -4,10 +4,12 @@ import SQLs
 
 class IteradorSql:
     def __init__(self):
+
         self.origem_conexao = None
         self.destino_conexao = None
 
     def conexao_origem(self, dados_origem):
+
         try:
             self.origem_conexao = pymysql.connect(host=dados_origem['host'],
                                                   user=dados_origem['user'],
@@ -27,6 +29,7 @@ class IteradorSql:
             return {'retorno': 'Exception', 'codigo': err.args[0], 'descricao': err.args[1]}
 
     def conexao_destino(self, dados_destino):
+
         try:
             self.destino_conexao = pymysql.connect(host=dados_destino['host'],
                                                    user=dados_destino['user'],
@@ -46,6 +49,7 @@ class IteradorSql:
             return {'retorno': 'Exception', 'codigo': err.args[0], 'descricao': err.args[1]}
 
     def select_produto(self):
+
         cursor_origem = self.origem_conexao.cursor()
         cursor_origem.execute(SQLs.query_select_produto)
         produto = cursor_origem.fetchall()
@@ -53,6 +57,7 @@ class IteradorSql:
         return produto
 
     def insert_produto(self, produtos):
+
         cursor_destino = self.destino_conexao.cursor()
         produtos_log = []
 
@@ -80,6 +85,7 @@ class IteradorSql:
         return produtos_log
 
     def consulta_produto_pos_insert(self, dados_tabela):
+
         cursor_destino = self.destino_conexao.cursor()
 
         if dados_tabela['tabela'] == 'produto':
@@ -103,6 +109,7 @@ class IteradorSql:
         return dados_pos_insert
 
     def atualiza_campo_produto_pos_insert(self, dados_atualizacao):
+
         cursor_destino = self.destino_conexao.cursor()
 
         if dados_atualizacao['campo'] == 'fabricante':
@@ -116,6 +123,7 @@ class IteradorSql:
                                    'WHERE id_produto = %(id_produto)s;', dados_atualizacao)
 
     def select_fabricante_origem(self):
+
         cursor_origem = self.origem_conexao.cursor()
         cursor_origem.execute(SQLs.query_select_fabricante)
         fabricante = cursor_origem.fetchall()
@@ -123,6 +131,7 @@ class IteradorSql:
         return fabricante
 
     def select_fabricante_destino(self):
+
         cursor_destino = self.destino_conexao.cursor()
         cursor_destino.execute(SQLs.query_select_fabricante)
         fabricante = cursor_destino.fetchall()
@@ -130,6 +139,7 @@ class IteradorSql:
         return fabricante
 
     def insert_fabricante(self, fabricantes):
+
         cursor_destino = self.destino_conexao.cursor()
         fabricantes_log = []
 
@@ -154,6 +164,7 @@ class IteradorSql:
         return fabricantes_log
 
     def select_principio_ativo_origem(self):
+
         cursor_origem = self.origem_conexao.cursor()
         cursor_origem.execute(SQLs.query_select_principio)
         principio_ativo = cursor_origem.fetchall()
@@ -161,6 +172,7 @@ class IteradorSql:
         return principio_ativo
 
     def select_principio_ativo_destino(self):
+
         cursor_destino = self.destino_conexao.cursor()
         cursor_destino.execute(SQLs.query_select_principio)
         principio_ativo = cursor_destino.fetchall()
@@ -168,6 +180,7 @@ class IteradorSql:
         return principio_ativo
 
     def insert_principios(self, principios):
+
         cursor_destino = self.destino_conexao.cursor()
         principios_log = []
 
@@ -192,6 +205,7 @@ class IteradorSql:
         return principios_log
 
     def select_barras(self):
+
         cursor_origem = self.origem_conexao.cursor()
         cursor_origem.execute(SQLs.query_select_barras)
         barras = cursor_origem.fetchall()
@@ -199,6 +213,7 @@ class IteradorSql:
         return barras
 
     def insert_barras(self, barras_selecionados):
+
         cursor_destino = self.destino_conexao.cursor()
         barras_log = []
 
@@ -223,6 +238,7 @@ class IteradorSql:
         return barras_log
 
     def select_estoque(self):
+
         cursor_origem = self.origem_conexao.cursor()
         cursor_origem.execute(SQLs.query_select_estoque)
         estoque = cursor_origem.fetchall()
@@ -230,6 +246,7 @@ class IteradorSql:
         return estoque
 
     def insert_estoque(self, estoques):
+
         cursor_destino = self.destino_conexao.cursor()
         estoques_log = []
 
@@ -278,6 +295,7 @@ class IteradorSql:
         return estoques_log
 
     def select_produto_pos_insert(self):
+
         cursor_destino = self.destino_conexao.cursor()
         cursor_destino.execute('SELECT id_produto, campo_auxiliar FROM produto;')
         produto = cursor_destino.fetchall()
@@ -285,6 +303,7 @@ class IteradorSql:
         return produto
 
     def select_lote(self):
+
         cursor_origem = self.origem_conexao.cursor()
         cursor_origem.execute(SQLs.query_select_lote)
         lote = cursor_origem.fetchall()
@@ -292,6 +311,7 @@ class IteradorSql:
         return lote
 
     def insert_lote(self, lotes):
+
         cursor_destino = self.destino_conexao.cursor()
         lotes_log = []
 
@@ -316,17 +336,19 @@ class IteradorSql:
         return lotes_log
 
     def select_preco_filial(self):
+
         cursor_origem = self.origem_conexao.cursor()
         cursor_origem.execute(SQLs.query_select_preco)
         preco_filial = cursor_origem.fetchall()
 
         return preco_filial
 
-    def insert_precos_filial(self, preco_filial):
+    def insert_precos_filial(self, precos):
+
         cursor_destino = self.destino_conexao.cursor()
         preco_filial_log = []
 
-        for preco in preco_filial:
+        for preco in precos:
             try:
                 cursor_destino.execute(SQLs.query_insert_preco, preco)
             except UnicodeEncodeError as uni_err:
@@ -345,14 +367,16 @@ class IteradorSql:
         return preco_filial_log
 
     def select_empresas(self, empresas_selecionadas):
+
         cursor_origem = self.origem_conexao.cursor()
 
         cursor_origem.execute(SQLs.query_select_empresa, (empresas_selecionadas,))
-        empresa = cursor_origem.fetchall()  # → Lista de Dicionários.
+        empresa = cursor_origem.fetchall()
 
         return empresa
 
     def select_fornecedor_origem(self, fornecedores_selecionados):
+
         cursor_origem = self.origem_conexao.cursor()
         cursor_origem.execute(SQLs.query_select_fornecedor_origem, (fornecedores_selecionados,))
         fornecedor = cursor_origem.fetchall()
@@ -360,6 +384,7 @@ class IteradorSql:
         return fornecedor
 
     def select_fornecedor_destino(self):
+
         cursor_destino = self.destino_conexao.cursor()
         cursor_destino.execute(SQLs.query_select_fornecedor_destino)
         fornecedor = cursor_destino.fetchall()
@@ -367,14 +392,16 @@ class IteradorSql:
         return fornecedor
 
     def select_cliente(self, empresas_selecionadas):
+
         cursor = self.origem_conexao.cursor()
 
         cursor.execute(SQLs.query_select_cliente, (empresas_selecionadas,))
-        cliente = cursor.fetchall()  # → Lista de Dicionários.
+        cliente = cursor.fetchall()
 
         return cliente
 
     def insert_empresa(self, empresas):
+
         cursor = self.destino_conexao.cursor()
         empresas_log = []
 
@@ -397,6 +424,7 @@ class IteradorSql:
         return empresas_log
 
     def insert_fornecedor(self, fornecedores):
+
         cursor = self.destino_conexao.cursor()
         fornecedores_log = []
 
@@ -421,6 +449,7 @@ class IteradorSql:
         return fornecedores_log
 
     def insert_cliente(self, clientes):
+
         cursor = self.destino_conexao.cursor()
         clientes_log = []
 
@@ -441,14 +470,12 @@ class IteradorSql:
                 continue
 
         # Atualiza o id_empresa da tabela cliente com os novos ids de empresas inseridas
-        cursor.execute('UPDATE cliente '
-                       'INNER JOIN empresa '
-                       'ON cliente.campo_auxiliar = empresa.campo_auxiliar '
-                       'SET cliente.id_empresa = empresa.id_empresa;')
+        cursor.execute(SQLs.query_update_cliente)
 
         return clientes_log
 
     def insert_receber(self, recebers):
+
         cursor_destino = self.destino_conexao.cursor()
         recebers_log = []
 
@@ -470,22 +497,17 @@ class IteradorSql:
                 recebers_log.append(receber_log)
                 continue
 
-        # Atualiza o clientes_id da tabela receber com os novos ids de clientes inseridos a partir do
-        # campo lojas_leram2 que recebeu o clientes_id do banco de origem.
-        cursor_destino.execute('UPDATE contas_receber '
-                               'INNER JOIN cliente '
-                               'ON contas_receber.campo_auxiliar = cliente.campo_auxiliar '
-                               'SET contas_receber.id_cliente = cliente.id_cliente;')
+        # Atualiza o id_cliente da tabela receber com os novos ids de clientes inseridos a partir do
+        # campo campo_auxiliar que recebeu o id_cliente do banco de origem.
+        cursor_destino.execute(SQLs.query_atualiza_receber_cliente)
 
-        # Atualiza o empresa_id da tabela receber com os novos ids de empresas.
-        cursor_destino.execute('UPDATE contas_receber '
-                               'INNER JOIN cliente '
-                               'ON contas_receber.id_cliente = cliente.id_cliente '
-                               'SET contas_receber.id_empresa = cliente.id_empresa;')
+        # Atualiza o id_empresa da tabela receber com os novos ids de empresas.
+        cursor_destino.execute(SQLs.query_atualiza_receber_empresa)
 
         return recebers_log
 
     def consulta_fornecedor_pos_insert(self):
+
         cursor_destino = self.destino_conexao.cursor()
         cursor_destino.execute(SQLs.query_consulta_pos_insert_fornecedor)
         fornecedores = cursor_destino.fetchall()
@@ -493,6 +515,7 @@ class IteradorSql:
         return fornecedores
 
     def consulta_produto_comparacao(self):
+
         cursor_destino = self.destino_conexao.cursor()
         cursor_destino.execute(SQLs.query_consulta_comparacao_produto)
         produtos = cursor_destino.fetchall()
@@ -500,6 +523,7 @@ class IteradorSql:
         return produtos
 
     def consulta_pos_insert(self, produto):
+
         cursor_destino = self.destino_conexao.cursor()
 
         if produto['tabela'] == 'produto':
@@ -517,6 +541,7 @@ class IteradorSql:
         return consulta_pos_insert
 
     def insert_pagar(self, pagars):
+
         cursor_destino = self.destino_conexao.cursor()
         pagars_log = []
 
@@ -541,65 +566,106 @@ class IteradorSql:
         return pagars_log
 
     def select_receber(self, clientes_selecionados):
-        cursor_origem = self.origem_conexao.cursor()
 
+        cursor_origem = self.origem_conexao.cursor()
         cursor_origem.execute(SQLs.query_select_receber, (clientes_selecionados,))
-        receber = cursor_origem.fetchall()  # → Lista de Dicionários.
+        receber = cursor_origem.fetchall()
 
         return receber
 
     def select_pagar(self, fornecedores_selecionados):
-        cursor_origem = self.origem_conexao.cursor()
 
+        cursor_origem = self.origem_conexao.cursor()
         cursor_origem.execute(SQLs.query_select_pagar, (fornecedores_selecionados,))
-        pagar = cursor_origem.fetchall()  # → Lista de Dicionários.
+        pagar = cursor_origem.fetchall()
 
         return pagar
 
     def select_grupo_origem_sapagado(self):
-        cursor = self.origem_conexao.cursor()
 
-        cursor.execute('SELECT id_grupo, descricao FROM grupo WHERE apagado = "N";')
+        cursor = self.origem_conexao.cursor()
+        cursor.execute(SQLs.query_select_grporigem_sapagado)
         grupo = cursor.fetchall()
 
         return grupo
 
     def select_grupo_origem_capagado(self):
-        cursor = self.origem_conexao.cursor()
 
-        cursor.execute('SELECT id_grupo, descricao FROM grupo;')
+        cursor = self.origem_conexao.cursor()
+        cursor.execute(SQLs.query_select_grporigem_capagado)
         grupo = cursor.fetchall()
 
         return grupo
 
     def select_grupo_destino_sapagado(self):
-        cursor = self.destino_conexao.cursor()
 
-        cursor.execute('SELECT id_grupo, descricao FROM grupo WHERE apagado = "N";')
+        cursor = self.destino_conexao.cursor()
+        cursor.execute(SQLs.query_select_grpdestino_sapagado)
         grupo = cursor.fetchall()
 
         return grupo
 
     def select_grupo_destino_capagado(self):
-        cursor = self.destino_conexao.cursor()
 
-        cursor.execute('SELECT id_grupo, descricao FROM grupo;')
+        cursor = self.destino_conexao.cursor()
+        cursor.execute(SQLs.query_select_grpdestino_capagado)
         grupo = cursor.fetchall()
 
         return grupo
 
     def select_listagem_empresa(self):
-        cursor = self.origem_conexao.cursor()
 
-        cursor.execute('SELECT id_empresa, nome_fantasia FROM empresa;')
-        empresa = cursor.fetchall()  # Saída → Lista de Dicionários.
+        cursor = self.origem_conexao.cursor()
+        cursor.execute(SQLs.query_select_listagem_empresa)
+        empresa = cursor.fetchall()
 
         return empresa
 
     def select_listagem_fornecedor(self):
-        cursor = self.origem_conexao.cursor()
 
-        cursor.execute('SELECT id_fornecedor, razao_social FROM fornecedor;')
-        fornecedor = cursor.fetchall()  # Saída → Lista de Dicionários.
+        cursor = self.origem_conexao.cursor()
+        cursor.execute(SQLs.query_select_listagem_fornecedor)
+        fornecedor = cursor.fetchall()
 
         return fornecedor
+
+    def limpa_campo_auxiliar(self, marcador_limpeza):
+
+        cursor = self.destino_conexao.cursor()
+
+        if marcador_limpeza['fabricante'] == 'sim':
+            cursor.execute(SQLs.query_update_limpeza_fabricante)
+
+        if marcador_limpeza['principio_ativo'] == 'sim':
+            cursor.execute(SQLs.query_update_limpeza_principio_ativo)
+
+        if marcador_limpeza['produto'] == 'sim':
+            cursor.execute(SQLs.query_update_limpeza_produto)
+
+        if marcador_limpeza['barras'] == 'sim':
+            cursor.execute(SQLs.query_update_limpeza_barras)
+
+        if marcador_limpeza['estoque'] == 'sim':
+            cursor.execute(SQLs.query_update_limpeza_estoque)
+
+        if marcador_limpeza['lote'] == 'sim':
+            cursor.execute(SQLs.query_update_limpeza_lote)
+
+        if marcador_limpeza['preco_filial'] == 'sim':
+            cursor.execute(SQLs.query_update_limpeza_preco_filial)
+
+        if marcador_limpeza['fornecedor'] == 'sim':
+            cursor.execute(SQLs.query_update_limpeza_fornecedor)
+
+        if marcador_limpeza['pagar'] == 'sim':
+            cursor.execute(SQLs.query_update_limpeza_pagar)
+
+        if marcador_limpeza['empresa'] == 'sim':
+            cursor.execute(SQLs.query_update_limpeza_empresa)
+
+        if marcador_limpeza['cliente'] == 'sim':
+            cursor.execute(SQLs.query_update_limpeza_cliente)
+            cursor.execute(SQLs.query_update_limpeza_cliente2)
+
+        if marcador_limpeza['receber'] == 'sim':
+            cursor.execute(SQLs.query_update_limpeza_receber)
