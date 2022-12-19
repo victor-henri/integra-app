@@ -1,5 +1,6 @@
 import tkinter as tk
-import tkinter.font as fonte
+from tkinter import *
+import tkinter.font as font
 import tkinter.ttk as ttk
 import ttkbootstrap as ttkb
 from ttkwidgets import CheckboxTreeview
@@ -22,11 +23,19 @@ from fornecedor import Fornecedor
 from pagar import Pagar
 
 
-class Ui(tk.Tk):
+root = Tk()
+root.geometry("1175x525")
+root.resizable(False, False)
+root.title("IntegraApp")
+theme = ttkb.Style()
+theme.theme_use("integra_visual")
+theme.configure('Treeviews', rowheight=23)
 
-    def __init__(self):
 
-        super().__init__()
+class Ui:
+
+    def __init__(self, master):
+
         self.produtos_ids_separados = None
         self.fornecedores_selecionados = None
         self.empresas_selecionadas = None
@@ -50,660 +59,641 @@ class Ui(tk.Tk):
         self.principios_encontrados_tratados = None
         self.fabricantes_encontrados_tratados = None
 
-        # Topo
-        self.configure(height=200, width=200)
-        self.resizable(False, False)
-        self.title("IntegraApp")
-        self.tema_padrao = ttkb.Style()
-        self.tema_padrao.theme_use('integra_visual')
-        self.tema_padrao.configure('Treeview', rowheight=23)
-        self.fonte_corpo = fonte.Font(family='Roboto', size=10)
-        self.fonte_titulo = fonte.Font(family='Roboto', size=10)
+        self.body_font = font.Font(family='Roboto', size=10)
+        self.title_font = font.Font(family='Roboto', size=12)
 
-        # Frame Principal
-        self.main_frame = ttk.Frame(self)
-        self.main_frame.configure(height=250, padding=10)
-        self.main_frame.grid(column=0, row=0)
-        self.abas_notebook = ttk.Notebook(self.main_frame)
+        # Main Frame
+        self.main_frame = ttkb.Frame(master)
+        self.main_frame.configure(padding=10)
+        self.main_frame.grid()
+        self.tabs_notebook = ttkb.Notebook(self.main_frame)
 
-        # Conexões
-        self.conexoes_frame = ttk.Frame(self.abas_notebook)
-        self.conexoes_frame.pack(side=tk.TOP)
-        self.conexoes_frame.grid_anchor(tk.CENTER)
-        self.abas_notebook.add(self.conexoes_frame,
-                               compound=tk.CENTER,
-                               state=tk.NORMAL,
-                               sticky=tk.NSEW,
-                               text="Conexões")
+        # CONNECTIONS
+        self.connections_frame = ttkb.Frame(self.tabs_notebook)
+        self.connections_frame.pack()
+        self.connections_frame.grid_anchor(tk.CENTER)
+        self.tabs_notebook.add(self.connections_frame, text="Conexões")
 
-        # Banco de Origem
-        self.borigem_lframe = ttk.Labelframe(self.conexoes_frame)
-        self.borigem_lframe.configure(labelanchor=tk.N, padding=20, text="Banco de Origem")
-        self.borigem_lframe.grid(column=0, padx=50, row=0)
-        self.borigem_lframe.columnconfigure(8, weight=1)
-        self.borigem_lframe.grid_anchor(tk.CENTER)
+        # CONNECTIONS[Origin Database]
+        self.origin_labelframe = ttkb.Labelframe(self.connections_frame)
+        self.origin_labelframe.configure(labelanchor=tk.N, padding=20, text="Banco de Origem")
+        self.origin_labelframe.grid(column=0, padx=50, row=0)
+        self.origin_labelframe.columnconfigure(8, weight=1)
 
-        # Banco de Origem - Label
-        self.oipservidor_label = ttk.Label(self.borigem_lframe, font=self.fonte_corpo)
-        self.oipservidor_label.configure(text="Ip do Servidor")
-        self.oipservidor_label.grid(column=0, row=0)
-        self.obanco_label = ttk.Label(self.borigem_lframe, font=self.fonte_corpo)
-        self.obanco_label.configure(text="Nome do Banco")
-        self.obanco_label.grid(column=0, row=2)
-        self.ousuario_label = ttk.Label(self.borigem_lframe, font=self.fonte_corpo)
-        self.ousuario_label.configure(text="Usuário")
-        self.ousuario_label.grid(column=0, row=4)
-        self.osenha_label = ttk.Label(self.borigem_lframe, font=self.fonte_corpo)
-        self.osenha_label.configure(text="Senha")
-        self.osenha_label.grid(column=0, row=6)
-        self.oporta_label = ttk.Label(self.borigem_lframe, font=self.fonte_corpo)
-        self.oporta_label.configure(text="Porta")
-        self.oporta_label.grid(column=0, padx=20, row=8, sticky=tk.W)
-        self.oid_label = ttk.Label(self.borigem_lframe, font=self.fonte_corpo)
-        self.oid_label.configure(text="ID Filial")
-        self.oid_label.grid(column=0, row=8, sticky=tk.E, ipadx=6)
+        self.ip_origin_label = ttkb.Label(self.origin_labelframe)
+        self.ip_origin_label.configure(text="Ip do Servidor", font=self.body_font)
+        self.ip_origin_label.grid(column=0, row=0)
 
-        # Banco de Origem - Entry
-        self.oipservidor_entry = ttk.Entry(self.borigem_lframe, justify=tk.CENTER)
-        self.oipservidor_entry.grid(column=0, row=1)
-        self.obanco_entry = ttk.Entry(self.borigem_lframe, justify=tk.CENTER)
-        self.obanco_entry.grid(column=0, row=3)
-        self.ousuario_entry = ttk.Entry(self.borigem_lframe, justify=tk.CENTER)
-        self.ousuario_entry.grid(column=0, row=5)
-        self.osenha_entry = ttk.Entry(self.borigem_lframe, show='*', justify=tk.CENTER)
-        self.osenha_entry.grid(column=0, row=7)
-        self.oporta_entry = ttk.Entry(self.borigem_lframe, justify=tk.CENTER)
-        self.oporta_entry.configure(width=8)
-        self.oporta_entry.grid(column=0, row=9, sticky=tk.W)
-        self.oid_entry = ttk.Entry(self.borigem_lframe, justify=tk.CENTER)
-        self.oid_entry.configure(width=8)
-        self.oid_entry.grid(column=0, row=9, sticky=tk.E)
+        self.ip_origin_entry = ttkb.Entry(self.origin_labelframe)
+        self.ip_origin_entry.configure(justify=tk.CENTER)
+        self.ip_origin_entry.grid(column=0, row=1)
 
-        # Banco de Origem - Button
-        self.oconectar_button = ttkb.Button(self.borigem_lframe, command=self.conexao_origem)
-        self.oconectar_button.configure(text="Conectar", width=15)
-        self.oconectar_button.grid(column=0, pady=10, row=11)
-        self.oalerta_button = ttk.Button()
+        self.db_origin_label = ttkb.Label(self.origin_labelframe)
+        self.db_origin_label.configure(text="Nome do Banco", font=self.body_font)
+        self.db_origin_label.grid(column=0, row=2)
 
-        # Banco de Origem - Message
-        self.omensagem_message = tk.Message(self.borigem_lframe, font=self.fonte_corpo)
-        self.omensagem_message.configure(text="Desconectado",
-                                         width=100,
-                                         foreground='red',
-                                         relief=tk.FLAT,
-                                         borderwidth=1)
-        self.omensagem_message.grid(column=0, row=12)
+        self.db_origin_entry = ttkb.Entry(self.origin_labelframe)
+        self.db_origin_entry.configure(justify=tk.CENTER)
+        self.db_origin_entry.grid(column=0, row=3)
 
-        # Banco de Destino
-        self.bdestino_lframe = ttk.Labelframe(self.conexoes_frame)
-        self.bdestino_lframe.configure(labelanchor=tk.N, padding=20, text="Banco de Destino")
-        self.bdestino_lframe.grid(column=2, padx=50, row=0)
-        self.bdestino_lframe.columnconfigure(8, weight=1)
-        self.bdestino_lframe.grid_anchor(tk.CENTER)
+        self.user_origin_label = ttkb.Label(self.origin_labelframe)
+        self.user_origin_label.configure(text="Usuário", font=self.body_font)
+        self.user_origin_label.grid(column=0, row=4)
 
-        # Banco de Destino - Label
-        self.dipservidor_label = ttk.Label(self.bdestino_lframe, font=self.fonte_corpo)
-        self.dipservidor_label.configure(text="Ip do Servidor")
-        self.dipservidor_label.grid(column=0, row=0)
-        self.dbanco_label = ttk.Label(self.bdestino_lframe, font=self.fonte_corpo)
-        self.dbanco_label.configure(text="Nome do Banco")
-        self.dbanco_label.grid(column=0, row=2)
-        self.dusuario_label = ttk.Label(self.bdestino_lframe, font=self.fonte_corpo)
-        self.dusuario_label.configure(text="Usuário")
-        self.dusuario_label.grid(column=0, row=4)
-        self.dsenha_label = ttk.Label(self.bdestino_lframe, font=self.fonte_corpo)
-        self.dsenha_label.configure(text="Senha")
-        self.dsenha_label.grid(column=0, row=6)
-        self.dporta_label = ttk.Label(self.bdestino_lframe, font=self.fonte_corpo)
-        self.dporta_label.configure(text="Porta")
-        self.dporta_label.grid(column=0, padx=20, row=8, sticky=tk.W)
-        self.did_label = ttk.Label(self.bdestino_lframe, font=self.fonte_corpo)
-        self.did_label.configure(text="ID Filial")
-        self.did_label.grid(column=0, row=8, sticky=tk.E, ipadx=6)
+        self.user_origin_entry = ttkb.Entry(self.origin_labelframe)
+        self.user_origin_entry.configure(justify=tk.CENTER)
+        self.user_origin_entry.grid(column=0, row=5)
 
-        # Banco de Destino - Entry
-        self.dipservidor_entry = ttk.Entry(self.bdestino_lframe, justify=tk.CENTER)
-        self.dipservidor_entry.grid(column=0, row=1)
-        self.dbanco_entry = ttk.Entry(self.bdestino_lframe, justify=tk.CENTER)
-        self.dbanco_entry.grid(column=0, row=3)
-        self.dusuario_entry = ttk.Entry(self.bdestino_lframe, justify=tk.CENTER)
-        self.dusuario_entry.grid(column=0, row=5)
-        self.dsenha_entry = ttk.Entry(self.bdestino_lframe, show='*', justify=tk.CENTER)
-        self.dsenha_entry.grid(column=0, row=7)
-        self.dporta_entry = ttk.Entry(self.bdestino_lframe, justify=tk.CENTER)
-        self.dporta_entry.configure(width=8)
-        self.dporta_entry.grid(column=0, row=9, sticky=tk.W)
-        self.did_entry = ttk.Entry(self.bdestino_lframe, justify=tk.CENTER)
-        self.did_entry.configure(width=8)
-        self.did_entry.grid(column=0, row=9, sticky=tk.E)
+        self.pass_origin_label = ttkb.Label(self.origin_labelframe)
+        self.pass_origin_label.configure(text="Senha", font=self.body_font)
+        self.pass_origin_label.grid(column=0, row=6)
 
-        # Banco de Destino - Button
-        self.dconectar_button = ttk.Button(self.bdestino_lframe, command=self.conexao_destino)
-        self.dconectar_button.configure(text="Conectar", width=15)
-        self.dconectar_button.grid(column=0, pady=10, row=11)
-        self.dalerta_button = ttk.Button()
+        self.pass_origin_entry = ttkb.Entry(self.origin_labelframe)
+        self.pass_origin_entry.configure(justify=tk.CENTER, show='*')
+        self.pass_origin_entry.grid(column=0, row=7)
 
-        # Banco de Destino - Message
-        self.dmensagem_message = tk.Message(self.bdestino_lframe, font=self.fonte_corpo)
-        self.dmensagem_message.configure(text="Desconectado",
-                                         width=100,
-                                         foreground='red',
-                                         relief=tk.FLAT,
-                                         borderwidth=1)
-        self.dmensagem_message.grid(column=0, row=12)
+        self.port_origin_label = ttkb.Label(self.origin_labelframe)
+        self.port_origin_label.configure(text="Porta", font=self.body_font)
+        self.port_origin_label.grid(column=0, padx=20, row=8, sticky=tk.W)
 
-        # Banco de Destino - Separator
-        self.sbanco_separator = ttk.Separator(self.conexoes_frame)
-        self.sbanco_separator.configure(orient=tk.VERTICAL)
-        self.sbanco_separator.place(anchor=tk.CENTER, height=350, x=465, y=230)
+        self.port_origin_entry = ttkb.Entry(self.origin_labelframe)
+        self.port_origin_entry.configure(justify=tk.CENTER, width=8)
+        self.port_origin_entry.grid(column=0, row=9, sticky=tk.W)
 
-        # Configurações de Produtos
-        self.configuracoes_frame = ttk.Frame(self.abas_notebook)
-        self.configuracoes_lframe = ttk.Labelframe(self.configuracoes_frame)
-        self.configuracoes_lframe.configure(height=100, labelanchor=tk.N, padding=20, text="Opções")
-        self.configuracoes_lframe.pack(anchor=tk.N, expand=1, fill=tk.BOTH, side=tk.TOP)
-        self.configuracoes_lframe.columnconfigure(0, weight=1)
-        self.configuracoes_lframe.columnconfigure(1, weight=1)
-        self.configuracoes_lframe.columnconfigure(2, weight=1)
-        self.configuracoes_lframe.columnconfigure(3, weight=1)
-        self.configuracoes_lframe.columnconfigure(4, weight=1)
-        self.configuracoes_frame.configure(height=200, padding=15, width=200)
-        self.configuracoes_frame.pack(side=tk.TOP)
-        self.abas_notebook.add(self.configuracoes_frame,
-                               compound=tk.TOP,
-                               state=tk.NORMAL,
-                               sticky=tk.NSEW,
-                               text="Configurações Gerais")
+        self.id_origin_label = ttkb.Label(self.origin_labelframe)
+        self.id_origin_label.configure(text="ID Filial", font=self.body_font)
+        self.id_origin_label.grid(column=0, row=8, sticky=tk.E, ipadx=6)
 
-        # Configurações de Produtos - Frame
-        self.grupoconfig1_frame = ttk.Frame(self.configuracoes_lframe)
-        self.grupoconfig1_frame.configure(height=250, padding=5)
-        self.grupoconfig1_frame.place(height=250, width=400, x=15, y=60)
+        self.id_origin_entry = ttkb.Entry(self.origin_labelframe)
+        self.id_origin_entry.configure(justify=tk.CENTER, width=8)
+        self.id_origin_entry.grid(column=0, row=9, sticky=tk.E)
 
-        self.grupoconfig2_frame = ttk.Frame(self.configuracoes_lframe)
-        self.grupoconfig2_frame.configure(height=250, padding=5)
-        self.grupoconfig2_frame.place(height=250, width=400, x=450, y=60)
+        self.conn_origin_button = ttkb.Button(self.origin_labelframe, command=self.conexao_origem)
+        self.conn_origin_button.configure(text="Conectar", width=15)
+        self.conn_origin_button.grid(column=0, pady=10, row=11)
 
-        self.principio_lframe = ttk.Labelframe(self.grupoconfig1_frame)
-        self.principio_lframe.configure(text="Principio Ativo", height=80, labelanchor=tk.N)
-        self.principio_lframe.pack(fill=tk.X)
+        self.alert_origin_button = ttkb.Button()
+        self.origin_message = tk.Message(self.origin_labelframe)
+        self.origin_message.configure(font=self.body_font, text="Desconectado", width=100, foreground='red')
+        self.origin_message.grid(column=0, row=12)
 
-        self.fabricante_lframe = ttk.Labelframe(self.grupoconfig2_frame)
-        self.fabricante_lframe.configure(text="Fabricante", height=80, labelanchor=tk.N)
-        self.fabricante_lframe.pack(fill=tk.X)
+        # CONNECTIONS[Destiny Database]
+        self.destiny_labelframe = ttkb.Labelframe(self.connections_frame)
+        self.destiny_labelframe.configure(labelanchor=tk.N, padding=20, text="Banco de Destino")
+        self.destiny_labelframe.grid(column=2, padx=50, row=0)
+        self.destiny_labelframe.columnconfigure(8, weight=1)
 
-        # Configurações de Produtos - Label
-        self.zeros_label = ttk.Label(self.configuracoes_lframe)
+        self.ip_destiny_label = ttkb.Label(self.destiny_labelframe)
+        self.ip_destiny_label.configure(text="Ip do Servidor", font=self.body_font)
+        self.ip_destiny_label.grid(column=0, row=0)
+
+        self.ip_destiny_entry = ttkb.Entry(self.destiny_labelframe)
+        self.ip_destiny_entry.configure(justify=tk.CENTER)
+        self.ip_destiny_entry.grid(column=0, row=1)
+
+        self.db_destiny_label = ttkb.Label(self.destiny_labelframe)
+        self.db_destiny_label.configure(text="Nome do Banco", font=self.body_font)
+        self.db_destiny_label.grid(column=0, row=2)
+
+        self.db_destiny_entry = ttkb.Entry(self.destiny_labelframe)
+        self.db_destiny_entry.configure(justify=tk.CENTER)
+        self.db_destiny_entry.grid(column=0, row=3)
+
+        self.user_destiny_label = ttkb.Label(self.destiny_labelframe)
+        self.user_destiny_label.configure(text="Usuário", font=self.body_font)
+        self.user_destiny_label.grid(column=0, row=4)
+
+        self.user_destiny_entry = ttkb.Entry(self.destiny_labelframe)
+        self.user_destiny_entry.configure(justify=tk.CENTER)
+        self.user_destiny_entry.grid(column=0, row=5)
+
+        self.pass_destiny_label = ttkb.Label(self.destiny_labelframe)
+        self.pass_destiny_label.configure(text="Senha", font=self.body_font)
+        self.pass_destiny_label.grid(column=0, row=6)
+
+        self.pass_destiny_entry = ttkb.Entry(self.destiny_labelframe)
+        self.pass_destiny_entry.configure(justify=tk.CENTER, show='*')
+        self.pass_destiny_entry.grid(column=0, row=7)
+
+        self.port_destiny_label = ttkb.Label(self.destiny_labelframe)
+        self.port_destiny_label.configure(text="Porta", font=self.body_font)
+        self.port_destiny_label.grid(column=0, padx=20, row=8, sticky=tk.W)
+
+        self.port_destiny_entry = ttkb.Entry(self.destiny_labelframe)
+        self.port_destiny_entry.configure(justify=tk.CENTER, width=8)
+        self.port_destiny_entry.grid(column=0, row=9, sticky=tk.W)
+
+        self.id_destiny_label = ttkb.Label(self.destiny_labelframe)
+        self.id_destiny_label.configure(text="ID Filial", font=self.body_font)
+        self.id_destiny_label.grid(column=0, row=8, sticky=tk.E, ipadx=6)
+
+        self.id_destiny_entry = ttkb.Entry(self.destiny_labelframe)
+        self.id_destiny_entry.configure(justify=tk.CENTER, width=8)
+        self.id_destiny_entry.grid(column=0, row=9, sticky=tk.E)
+
+        self.conn_destiny_button = ttkb.Button(self.destiny_labelframe, command=self.conexao_destino)
+        self.conn_destiny_button.configure(text="Conectar", width=15)
+        self.conn_destiny_button.grid(column=0, pady=10, row=11)
+
+        self.alert_destiny_button = ttkb.Button()
+        self.destiny_message = tk.Message(self.destiny_labelframe)
+        self.destiny_message.configure(font=self.body_font, text="Desconectado", width=100, foreground='red')
+        self.destiny_message.grid(column=0, row=12)
+
+        # CONNECTIONS[Separator]
+        self.database_separator = ttkb.Separator(self.connections_frame)
+        self.database_separator.configure(orient=tk.HORIZONTAL)
+        self.database_separator.place(anchor=tk.CENTER, height=350, x=465, y=230)
+
+        # SETTINGS
+        self.settings_frame = ttkb.Frame(self.tabs_notebook)
+        self.settings_frame.configure(padding=15)
+        self.settings_frame.pack()
+
+        self.tabs_notebook.add(self.settings_frame, text="Configurações Gerais")
+
+        self.settings_labelframe = ttkb.Labelframe(self.settings_frame)
+        self.settings_labelframe.configure(labelanchor=tk.N, padding=20, text="Opções")
+        self.settings_labelframe.pack(expand=True, fill=tk.BOTH)
+        self.settings_labelframe.columnconfigure(0, weight=1)
+        self.settings_labelframe.columnconfigure(1, weight=1)
+        self.settings_labelframe.columnconfigure(2, weight=1)
+        self.settings_labelframe.columnconfigure(3, weight=1)
+        self.settings_labelframe.columnconfigure(4, weight=1)
+
+        # SETTINGS[Top Options]
+        self.sel_product = tk.BooleanVar()
+        self.sel_product.set(False)
+        self.product_checkbutton = ttkb.Checkbutton(self.settings_labelframe, command=self.troca_opcao_produto)
+        self.product_checkbutton.configure(text="Produto", variable=self.sel_product)
+        self.product_checkbutton.grid(column=0, row=0)
+
+        self.sel_bars = tk.BooleanVar()
+        self.sel_bars.set(False)
+        self.bars_checkbutton = ttkb.Checkbutton(self.settings_labelframe)
+        self.bars_checkbutton.configure(text="Barras Adicional", state=tk.DISABLED, variable=self.sel_bars)
+        self.bars_checkbutton.grid(column=1, row=0)
+
+        self.sel_stock = tk.BooleanVar()
+        self.sel_stock.set(False)
+        self.stock_checkbutton = ttkb.Checkbutton(self.settings_labelframe)
+        self.stock_checkbutton.configure(text="Estoque", state=tk.DISABLED, variable=self.sel_stock)
+        self.stock_checkbutton.grid(column=2, row=0)
+
+        self.sel_partition = tk.BooleanVar()
+        self.sel_partition.set(False)
+        self.partition_checkbutton = ttkb.Checkbutton(self.settings_labelframe)
+        self.partition_checkbutton.configure(text="Lote", state=tk.DISABLED, variable=self.sel_partition)
+        self.partition_checkbutton.grid(column=3, row=0)
+
+        self.sel_price = tk.BooleanVar()
+        self.sel_price.set(False)
+        self.price_checkbutton = ttkb.Checkbutton(self.settings_labelframe)
+        self.price_checkbutton.configure(text="Preço Filial", state=tk.DISABLED, variable=self.sel_price)
+        self.price_checkbutton.grid(column=4, row=0)
+
+        # SETTINGS[Mid Options][Principle]
+        self.left_settings_frame = ttkb.Frame(self.settings_labelframe)
+        self.left_settings_frame.configure(padding=5)
+        self.left_settings_frame.place(height=250, width=400, x=15, y=60)
+
+        self.principle_labelframe = ttkb.Labelframe(self.left_settings_frame)
+        self.principle_labelframe.configure(text="Principio Ativo", height=80, labelanchor=tk.N)
+        self.principle_labelframe.pack(fill=tk.X)
+
+        self.sel_principle_desc = tk.BooleanVar()
+        self.sel_principle_desc.set(False)
+        self.principle_desc_checkbutton = ttkb.Checkbutton(self.principle_labelframe,
+                                                           command=self.troca_opcao_principio)
+        self.principle_desc_checkbutton.configure(text="Por Descrição", variable=self.sel_principle_desc)
+        self.principle_desc_checkbutton.place(x=25, y=22)
+
+        self.sel_principle_id = tk.BooleanVar()
+        self.sel_principle_id.set(False)
+        self.principle_id_checkbutton = ttkb.Checkbutton(self.principle_labelframe, command=self.troca_opcao_principio)
+        self.principle_id_checkbutton.configure(text="Por ID", variable=self.sel_principle_id)
+        self.principle_id_checkbutton.place(x=160, y=22)
+
+        self.principle_id_entry = ttkb.Entry(self.principle_labelframe)
+        self.principle_id_entry.configure(justify=tk.CENTER, width=5)
+        self.principle_id_entry.place(height=26, width=30, x=245, y=17)
+
+        self.principle_id_label = ttkb.Label(self.principle_labelframe)
+        self.principle_id_label.configure(text="Id de Destino")
+        self.principle_id_label.place(x=280, y=20)
+
+        # SETTINGS[Middle Options][Manufacturer]
+        self.right_settings_frame = ttkb.Frame(self.settings_labelframe)
+        self.right_settings_frame.configure(height=250, padding=5)
+        self.right_settings_frame.place(height=250, width=400, x=450, y=60)
+
+        self.manufacturer_labelframe = ttkb.Labelframe(self.right_settings_frame)
+        self.manufacturer_labelframe.configure(text="Fabricante", height=80, labelanchor=tk.N)
+        self.manufacturer_labelframe.pack(fill=tk.X)
+
+        self.sel_manufacturer_cnpj = tk.BooleanVar()
+        self.sel_manufacturer_cnpj.set(False)
+        self.manufacturer_cnpj_checkbutton = ttkb.Checkbutton(self.manufacturer_labelframe,
+                                                              command=self.troca_opcao_fabricante)
+        self.manufacturer_cnpj_checkbutton.configure(text="Por CNPJ", variable=self.sel_manufacturer_cnpj)
+        self.manufacturer_cnpj_checkbutton.place(x=25, y=22)
+
+        self.sel_manufacturer_id = tk.BooleanVar()
+        self.sel_manufacturer_id.set(False)
+        self.manufacturer_id_checkbutton = ttkb.Checkbutton(self.manufacturer_labelframe,
+                                                            command=self.troca_opcao_fabricante)
+        self.manufacturer_id_checkbutton.configure(text="Por ID", variable=self.sel_manufacturer_id)
+        self.manufacturer_id_checkbutton.place(x=145, y=22)
+
+        self.manufacturer_id_entry = ttkb.Entry(self.manufacturer_labelframe)
+        self.manufacturer_id_entry.configure(justify=tk.CENTER, width=5)
+        self.manufacturer_id_entry.place(height=26, width=30, x=245, y=17)
+
+        self.manufacturer_id_label = ttkb.Label(self.manufacturer_labelframe)
+        self.manufacturer_id_label.configure(text="Id de Destino")
+        self.manufacturer_id_label.place(x=280, y=20)
+
+        # SETTINGS[Bottom Options]
+        self.sel_productbar = tk.BooleanVar()
+        self.sel_productbar.set(False)
+        self.productbar_checkbutton = ttkb.Checkbutton(self.settings_labelframe)
+        self.productbar_checkbutton.configure(text="Não importar produtos com barras que iniciam com ",
+                                              variable=self.sel_productbar)
+        self.productbar_checkbutton.place(x=10, y=325)
+
+        self.sel_erased = tk.BooleanVar()
+        self.sel_erased.set(False)
+        self.erased_checkbutton = ttkb.Checkbutton(self.settings_labelframe)
+        self.erased_checkbutton.configure(text="Não importar registros marcados como apagados.",
+                                          variable=self.sel_erased)
+        self.erased_checkbutton.place(x=10, y=350)
+
+        self.zeros_label = ttkb.Label(self.settings_labelframe)
         self.zeros_label.configure(text="ou mais zero(s).")
-        self.zeros_label.place(anchor=tk.NW, x=415, y=322)
+        self.zeros_label.place(x=425, y=322)
 
-        self.id_fabricante_label = ttk.Label(self.fabricante_lframe)
-        self.id_fabricante_label.configure(text="Id de Destino")
-        self.id_fabricante_label.place(anchor=tk.NW, x=280, y=20)
+        self.value_zeros_spinbox = tk.StringVar(value='1')
+        self.zeros_spinbox = ttkb.Spinbox(self.settings_labelframe)
+        self.zeros_spinbox.configure(from_=1, to=12, textvariable=self.value_zeros_spinbox)
+        self.zeros_spinbox.place(width=50, x=370, y=317)
 
-        self.id_principio_label = ttk.Label(self.principio_lframe)
-        self.id_principio_label.configure(text="Id de Destino")
-        self.id_principio_label.place(anchor=tk.NW, x=280, y=20)
+        # SETTINGS[Separators]
+        self.top_separator = ttkb.Separator(self.settings_labelframe)
+        self.top_separator.configure(orient=tk.HORIZONTAL)
+        self.top_separator.place(anchor=tk.CENTER, width=850, x=430, y=40)
 
-        # Configurações de Produtos - Entry
-        self.id_fabricante_entry = ttk.Entry(self.fabricante_lframe, justify=tk.CENTER)
-        self.id_fabricante_entry.configure(width=5)
-        self.id_fabricante_entry.place(anchor=tk.NW, height=26, width=30, x=245, y=17)
+        self.bottom_separator = ttkb.Separator(self.settings_labelframe)
+        self.bottom_separator.configure(orient=tk.HORIZONTAL)
+        self.bottom_separator.place(anchor=tk.CENTER, width=850, x=430, y=310)
 
-        self.id_principio_entry = ttk.Entry(self.principio_lframe, justify=tk.CENTER)
-        self.id_principio_entry.configure(width=5)
-        self.id_principio_entry.place(anchor=tk.NW, height=26, width=30, x=245, y=17)
+        # PRODUCT GROUPS
+        self.product_groups_frame = ttkb.Frame(self.tabs_notebook)
+        self.product_groups_frame.configure(padding=5)
+        self.product_groups_frame.grid(column=0, row=0)
 
-        # Configurações de Produtos - Button
-        self.selprodutos_cbutton = tk.BooleanVar()
-        self.selprodutos_cbutton.set(False)
-        self.produtos_cbutton = ttk.Checkbutton(self.configuracoes_lframe,
-                                                variable=self.selprodutos_cbutton,
-                                                command=self.troca_opcao_produto)
-        self.produtos_cbutton.configure(text="Produto")
-        self.produtos_cbutton.grid(column=0, row=0)
+        self.tabs_notebook.add(self.product_groups_frame, text="Grupos de Produtos")
 
-        self.selbarras_cbutton = tk.BooleanVar()
-        self.selbarras_cbutton.set(False)
-        self.barras_cbutton = ttk.Checkbutton(self.configuracoes_lframe, variable=self.selbarras_cbutton)
-        self.barras_cbutton.configure(text="Barras Adicional", state=tk.DISABLED)
-        self.barras_cbutton.grid(column=1, row=0)
+        self.groups_frame = ttkb.Frame(self.product_groups_frame)
+        self.groups_frame.configure(padding=5)
+        self.groups_frame.pack(expand=True, fill=tk.BOTH)
 
-        self.selestoque_cbutton = tk.BooleanVar()
-        self.selestoque_cbutton.set(False)
-        self.estoque_cbutton = ttk.Checkbutton(self.configuracoes_lframe, variable=self.selestoque_cbutton)
-        self.estoque_cbutton.configure(text="Estoque", state=tk.DISABLED)
-        self.estoque_cbutton.grid(column=2, row=0)
+        # PRODUCT GROUPS[Origin Database]
+        self.groups_origin_labelframe = ttkb.Labelframe(self.groups_frame)
+        self.groups_origin_labelframe.configure(labelanchor=tk.N, text="Banco de Origem", borderwidth=0)
+        self.groups_origin_labelframe.pack(expand=True, fill=tk.BOTH, padx=15, pady=15, side=tk.LEFT)
+        self.groups_origin_labelframe.rowconfigure(0, weight=1)
+        self.groups_origin_labelframe.columnconfigure(0, weight=1)
 
-        self.sellotes_cbutton = tk.BooleanVar()
-        self.sellotes_cbutton.set(False)
-        self.lotes_cbutton = ttk.Checkbutton(self.configuracoes_lframe, variable=self.sellotes_cbutton)
-        self.lotes_cbutton.configure(text="Lote", state=tk.DISABLED)
-        self.lotes_cbutton.grid(column=3, row=0)
+        self.groups_origin_checkboxtreeview = CheckboxTreeview(self.groups_origin_labelframe)
+        self.groups_origin_checkboxtreeview.grid(column=0, row=0, padx=5, pady=5, sticky=tk.NSEW)
+        self.groups_origin_checkboxtreeview['columns'] = ('Novo ID', 'ID', 'Nome')
+        self.groups_origin_checkboxtreeview.column('#0', width=30, stretch=False)
+        self.groups_origin_checkboxtreeview.column('Novo ID', anchor=tk.CENTER, width=70, stretch=False)
+        self.groups_origin_checkboxtreeview.column('ID', anchor=tk.CENTER, width=30, stretch=False)
+        self.groups_origin_checkboxtreeview.column('Nome', anchor=tk.W, width=120, stretch=True)
+        self.groups_origin_checkboxtreeview.heading('#0', text='', anchor=tk.CENTER)
+        self.groups_origin_checkboxtreeview.heading('Novo ID', text='Novo ID', anchor=tk.CENTER)
+        self.groups_origin_checkboxtreeview.heading('ID', text='ID', anchor=tk.CENTER)
+        self.groups_origin_checkboxtreeview.heading('Nome', text='Nome', anchor=tk.W)
 
-        self.selpreco_filial_cbutton = tk.BooleanVar()
-        self.selpreco_filial_cbutton.set(False)
-        self.preco_filial_cbutton = ttk.Checkbutton(self.configuracoes_lframe, variable=self.selpreco_filial_cbutton)
-        self.preco_filial_cbutton.configure(text="Preço Filial", state=tk.DISABLED)
-        self.preco_filial_cbutton.grid(column=4, row=0)
+        self.sel_erased_origin_groups = tk.BooleanVar()
+        self.sel_erased_origin_groups.set(False)
+        self.erased_groups_origin_checkbutton = ttkb.Checkbutton(self.groups_origin_labelframe,
+                                                                 command=self.lista_grupo_origem)
+        self.erased_groups_origin_checkbutton.configure(text="Não mostrar grupos apagados",
+                                                        variable=self.sel_erased_origin_groups)
+        self.erased_groups_origin_checkbutton.grid(column=0, row=1, sticky=tk.W)
 
-        self.seldesconsiderar_prod_cbutton = tk.BooleanVar()
-        self.seldesconsiderar_prod_cbutton.set(False)
-        self.desconsiderar_prod_cbutton = ttk.Checkbutton(self.configuracoes_lframe,
-                                                          variable=self.seldesconsiderar_prod_cbutton)
-        self.desconsiderar_prod_cbutton.configure(text="Não importar produtos com barras que iniciam com ")
-        self.desconsiderar_prod_cbutton.place(anchor=tk.NW, y=325)
+        self.sel_all_origin_groups = tk.BooleanVar()
+        self.sel_all_origin_groups.set(False)
+        self.all_origin_groups_checkbutton = ttkb.Checkbutton(self.groups_origin_labelframe,
+                                                              command=self.marca_grupos_origem)
+        self.all_origin_groups_checkbutton.configure(text="Selecionar todos",
+                                                     variable=self.sel_all_origin_groups)
+        self.all_origin_groups_checkbutton.grid(column=0, row=1, sticky=tk.E)
 
-        self.seldesconsiderar_apagados_cbutton = tk.BooleanVar()
-        self.seldesconsiderar_apagados_cbutton.set(False)
-        self.desconsiderar_apagados_cbutton = ttk.Checkbutton(self.configuracoes_lframe,
-                                                              variable=self.seldesconsiderar_apagados_cbutton)
-        self.desconsiderar_apagados_cbutton.configure(text="Não importar registros marcados como apagados.")
-        self.desconsiderar_apagados_cbutton.place(anchor=tk.NW, y=350)
+        # PRODUCT GROUPS[Destiny Database]
+        self.groups_destiny_labelframe = ttkb.Labelframe(self.groups_frame)
+        self.groups_destiny_labelframe.configure(labelanchor=tk.N, text="Banco de Destino", borderwidth=0)
+        self.groups_destiny_labelframe.pack(expand=True, fill=tk.BOTH, padx=15, pady=15, side=tk.LEFT)
+        self.groups_destiny_labelframe.rowconfigure(0, weight=1)
+        self.groups_destiny_labelframe.columnconfigure(0, weight=1)
 
-        self.selfabricante_cnpj_cbutton = tk.BooleanVar()
-        self.selfabricante_cnpj_cbutton.set(False)
-        self.fabricante_cnpj_cbutton = ttk.Checkbutton(self.fabricante_lframe,
-                                                       variable=self.selfabricante_cnpj_cbutton,
-                                                       command=self.troca_opcao_fabricante)
-        self.fabricante_cnpj_cbutton.configure(text="Por CNPJ")
-        self.fabricante_cnpj_cbutton.place(anchor=tk.NW, x=25, y=22)
+        self.groups_destiny_checkboxtreeview = CheckboxTreeview(self.groups_destiny_labelframe)
+        self.groups_destiny_checkboxtreeview.grid(column=0, padx=5, pady=5, row=0, sticky=tk.NSEW)
+        self.groups_destiny_checkboxtreeview['columns'] = ('ID', 'Nome')
+        self.groups_destiny_checkboxtreeview.column('#0', width=0, stretch=False)
+        self.groups_destiny_checkboxtreeview.column('ID', anchor=tk.CENTER, width=50, stretch=False)
+        self.groups_destiny_checkboxtreeview.column('Nome', anchor=tk.W, width=120, stretch=True)
+        self.groups_destiny_checkboxtreeview.heading('#0', text='', anchor=tk.CENTER)
+        self.groups_destiny_checkboxtreeview.heading('ID', text='ID', anchor=tk.CENTER)
+        self.groups_destiny_checkboxtreeview.heading('Nome', text='Nome', anchor=tk.W)
 
-        self.selfabricante_id_cbutton = tk.BooleanVar()
-        self.selfabricante_id_cbutton.set(False)
-        self.fabricante_id_cbutton = ttk.Checkbutton(self.fabricante_lframe,
-                                                     variable=self.selfabricante_id_cbutton,
-                                                     command=self.troca_opcao_fabricante)
-        self.fabricante_id_cbutton.configure(text="Por ID")
-        self.fabricante_id_cbutton.place(anchor=tk.NW, x=145, y=22)
+        self.sel_erased_destiny_groups = tk.BooleanVar()
+        self.sel_erased_destiny_groups.set(False)
+        self.erased_groups_origin_checkbutton = ttkb.Checkbutton(self.groups_destiny_labelframe,
+                                                                 command=self.lista_grupo_destino)
+        self.erased_groups_origin_checkbutton.configure(text="Não mostrar grupos apagados",
+                                                        variable=self.sel_erased_destiny_groups)
+        self.erased_groups_origin_checkbutton.grid(column=0, row=1, sticky=tk.W)
 
-        self.selprincipio_desc_cbutton = tk.BooleanVar()
-        self.selprincipio_desc_cbutton.set(False)
-        self.principio_desc_cbutton = ttk.Checkbutton(self.principio_lframe,
-                                                      variable=self.selprincipio_desc_cbutton,
-                                                      command=self.troca_opcao_principio)
-        self.principio_desc_cbutton.configure(text="Por Descrição")
-        self.principio_desc_cbutton.place(anchor=tk.NW, x=25, y=22)
+        # SUPPLIER & BILLS TO PAY
+        self.suppliers_frame = ttkb.Frame(self.tabs_notebook)
+        self.suppliers_frame.configure(padding=15)
+        self.suppliers_frame.pack(side=tk.TOP)
 
-        self.selprincipio_id_cbutton = tk.BooleanVar()
-        self.selprincipio_id_cbutton.set(False)
-        self.principio_id_cbutton = ttk.Checkbutton(self.principio_lframe,
-                                                    variable=self.selprincipio_id_cbutton,
-                                                    command=self.troca_opcao_principio)
-        self.principio_id_cbutton.configure(text="Por ID")
-        self.principio_id_cbutton.place(anchor=tk.NW, x=160, y=22)
+        self.tabs_notebook.add(self.suppliers_frame, text="Fornecedores e Pagar")
 
-        # Configurações de Produtos - Spinbox
-        self.valor_zeros_spinbox = tk.StringVar(value='1')
-        self.zeros_spinbox = ttk.Spinbox(self.configuracoes_lframe,
-                                         from_=1,
-                                         to=12,
-                                         textvariable=self.valor_zeros_spinbox)
-        self.zeros_spinbox.place(anchor=tk.NW, width=50, x=360, y=317)
+        self.suppliers_options_labelframe = ttkb.Labelframe(self.suppliers_frame)
+        self.suppliers_options_labelframe.configure(labelanchor=tk.N, padding=15, text="Opções")
+        self.suppliers_options_labelframe.pack(anchor=tk.CENTER, fill=tk.X, side=tk.TOP)
+        self.suppliers_options_labelframe.columnconfigure(tk.ALL, weight=1)
 
-        # Configurações de Produtos - Separator
-        self.config1_separator = ttk.Separator(self.configuracoes_lframe)
-        self.config1_separator.configure(orient=tk.HORIZONTAL)
-        self.config1_separator.place(anchor=tk.CENTER, width=850, x=430, y=40)
-        self.config2_separator = ttk.Separator(self.configuracoes_lframe)
-        self.config2_separator.configure(orient=tk.HORIZONTAL)
-        self.config2_separator.place(anchor=tk.CENTER, width=850, x=430, y=310)
+        self.suppliers_checkboxtreeview = CheckboxTreeview(self.suppliers_frame)
+        self.suppliers_checkboxtreeview.pack(expand=True, fill=tk.X, side=tk.BOTTOM, ipady=5)
+        self.suppliers_checkboxtreeview.configure(height=15)
+        self.suppliers_checkboxtreeview['columns'] = ('ID', 'Nome')
+        self.suppliers_checkboxtreeview.column('#0', width=40, stretch=False)
+        self.suppliers_checkboxtreeview.column('ID', anchor=tk.CENTER, width=120, stretch=False)
+        self.suppliers_checkboxtreeview.column('Nome', anchor=tk.W, width=120, stretch=True)
+        self.suppliers_checkboxtreeview.heading('#0', text='', anchor=tk.CENTER)
+        self.suppliers_checkboxtreeview.heading('ID', text='ID', anchor=tk.CENTER)
+        self.suppliers_checkboxtreeview.heading('Nome', text='Nome', anchor=tk.W)
 
-        # Grupos de Produtos
-        self.grupo_prod_frame = ttk.Frame(self.abas_notebook)
-        self.grupo_prod_frame.configure(height=200, width=200, padding=5)
-        self.grupo_prod_frame.grid(column=0, row=0, sticky=tk.NSEW)
+        self.sel_suppliers = tk.BooleanVar()
+        self.sel_suppliers.set(False)
+        self.suppliers_checkbutton = ttkb.Checkbutton(self.suppliers_options_labelframe)
+        self.suppliers_checkbutton.configure(text="Fornecedores", variable=self.sel_suppliers)
+        self.suppliers_checkbutton.grid(column=0, row=0, padx=160)
 
-        self.abas_notebook.add(self.grupo_prod_frame, sticky=tk.NSEW, text="Grupos de Produtos")
+        self.sel_bills = tk.BooleanVar()
+        self.sel_bills.set(False)
+        self.bills_checkbutton = ttkb.Checkbutton(self.suppliers_options_labelframe)
+        self.bills_checkbutton.configure(text="Pagar", variable=self.sel_bills)
+        self.bills_checkbutton.grid(column=1, row=0, padx=160)
 
-        self.grupos_frame = ttk.Frame(self.grupo_prod_frame)
-        self.grupos_frame.configure(height=200, width=200, padding=5)
-        self.grupos_frame.pack(side=tk.TOP, expand=1, fill=tk.BOTH)
+        self.sel_all_suppliers = tk.BooleanVar()
+        self.sel_all_suppliers.set(False)
+        self.all_suppliers_checkbutton = ttkb.Checkbutton(self.suppliers_frame, command=self.marca_fornecedores)
+        self.all_suppliers_checkbutton.configure(text="Selecionar todos", variable=self.sel_all_suppliers)
+        self.all_suppliers_checkbutton.place(x=770, y=413)
 
-        # Grupos de Produtos - LabelFrame
-        self.gr_prod_origem_lframe = ttk.Labelframe(self.grupos_frame, borderwidth=0)
-        self.gr_prod_origem_lframe.configure(height=200, labelanchor=tk.N, text="Banco de Origem", width=200)
-        self.gr_prod_origem_lframe.pack(anchor=tk.W, expand=1, fill=tk.BOTH, padx=15, pady=15, side=tk.LEFT)
-        self.gr_prod_origem_lframe.rowconfigure(0, weight=1)
-        self.gr_prod_origem_lframe.columnconfigure(0, weight=1)
+        # COMPANIES/CUSTOMERS & ACCOUNTS RECEIVABLE
+        self.companies_frame = ttkb.Frame(self.tabs_notebook)
+        self.companies_frame.configure(padding=15)
+        self.companies_frame.pack(side=tk.TOP)
 
-        self.gr_prod_destino_lframe = ttk.Labelframe(self.grupos_frame, borderwidth=0)
-        self.gr_prod_destino_lframe.configure(height=200, labelanchor=tk.N, text="Banco de Destino", width=200)
-        self.gr_prod_destino_lframe.pack(anchor=tk.W, expand=1, fill=tk.BOTH, padx=15, pady=15, side=tk.LEFT)
-        self.gr_prod_destino_lframe.rowconfigure(0, weight=1)
-        self.gr_prod_destino_lframe.columnconfigure(0, weight=1)
+        self.tabs_notebook.add(self.companies_frame, text="Empresas e Clientes")
 
-        # Grupos de Produtos - CheckboxTreeView
-        self.gr_prod_origem_treeview = CheckboxTreeview(self.gr_prod_origem_lframe)
-        self.gr_prod_origem_treeview.grid(column=0, padx=5, pady=5, row=0, sticky=tk.NSEW)
-        self.gr_prod_origem_treeview['columns'] = ('Novo ID', 'ID', 'Nome')
-        self.gr_prod_origem_treeview.column('#0', width=30, stretch=False)
-        self.gr_prod_origem_treeview.column('Novo ID', anchor=tk.CENTER, width=70, stretch=False)
-        self.gr_prod_origem_treeview.column('ID', anchor=tk.CENTER, width=30, stretch=False)
-        self.gr_prod_origem_treeview.column('Nome', anchor=tk.W, width=120, stretch=True)
-        self.gr_prod_origem_treeview.heading('#0', text='', anchor=tk.CENTER)
-        self.gr_prod_origem_treeview.heading('Novo ID', text='Novo ID', anchor=tk.CENTER)
-        self.gr_prod_origem_treeview.heading('ID', text='ID', anchor=tk.CENTER)
-        self.gr_prod_origem_treeview.heading('Nome', text='Nome', anchor=tk.W)
+        self.companies_options_labelframe = ttkb.Labelframe(self.companies_frame)
+        self.companies_options_labelframe.configure(labelanchor=tk.N, padding=15, text="Opções")
+        self.companies_options_labelframe.pack(anchor=tk.CENTER, fill=tk.X, side=tk.TOP)
+        self.companies_options_labelframe.columnconfigure(tk.ALL, weight=1)
 
-        self.gr_prod_destino_treeview = CheckboxTreeview(self.gr_prod_destino_lframe)
-        self.gr_prod_destino_treeview.grid(column=0, padx=5, pady=5, row=0, sticky=tk.NSEW)
-        self.gr_prod_destino_treeview['columns'] = ('ID', 'Nome')
-        self.gr_prod_destino_treeview.column('#0', width=0, stretch=False)
-        self.gr_prod_destino_treeview.column('ID', anchor=tk.CENTER, width=50, stretch=False)
-        self.gr_prod_destino_treeview.column('Nome', anchor=tk.W, width=120, stretch=True)
-        self.gr_prod_destino_treeview.heading('#0', text='')
-        self.gr_prod_destino_treeview.heading('ID', text='ID', anchor=tk.CENTER)
-        self.gr_prod_destino_treeview.heading('Nome', text='Nome', anchor=tk.W)
+        self.companies_checkboxtreeview = CheckboxTreeview(self.companies_frame)
+        self.companies_checkboxtreeview.pack(expand=1, fill=tk.X, side=tk.BOTTOM, ipady=5)
+        self.companies_checkboxtreeview.configure(height=15)
+        self.companies_checkboxtreeview['columns'] = ('ID', 'Nome')
+        self.companies_checkboxtreeview.column('#0', width=40, stretch=False)
+        self.companies_checkboxtreeview.column('ID', anchor=tk.CENTER, width=120, stretch=False)
+        self.companies_checkboxtreeview.column('Nome', anchor=tk.W, width=120, stretch=True)
+        self.companies_checkboxtreeview.heading('#0', text='', anchor=tk.CENTER)
+        self.companies_checkboxtreeview.heading('ID', text='ID', anchor=tk.CENTER)
+        self.companies_checkboxtreeview.heading('Nome', text='Nome', anchor=tk.W)
 
-        # Grupos de Produtos - CheckButton
-        self.selapagado_grupo_origem_cbutton = tk.BooleanVar()
-        self.selapagado_grupo_origem_cbutton.set(False)
-        self.apagado_grupo_origem_cbutton = ttk.Checkbutton(self.gr_prod_origem_lframe,
-                                                            variable=self.selapagado_grupo_origem_cbutton,
-                                                            command=self.lista_grupo_origem)
-        self.apagado_grupo_origem_cbutton.configure(text="Não mostrar grupos apagados")
-        self.apagado_grupo_origem_cbutton.grid(column=0, row=1, sticky=tk.W)
+        self.sel_companies = tk.BooleanVar()
+        self.sel_companies.set(False)
+        self.companies_checkbutton = ttkb.Checkbutton(self.companies_options_labelframe)
+        self.companies_checkbutton.configure(text="Empresas e Clientes", variable=self.sel_companies)
+        self.companies_checkbutton.grid(column=0, row=0, padx=160)
 
-        self.seltodos_grp_origem_cbutton = tk.BooleanVar()
-        self.seltodos_grp_origem_cbutton.set(False)
-        self.todos_grp_origem_cbutton = ttk.Checkbutton(self.gr_prod_origem_lframe,
-                                                        variable=self.seltodos_grp_origem_cbutton,
-                                                        command=self.marca_grupos_origem)
-        self.todos_grp_origem_cbutton.configure(text="Selecionar todos")
-        self.todos_grp_origem_cbutton.grid(column=0, row=1, sticky=tk.E)
+        self.sel_accounts_receivable = tk.BooleanVar()
+        self.sel_accounts_receivable.set(False)
+        self.accounts_receivable_checkbutton = ttkb.Checkbutton(self.companies_options_labelframe)
+        self.accounts_receivable_checkbutton.configure(text="Receber", variable=self.sel_accounts_receivable)
+        self.accounts_receivable_checkbutton.grid(column=1, row=0, padx=130)
 
-        self.selapagado_grupo_destino_cbutton = tk.BooleanVar()
-        self.selapagado_grupo_destino_cbutton.set(False)
-        self.apagado_grupo_destino_cbutton = ttk.Checkbutton(self.gr_prod_destino_lframe,
-                                                             variable=self.selapagado_grupo_destino_cbutton,
-                                                             command=self.lista_grupo_destino)
-        self.apagado_grupo_destino_cbutton.configure(text="Não mostrar grupos apagados")
-        self.apagado_grupo_destino_cbutton.grid(column=0, row=1, sticky=tk.W)
+        self.sel_all_companies = tk.BooleanVar()
+        self.sel_all_companies.set(False)
+        self.all_companies_checkbutton = ttkb.Checkbutton(self.companies_frame, command=self.marca_empresas)
+        self.all_companies_checkbutton.configure(text="Selecionar todos", variable=self.sel_all_companies)
+        self.all_companies_checkbutton.place(x=770, y=413)
 
-        # Fornecedores e Pagar
-        self.fornecedores_frame = ttk.Frame(self.abas_notebook)
-        self.fornecedores_frame.configure(height=200, padding=15, width=200)
-        self.fornecedores_frame.pack(side=tk.TOP)
-        self.abas_notebook.add(self.fornecedores_frame, text="Fornecedores e Pagar")
-        self.opcoes_fornecedores_frame = ttk.Labelframe(self.fornecedores_frame)
-        self.opcoes_fornecedores_frame.configure(height=80, width=400, labelanchor=tk.N, padding=15, text="Opções")
-        self.opcoes_fornecedores_frame.pack(anchor=tk.CENTER, fill=tk.X, side=tk.TOP)
-        self.opcoes_fornecedores_frame.columnconfigure(tk.ALL, weight=1)
-
-        # Fornecedores e Pagar - Treeview
-        self.fornecedores_treeview = CheckboxTreeview(self.fornecedores_frame)
-        self.fornecedores_treeview.pack(expand=1, fill=tk.X, side=tk.BOTTOM, anchor=tk.N, ipady=5)
-        self.fornecedores_treeview.configure(height=13)
-        self.fornecedores_treeview['columns'] = ('ID', 'Nome')
-        self.fornecedores_treeview.column('#0', width=40, stretch=False)
-        self.fornecedores_treeview.column('ID', anchor=tk.CENTER, width=120, stretch=False)
-        self.fornecedores_treeview.column('Nome', anchor=tk.W, width=120, stretch=True)
-        self.fornecedores_treeview.heading('#0', text='', anchor=tk.CENTER)
-        self.fornecedores_treeview.heading('ID', text='ID', anchor=tk.CENTER)
-        self.fornecedores_treeview.heading('Nome', text='Nome', anchor=tk.W)
-
-        # Fornecedores e Pagar - Button
-        self.selfornecedores_cbutton = tk.BooleanVar()
-        self.selfornecedores_cbutton.set(False)
-        self.fornecedores_cbutton = ttk.Checkbutton(self.opcoes_fornecedores_frame,
-                                                    variable=self.selfornecedores_cbutton)
-        self.fornecedores_cbutton.configure(text="Fornecedores")
-        self.fornecedores_cbutton.grid(column=0, row=0, sticky=tk.W, padx=160)
-
-        self.selpagar_cbutton = tk.BooleanVar()
-        self.selpagar_cbutton.set(False)
-        self.pagar_cbutton = ttk.Checkbutton(self.opcoes_fornecedores_frame,
-                                             variable=self.selpagar_cbutton)
-        self.pagar_cbutton.configure(text="Pagar")
-        self.pagar_cbutton.grid(column=1, row=0, sticky=tk.E, padx=160)
-
-        self.seltodos_fornecedores_cbutton = tk.BooleanVar()
-        self.seltodos_fornecedores_cbutton.set(False)
-        self.todos_fornecedores_cbutton = ttk.Checkbutton(self.fornecedores_frame,
-                                                          variable=self.seltodos_fornecedores_cbutton,
-                                                          command=self.marca_fornecedores)
-        self.todos_fornecedores_cbutton.configure(text="Selecionar todos")
-        self.todos_fornecedores_cbutton.place(anchor=tk.NW, x=770, y=413)
-
-        # Empresas e Clientes
-        self.empresas_frame = ttk.Frame(self.abas_notebook)
-        self.empresas_frame.configure(height=200, padding=15, width=200)
-        self.empresas_frame.pack(side=tk.TOP)
-        self.abas_notebook.add(self.empresas_frame, text=" Empresas e Clientes ")
-        self.opcoesempresas_frame = ttk.Labelframe(self.empresas_frame)
-        self.opcoesempresas_frame.configure(height=80, width=400, labelanchor=tk.N, padding=15, text="Opções")
-        self.opcoesempresas_frame.pack(anchor=tk.CENTER, fill=tk.X, side=tk.TOP)
-        self.opcoesempresas_frame.columnconfigure("all", weight=1)
-
-        # Empresas e Clientes - Treeview
-        self.empresas_treeview = CheckboxTreeview(self.empresas_frame)
-        self.empresas_treeview.pack(expand=1, fill=tk.X, side=tk.BOTTOM, anchor=tk.N, ipady=5)
-        self.empresas_treeview.configure(height=13)
-        self.empresas_treeview['columns'] = ('ID', 'Nome')
-        self.empresas_treeview.column('#0', width=40, stretch=False)
-        self.empresas_treeview.column('ID', anchor=tk.CENTER, width=120, stretch=False)
-        self.empresas_treeview.column('Nome', anchor=tk.W, width=120, stretch=True)
-        self.empresas_treeview.heading('#0', text='', anchor=tk.CENTER)
-        self.empresas_treeview.heading('ID', text='ID', anchor=tk.CENTER)
-        self.empresas_treeview.heading('Nome', text='Nome', anchor=tk.W)
-
-        # Empresas e Clientes - Button
-        self.selempresas_cbutton = tk.BooleanVar()
-        self.selempresas_cbutton.set(False)
-        self.empresas_cbutton = ttk.Checkbutton(self.opcoesempresas_frame,
-                                                variable=self.selempresas_cbutton)
-        self.empresas_cbutton.configure(text="Empresas e Clientes")
-        self.empresas_cbutton.grid(column=0, row=0, sticky=tk.W, padx=160)
-
-        self.selreceber_cbutton = tk.BooleanVar()
-        self.selreceber_cbutton.set(False)
-        self.receber_cbutton = ttk.Checkbutton(self.opcoesempresas_frame,
-                                               variable=self.selreceber_cbutton)
-        self.receber_cbutton.configure(text="Receber")
-        self.receber_cbutton.grid(column=1, row=0, sticky=tk.E, padx=130)
-
-        self.seltodosempresas_cbutton = tk.BooleanVar()
-        self.seltodosempresas_cbutton.set(False)
-        self.todosempresas_cbutton = ttk.Checkbutton(self.empresas_frame,
-                                                     variable=self.seltodosempresas_cbutton,
-                                                     command=self.marca_empresas)
-        self.todosempresas_cbutton.configure(text="Selecionar todos")
-        self.todosempresas_cbutton.place(anchor=tk.NW, x=770, y=413)
-
-        # Logs
-        self.logs_frame = ttk.Frame(self.abas_notebook)
-        self.logs_frame.configure(height=200, padding=15, width=200)
+        # LOGS
+        self.logs_frame = ttkb.Frame(self.tabs_notebook)
+        self.logs_frame.configure(padding=15)
         self.logs_frame.pack(side=tk.TOP)
-        self.abas_notebook.add(self.logs_frame, text="Execução e Logs")
-        self.abas_notebook.configure(height=450, padding=5, width=800)
-        self.abas_notebook.grid(column=1, row=0, sticky=tk.E)
 
-        # Logs - ScrolledText
-        self.logs_scrtext = ScrolledText(self.logs_frame)
-        self.logs_scrtext.configure(borderwidth=5, font=self.fonte_corpo)
-        self.logs_scrtext.place(anchor=tk.NW, width=905, height=383, x=0, y=0)
+        self.tabs_notebook.add(self.logs_frame, text="Execução e Logs")
 
-        # Logs - Button
-        self.iniciar_button = ttk.Button(self.logs_frame, command=self.iniciar)
-        self.iniciar_button.configure(text="Iniciar", width=20)
-        self.iniciar_button.place(anchor=tk.NW, height=30, x=30, y=395)
+        self.tabs_notebook.configure(padding=5)
+        self.tabs_notebook.grid(column=1, row=0)
 
-        # Logs - ProgressBar
-        self.progressbar = ttk.Progressbar(self.logs_frame, mode='determinate', bootstyle='success')
+        self.logs_scrolledtext = ScrolledText(self.logs_frame)
+        self.logs_scrolledtext.configure(borderwidth=5, font=self.body_font)
+        self.logs_scrolledtext.place(width=905, height=383, x=0, y=0)
+
+        self.start_button = ttkb.Button(self.logs_frame, command=self.iniciar)
+        self.start_button.configure(text="Iniciar", width=20)
+        self.start_button.place(height=30, x=30, y=400)
+
+        self.progressbar = ttkb.Progressbar(self.logs_frame, mode='determinate')
         self.progressbar.configure(length=600, orient=tk.HORIZONTAL)
-        self.progressbar.place(anchor=tk.NW, width=470, x=250, y=404)
+        self.progressbar.place(width=500, x=250, y=410)
 
-        # Documentação
-        self.documentacao_frame = ttk.Frame(self.abas_notebook)
-        self.documentacao_frame.configure(height=200, padding=15, width=200)
-        self.documentacao_frame.pack(side=tk.TOP)
-        self.abas_notebook.add(self.documentacao_frame, text="Documentação")
-        self.abas_notebook.configure(height=450, padding=5, width=800)
+        # DOCUMENTATION
+        self.documentation_frame = ttkb.Frame(self.tabs_notebook)
+        self.documentation_frame.configure(padding=15)
+        self.documentation_frame.pack(side=tk.TOP)
 
-        # Documentação - Text
-        self.documentacao_text = ScrolledText(self.documentacao_frame)
-        self.documentacao_text.configure(borderwidth=5, font=self.fonte_corpo)
-        self.documentacao_text.insert(tk.END, documentacao.informacao_doc)
-        self.documentacao_text.configure(state=tk.DISABLED)
-        self.documentacao_text.pack(fill=tk.BOTH)
+        self.tabs_notebook.add(self.documentation_frame, text="Documentação")
+        self.tabs_notebook.configure(padding=5)
 
-        # Logo
-        self.logo_frame = ttk.Frame(self.main_frame)
-        self.img = ImageTk.PhotoImage(Image.open('imgs/integrabanner.png'))
-        self.imglogo_label = ttk.Label(self.logo_frame, image=self.img)
-        self.imglogo_label.pack(anchor=tk.E, side=tk.TOP)
+        self.documentation_scrolledtext = ScrolledText(self.documentation_frame)
+        self.documentation_scrolledtext.configure(borderwidth=5, font=self.body_font)
+        self.documentation_scrolledtext.insert(tk.END, documentacao.informacao_doc)
+        self.documentation_scrolledtext.configure(state=tk.DISABLED)
+        self.documentation_scrolledtext.pack(fill=tk.BOTH)
+
+        # LOGO BANNER
+        self.logo_frame = ttkb.Frame(self.main_frame)
         self.logo_frame.configure(height=400, width=400)
-        self.logo_frame.grid(column=0, row=0, sticky=tk.W)
+        self.logo_frame.grid(column=0, row=0)
 
-        # Binds
-        self.gr_prod_origem_treeview.bind("<Double-1>", self.duplo_clique_grp)
+        self.logo_image = ImageTk.PhotoImage(Image.open('imgs/integrabanner.png'))
+
+        self.logo_image_label = ttkb.Label(self.logo_frame, image=self.logo_image)
+        self.logo_image_label.pack()
+
+        # BINDS
+        self.groups_origin_checkboxtreeview.bind("<Double-1>", self.double_click)
 
     # Métodos de Binds.
     @staticmethod
-    def fora_foco(event):
+    def focus_out(event):
         event.widget.destroy()
 
-    def duplo_clique_grp(self, event):
+    def double_click(self, event):
 
-        regiao_clique = self.gr_prod_origem_treeview.identify_region(event.x, event.y)
+        regiao_clique = self.groups_origin_checkboxtreeview.identify_region(event.x, event.y)
 
         if regiao_clique not in ("tree", "cell"):
             return
 
-        coluna = self.gr_prod_origem_treeview.identify_column(event.x)
+        coluna = self.groups_origin_checkboxtreeview.identify_column(event.x)
         index_coluna = int(coluna[1:]) - 1
-        iid_selecionado = self.gr_prod_origem_treeview.focus()
-        valores_selecionados = self.gr_prod_origem_treeview.item(iid_selecionado)
+        iid_selecionado = self.groups_origin_checkboxtreeview.focus()
+        valores_selecionados = self.groups_origin_checkboxtreeview.item(iid_selecionado)
 
+        linha_selecionada = None
         if coluna != '#1':
             print("Coluna inválida")
         else:
             linha_selecionada = valores_selecionados.get('values')[index_coluna]
             print(linha_selecionada)
 
-        caixa_coluna = self.gr_prod_origem_treeview.bbox(iid_selecionado, coluna)
-        editavel_entry = ttk.Entry(self.gr_prod_origem_treeview)
+        caixa_coluna = self.groups_origin_checkboxtreeview.bbox(iid_selecionado, coluna)
+        editavel_entry = ttk.Entry(self.groups_origin_checkboxtreeview)
         editavel_entry.identificador_coluna = index_coluna
         editavel_entry.identificador_item_iid = iid_selecionado
         editavel_entry.insert(0, linha_selecionada)
         editavel_entry.select_range(0, tk.END)
 
         editavel_entry.focus()
-        editavel_entry.bind("<FocusOut>", self.fora_foco)
-        editavel_entry.bind("<Return>", self.pressiona_enter_grp)
+        editavel_entry.bind("<FocusOut>", self.focus_out)
+        editavel_entry.bind("<Return>", self.press_enter)
 
         editavel_entry.place(x=caixa_coluna[0],
                              y=caixa_coluna[1],
                              w=caixa_coluna[2],
                              h=caixa_coluna[3])
 
-    def pressiona_enter_grp(self, event):
+    def press_enter(self, event):
 
-        novo_texto = event.widget.get()
+        new_text = event.widget.get()
         iid_selecionado = event.widget.identificador_item_iid
         index_coluna = event.widget.identificador_coluna
 
         if index_coluna == 0:
-            valor_atual = self.gr_prod_origem_treeview.item(iid_selecionado).get('values')
-            valor_atual[index_coluna] = novo_texto
-            self.gr_prod_origem_treeview.item(iid_selecionado, values=valor_atual)
+            valor_atual = self.groups_origin_checkboxtreeview.item(iid_selecionado).get('values')
+            valor_atual[index_coluna] = new_text
+            self.groups_origin_checkboxtreeview.item(iid_selecionado, values=valor_atual)
         event.widget.destroy()
 
     # Métodos de conexão.
     def conexao_origem(self):
 
-        self.dados_origem = {'host': self.oipservidor_entry.get(),
-                             'user': self.ousuario_entry.get(),
-                             'password': self.osenha_entry.get(),
-                             'database': self.obanco_entry.get(),
-                             'port': int(self.oporta_entry.get())}
+        self.dados_origem = {'host': self.ip_origin_entry.get(),
+                             'user': self.user_origin_entry.get(),
+                             'password': self.pass_origin_entry.get(),
+                             'database': self.db_origin_entry.get(),
+                             'port': int(self.port_origin_entry.get())}
 
         iterador = IteradorSql()
         retorno_origem = iterador.conexao_origem(dados_origem=self.dados_origem)
 
         if retorno_origem['retorno'] == 'Conectado':
-            self.oalerta_button.destroy()
-            self.omensagem_message.configure(text="Conectado", foreground='green')
+            self.alert_origin_button.destroy()
+            self.origin_message.configure(text="Conectado", foreground='green')
             self.lista_grupo_origem()
             self.lista_empresas()
             self.lista_fornecedores()
 
         elif retorno_origem['retorno'] == 'pymysql.err.OperationalError':
-            self.oalerta_button.destroy()
-            self.omensagem_message.configure(text="Falha", foreground='orange')
+            self.alert_origin_button.destroy()
+            self.origin_message.configure(text="Falha", foreground='orange')
             self.coderro = retorno_origem['codigo']
             self.descerro = retorno_origem['descricao']
             self.obotao_alerta(self.coderro, self.descerro)
-            self.oalerta_button.place(anchor="w", height=22, width=22, x=30, y=323)
+            self.alert_origin_button.place(anchor="w", height=22, width=22, x=30, y=323)
 
         else:
-            self.oalerta_button.destroy()
-            self.omensagem_message.configure(text="Falha", foreground='orange')
+            self.alert_origin_button.destroy()
+            self.origin_message.configure(text="Falha", foreground='orange')
             self.coderro = 20
             self.descerro = retorno_origem['descricao']
             self.obotao_alerta(self.coderro, self.descerro)
-            self.oalerta_button.place(anchor="w", height=22, width=22, x=30, y=323)
+            self.alert_origin_button.place(anchor="w", height=22, width=22, x=30, y=323)
 
     def conexao_destino(self):
 
-        self.dados_destino = {'host': self.dipservidor_entry.get(),
-                              'user': self.dusuario_entry.get(),
-                              'password': self.dsenha_entry.get(),
-                              'database': self.dbanco_entry.get(),
-                              'port': int(self.dporta_entry.get())}
+        self.dados_destino = {'host': self.ip_destiny_entry.get(),
+                              'user': self.user_destiny_entry.get(),
+                              'password': self.pass_destiny_entry.get(),
+                              'database': self.db_destiny_entry.get(),
+                              'port': int(self.port_destiny_entry.get())}
 
         iterador = IteradorSql()
         retorno_destino = iterador.conexao_destino(dados_destino=self.dados_destino)
 
         if retorno_destino['retorno'] == 'Conectado':
-            self.dalerta_button.destroy()
-            self.dmensagem_message.configure(text="Conectado", foreground='green')
+            self.alert_destiny_button.destroy()
+            self.destiny_message.configure(text="Conectado", foreground='green')
             self.lista_grupo_destino()
 
         elif retorno_destino['retorno'] == 'pymysql.err.OperationalError':
-            self.dalerta_button.destroy()
-            self.dmensagem_message.configure(text="Falha", foreground='orange')
+            self.alert_destiny_button.destroy()
+            self.destiny_message.configure(text="Falha", foreground='orange')
             self.coderro = retorno_destino['codigo']
             self.descerro = retorno_destino['descricao']
             self.dbotao_alerta(self.coderro, self.descerro)
-            self.dalerta_button.place(anchor="w", height=22, width=22, x=30, y=323)
+            self.alert_destiny_button.place(anchor="w", height=22, width=22, x=30, y=323)
 
         else:
-            self.dalerta_button.destroy()
-            self.dmensagem_message.configure(text="Falha", foreground='orange')
+            self.alert_destiny_button.destroy()
+            self.destiny_message.configure(text="Falha", foreground='orange')
             self.coderro = 20
             self.descerro = retorno_destino['descricao']
             self.dbotao_alerta(self.coderro, self.descerro)
-            self.dalerta_button.place(anchor="w", height=22, width=22, x=30, y=323)
+            self.alert_destiny_button.place(anchor="w", height=22, width=22, x=30, y=323)
 
     def obotao_alerta(self, coderro, descerro):
 
         self.oalerta_img = tk.PhotoImage(file="imgs/info.png")
-        self.oalerta_button = ttk.Button(
-            self.borigem_lframe,
+        self.alert_origin_button = ttk.Button(
+            self.origin_labelframe,
             image=self.oalerta_img,
             command=lambda: self.retorna_erro(coderro, descerro),
-            bootstyle="warning")
-        self.oalerta_button.configure(compound="left", padding=1)
+            bootstyle=ttkb.WARNING)
+        self.alert_origin_button.configure(compound="left", padding=1)
 
     def dbotao_alerta(self, coderro, descerro):
 
         self.dalerta_img = tk.PhotoImage(file="imgs/info.png")
-        self.dalerta_button = ttk.Button(
-            self.bdestino_lframe,
+        self.alert_destiny_button = ttk.Button(
+            self.destiny_labelframe,
             image=self.dalerta_img,
             command=lambda: self.retorna_erro(coderro, descerro),
             bootstyle="warning")
-        self.dalerta_button.configure(compound="left", padding=1)
+        self.alert_destiny_button.configure(compound="left", padding=1)
 
     def retorna_erro(self, coderro, descerro):
 
         erro = f"Código: {coderro} | Descrição: {descerro}"
         self.popup_top = tk.Toplevel()
-        self.grid_anchor("center")
         self.popup_top.title("Retorno do Erro")
-        self.tema_padrao.theme_use('integra_visual')
+        # self.grid_anchor("center")
+        # self.theme.theme_use('integra_visual')
         self.erro_frame = ttk.Frame(self.popup_top)
         self.erro_frame.configure(height=200, padding=20, width=200)
         self.erro_frame.grid(column=0, row=0)
@@ -720,18 +710,18 @@ class Ui(tk.Tk):
         ident = "| "
 
         if metodo:
-            self.logs_scrtext.insert(tk.INSERT, f"{separador}\n")
-            self.logs_scrtext.insert(tk.INSERT, f"{ident}{metodo}\n")
-            self.logs_scrtext.insert(tk.INSERT, f"{separador}\n")
+            self.logs_scrolledtext.insert(tk.INSERT, f"{separador}\n")
+            self.logs_scrolledtext.insert(tk.INSERT, f"{ident}{metodo}\n")
+            self.logs_scrolledtext.insert(tk.INSERT, f"{separador}\n")
             logging.warning(separador)
             logging.warning(f"{ident}{metodo}")
             logging.warning(separador)
 
         if registro_erro or retorno_erro:
-            self.logs_scrtext.insert(tk.INSERT, f"{separador}\n")
-            self.logs_scrtext.insert(tk.INSERT, f"{ident}{registro_erro}\n")
-            self.logs_scrtext.insert(tk.INSERT, f"{ident}{retorno_erro}\n")
-            self.logs_scrtext.insert(tk.INSERT, f"{separador}\n")
+            self.logs_scrolledtext.insert(tk.INSERT, f"{separador}\n")
+            self.logs_scrolledtext.insert(tk.INSERT, f"{ident}{registro_erro}\n")
+            self.logs_scrolledtext.insert(tk.INSERT, f"{ident}{retorno_erro}\n")
+            self.logs_scrolledtext.insert(tk.INSERT, f"{separador}\n")
             logging.warning(separador)
             logging.warning(f"{ident} {registro_erro}")
             logging.warning(f"{ident} {retorno_erro}")
@@ -744,13 +734,13 @@ class Ui(tk.Tk):
         iterador.conexao_origem(self.dados_origem)
 
         try:
-            if self.selapagado_grupo_origem_cbutton.get():
+            if self.sel_erased_origin_groups.get():
                 grupos = iterador.select_grupo_origem_sapagado()
                 index = 0
                 self.iid_lista_grupo_origem = []
 
                 for grupo in grupos:
-                    self.gr_prod_origem_treeview.insert(
+                    self.groups_origin_checkboxtreeview.insert(
                         "", index=tk.END, iid=index, text='', values=('', grupo['id_grupo'], grupo['descricao']))
                     self.iid_lista_grupo_origem.append(index)
                     index += 1
@@ -761,7 +751,7 @@ class Ui(tk.Tk):
                 self.iid_lista_grupo_origem = []
 
                 for grupo in grupos:
-                    self.gr_prod_origem_treeview.insert(
+                    self.groups_origin_checkboxtreeview.insert(
                         "", index=tk.END, iid=index, text='', values=('', grupo['id_grupo'], grupo['descricao']))
                     self.iid_lista_grupo_origem.append(index)
                     index += 1
@@ -775,13 +765,13 @@ class Ui(tk.Tk):
         iterador.conexao_destino(self.dados_destino)
 
         try:
-            if self.selapagado_grupo_destino_cbutton.get():
+            if self.sel_erased_destiny_groups.get():
                 grupos = iterador.select_grupo_destino_sapagado()
                 index = 0
                 iid_lista_grupos_destino = []
 
                 for grupo in grupos:
-                    self.gr_prod_destino_treeview.insert(
+                    self.groups_destiny_checkboxtreeview.insert(
                         "", index=tk.END, iid=index, text='', values=(grupo['id_grupo'], grupo['descricao']))
                     iid_lista_grupos_destino.append(index)
                     index += 1
@@ -792,7 +782,7 @@ class Ui(tk.Tk):
                 iid_lista_grupos_destino = []
 
                 for grupo in grupos:
-                    self.gr_prod_destino_treeview.insert(
+                    self.groups_destiny_checkboxtreeview.insert(
                         "", index=tk.END, iid=index, text='', values=(grupo['id_grupo'], grupo['descricao']))
                     iid_lista_grupos_destino.append(index)
                     index += 1
@@ -811,7 +801,7 @@ class Ui(tk.Tk):
             self.iid_lista_empresas = []
 
             for empresa in empresas:
-                self.empresas_treeview.insert(
+                self.companies_checkboxtreeview.insert(
                     "", index='end', iid=index, text='', values=(empresa['id_empresa'], empresa['nome_fantasia']))
                 self.iid_lista_empresas.append(index)
                 index += 1
@@ -830,7 +820,7 @@ class Ui(tk.Tk):
             self.iid_lista_fornecedores = []
 
             for fornecedor in fornecedores:
-                self.fornecedores_treeview.insert("",
+                self.suppliers_checkboxtreeview.insert("",
                                                   index='end',
                                                   iid=index,
                                                   text='',
@@ -846,25 +836,25 @@ class Ui(tk.Tk):
     def marca_empresas(self):
 
         for iid in self.iid_lista_empresas:
-            self.empresas_treeview.change_state(item=iid, state='checked')
+            self.companies_checkboxtreeview.change_state(item=iid, state='checked')
 
     def marca_fornecedores(self):
 
         for iid in self.iid_lista_fornecedores:
-            self.fornecedores_treeview.change_state(item=iid, state='checked')
+            self.suppliers_checkboxtreeview.change_state(item=iid, state='checked')
 
     def marca_grupos_origem(self):
 
         for iid in self.iid_lista_grupo_origem:
-            self.gr_prod_origem_treeview.change_state(item=iid, state='checked')
+            self.groups_origin_checkboxtreeview.change_state(item=iid, state='checked')
 
     # Métodos de coleta dos registros selecionados na Interface.
     def checa_empresas(self):
 
         empresas_selecionadas_l = []
 
-        for empresa in self.empresas_treeview.get_checked():
-            id_empresa = self.empresas_treeview.item(item=empresa, option='values')
+        for empresa in self.companies_checkboxtreeview.get_checked():
+            id_empresa = self.companies_checkboxtreeview.item(item=empresa, option='values')
             empresas_selecionadas_l.append(id_empresa[0])
         empresas_selecionadas = tuple(empresas_selecionadas_l)
 
@@ -874,8 +864,8 @@ class Ui(tk.Tk):
 
         fornecedores_selecionadas_l = []
 
-        for fornecedor in self.fornecedores_treeview.get_checked():
-            id_fornecedor = self.fornecedores_treeview.item(item=fornecedor, option='values')
+        for fornecedor in self.suppliers_checkboxtreeview.get_checked():
+            id_fornecedor = self.suppliers_checkboxtreeview.item(item=fornecedor, option='values')
             fornecedores_selecionadas_l.append(id_fornecedor[0])
         fornecedores_selecionados = tuple(fornecedores_selecionadas_l)
 
@@ -885,8 +875,8 @@ class Ui(tk.Tk):
 
         grupos_selecionados = []
 
-        for grupo in self.gr_prod_origem_treeview.get_checked():
-            valores = self.gr_prod_origem_treeview.item(item=grupo, option='values')
+        for grupo in self.groups_origin_checkboxtreeview.get_checked():
+            valores = self.groups_origin_checkboxtreeview.item(item=grupo, option='values')
             grupo_selecionado = {'novo_id': int(valores[0]), 'antigo_id': int(valores[1])}
             grupos_selecionados.append(grupo_selecionado)
 
@@ -895,7 +885,7 @@ class Ui(tk.Tk):
     # Métodos de retorno de dados da Interface.
     def retorna_comunicador_destino(self):
 
-        filial_id = str(self.did_entry.get())
+        filial_id = str(self.id_destiny_entry.get())
         tabela_comunicador = {'1': '1', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6',
                               '7': '7', '8': '8', '9': '9', '10': 'A', '11': 'B', '12': 'C',
                               '13': 'D', '14': 'E', '15': 'F',
@@ -919,64 +909,64 @@ class Ui(tk.Tk):
 
     def retorna_filial_id_origem(self):
 
-        filial_id_origem = self.oid_entry.get()
+        filial_id_origem = self.id_origin_entry.get()
 
         return filial_id_origem
 
     def retorna_filial_id_destino(self):
 
-        filial_id_destino = self.did_entry.get()
+        filial_id_destino = self.id_destiny_entry.get()
 
         return filial_id_destino
 
     # Métodos de troca automática de estado dos botões.
     def troca_opcao_fabricante(self):
 
-        if self.selfabricante_cnpj_cbutton.get():
-            self.fabricante_id_cbutton.configure(state=tk.DISABLED)
-            self.id_fabricante_entry.configure(state=tk.DISABLED)
+        if self.sel_manufacturer_cnpj.get():
+            self.manufacturer_id_checkbutton.configure(state=tk.DISABLED)
+            self.manufacturer_id_entry.configure(state=tk.DISABLED)
         else:
-            self.fabricante_id_cbutton.configure(state=tk.NORMAL)
-            self.id_fabricante_entry.configure(state=tk.NORMAL)
+            self.manufacturer_id_checkbutton.configure(state=tk.NORMAL)
+            self.manufacturer_id_entry.configure(state=tk.NORMAL)
 
-        if self.selfabricante_id_cbutton.get():
-            self.fabricante_cnpj_cbutton.configure(state=tk.DISABLED)
+        if self.sel_manufacturer_id.get():
+            self.manufacturer_cnpj_checkbutton.configure(state=tk.DISABLED)
         else:
-            self.fabricante_cnpj_cbutton.configure(state=tk.NORMAL)
+            self.manufacturer_cnpj_checkbutton.configure(state=tk.NORMAL)
 
     def troca_opcao_principio(self):
 
-        if self.selprincipio_desc_cbutton.get():
-            self.principio_id_cbutton.configure(state=tk.DISABLED)
-            self.id_principio_entry.configure(state=tk.DISABLED)
+        if self.sel_principle_desc.get():
+            self.principle_id_checkbutton.configure(state=tk.DISABLED)
+            self.principle_id_entry.configure(state=tk.DISABLED)
         else:
-            self.principio_id_cbutton.configure(state=tk.NORMAL)
-            self.id_principio_entry.configure(state=tk.NORMAL)
+            self.principle_id_checkbutton.configure(state=tk.NORMAL)
+            self.principle_id_entry.configure(state=tk.NORMAL)
 
-        if self.selprincipio_id_cbutton.get():
-            self.principio_desc_cbutton.configure(state=tk.DISABLED)
+        if self.sel_principle_id.get():
+            self.principle_desc_checkbutton.configure(state=tk.DISABLED)
         else:
-            self.principio_desc_cbutton.configure(state=tk.NORMAL)
+            self.principle_desc_checkbutton.configure(state=tk.NORMAL)
 
     def troca_opcao_produto(self):
 
-        if self.selprodutos_cbutton.get():
-            self.barras_cbutton.configure(state=tk.NORMAL)
-            self.estoque_cbutton.configure(state=tk.NORMAL)
-            self.lotes_cbutton.configure(state=tk.NORMAL)
-            self.preco_filial_cbutton.configure(state=tk.NORMAL)
+        if self.sel_product.get():
+            self.bars_checkbutton.configure(state=tk.NORMAL)
+            self.stock_checkbutton.configure(state=tk.NORMAL)
+            self.partition_checkbutton.configure(state=tk.NORMAL)
+            self.price_checkbutton.configure(state=tk.NORMAL)
 
         else:
-            self.barras_cbutton.configure(state=tk.DISABLED)
-            self.estoque_cbutton.configure(state=tk.DISABLED)
-            self.lotes_cbutton.configure(state=tk.DISABLED)
-            self.preco_filial_cbutton.configure(state=tk.DISABLED)
+            self.bars_checkbutton.configure(state=tk.DISABLED)
+            self.stock_checkbutton.configure(state=tk.DISABLED)
+            self.partition_checkbutton.configure(state=tk.DISABLED)
+            self.price_checkbutton.configure(state=tk.DISABLED)
 
     # Método de incremento da barra de progresso
     def barra_progresso(self):
 
         self.progressbar['value'] += 5
-        self.update_idletasks()
+        # self.update_idletasks()
 
     # Método de execução
     def iniciar(self):
@@ -984,8 +974,8 @@ class Ui(tk.Tk):
         comunicador = self.retorna_comunicador_destino()
         filial_id_origem = int(self.retorna_filial_id_origem())
         filial_id_destino = int(self.retorna_filial_id_destino())
-        id_fabricante = self.id_fabricante_entry.get()
-        id_principio = self.id_principio_entry.get()
+        id_fabricante = self.manufacturer_id_entry.get()
+        id_principio = self.principle_id_entry.get()
         zeros_barras = int(self.zeros_spinbox.get())
 
         marcador_atualizacao_produto = {'fabricante_por_cnpj': 'nao',
@@ -1011,12 +1001,11 @@ class Ui(tk.Tk):
                             'receber': 'nao'}
 
         marcador_apagado = {'apagado': 'nao'}
-
-        if self.seldesconsiderar_apagados_cbutton.get():
+        if self.sel_erased.get():
             marcador_apagado.update({'apagado': 'sim'})
 
         self.progressbar['value'] = 0
-        self.concluido_message = tk.Message(self.logs_frame, font=self.fonte_corpo)
+        self.concluido_message = tk.Message(self.logs_frame, font=self.body_font)
         self.concluido_message.configure(text="Em Andamento",
                                          width=125,
                                          foreground='orange',
@@ -1025,7 +1014,7 @@ class Ui(tk.Tk):
         self.concluido_message.place(anchor=tk.NW, x=750, y=398)
         self.log(metodo='Integração Iniciada.')
 
-        if self.selfabricante_cnpj_cbutton.get():
+        if self.sel_manufacturer_cnpj.get():
             self.log(metodo='Processamento de Fabricantes Iniciado.')
             fabricante = Fabricante(dados_origem=self.dados_origem,
                                     dados_destino=self.dados_destino,
@@ -1039,7 +1028,7 @@ class Ui(tk.Tk):
             self.log(metodo='Processamento de Fabricantes Finalizado.')
         self.barra_progresso()
 
-        if self.selprincipio_desc_cbutton.get():
+        if self.sel_principle_desc.get():
             self.log(metodo='Processamento de Principios Ativos Iniciado.')
             principio_ativo = PrincipioAtivo(dados_origem=self.dados_origem,
                                              dados_destino=self.dados_destino,
@@ -1053,7 +1042,7 @@ class Ui(tk.Tk):
             self.log(metodo='Processamento de Principios Ativos Finalizado.')
         self.barra_progresso()
 
-        if self.selprodutos_cbutton.get():
+        if self.sel_product.get():
             grupos_selecionados = self.checa_grupos_origem()
             self.log(metodo='Processamento de Produtos Iniciado.')
             produto = Produto(dados_origem=self.dados_origem,
@@ -1065,19 +1054,19 @@ class Ui(tk.Tk):
                               id_principio=id_principio,
                               grupos_selecionados=grupos_selecionados)
 
-            if self.seldesconsiderar_prod_cbutton.get():
+            if self.sel_productbar.get():
                 marcador_atualizacao_produto.update({'remover_produtos_barras_zerados': 'sim'})
 
-            if self.selfabricante_cnpj_cbutton.get():
+            if self.sel_manufacturer_cnpj.get():
                 marcador_atualizacao_produto.update({'fabricante_por_cnpj': 'sim'})
 
-            if self.selfabricante_id_cbutton.get():
+            if self.sel_manufacturer_id.get():
                 marcador_atualizacao_produto.update({'fabricante_por_id': 'sim'})
 
-            if self.selprincipio_desc_cbutton.get():
+            if self.sel_principle_desc.get():
                 marcador_atualizacao_produto.update({'principio_por_desc': 'sim'})
 
-            if self.selprincipio_id_cbutton.get():
+            if self.sel_principle_id.get():
                 marcador_atualizacao_produto.update({'principio_por_id': 'sim'})
 
             produtos_log = produto.inicia_produtos(marcador_produto=marcador_atualizacao_produto,
@@ -1090,7 +1079,7 @@ class Ui(tk.Tk):
             self.log(metodo='Processamento de Produtos Finalizado.')
         self.barra_progresso()
 
-        if self.selbarras_cbutton.get():
+        if self.sel_bars.get():
             self.log(metodo='Processamento de Barras Adicionais Iniciado.')
             barras = BarrasAdicional(dados_origem=self.dados_origem,
                                      dados_destino=self.dados_destino,
@@ -1104,7 +1093,7 @@ class Ui(tk.Tk):
             self.log(metodo='Processamento de Barras Adicionais Finalizado.')
         self.barra_progresso()
 
-        if self.selestoque_cbutton.get():
+        if self.sel_stock.get():
             self.log(metodo='Processamento de Estoque Iniciado.')
             estoque = Estoque(dados_origem=self.dados_origem,
                               dados_destino=self.dados_destino,
@@ -1120,7 +1109,7 @@ class Ui(tk.Tk):
             self.log(metodo='Processamento de Estoque Finalizado.')
         self.barra_progresso()
 
-        if self.sellotes_cbutton.get():
+        if self.sel_partition.get():
             self.log(metodo='Processamento de Lotes Iniciado.')
             lotes = Lote(dados_origem=self.dados_origem,
                          dados_destino=self.dados_destino,
@@ -1136,7 +1125,7 @@ class Ui(tk.Tk):
                 self.log(metodo='Processamento de Lotes Finalizado.')
         self.barra_progresso()
 
-        if self.selpreco_filial_cbutton.get():
+        if self.sel_price.get():
             self.log(metodo='Processamento de Preço Filial Iniciado.')
             preco_filial = PrecoFilial(dados_origem=self.dados_origem,
                                        dados_destino=self.dados_destino,
@@ -1152,7 +1141,7 @@ class Ui(tk.Tk):
                 self.log(metodo='Processamento de Preço Filial Finalizado.')
         self.barra_progresso()
 
-        if self.selfornecedores_cbutton.get():
+        if self.sel_suppliers.get():
             self.fornecedores_selecionados = self.checa_fornecedores()
 
             self.log(metodo='Processamento de Fornecedores Iniciado.')
@@ -1170,7 +1159,7 @@ class Ui(tk.Tk):
             self.log(metodo='Processamento de Fornecedores Finalizado.')
         self.barra_progresso()
 
-        if self.selpagar_cbutton.get():
+        if self.sel_bills.get():
             self.log(metodo='Processamento de Pagar Iniciado.')
             pagar = Pagar(dados_origem=self.dados_origem,
                           dados_destino=self.dados_destino,
@@ -1188,7 +1177,7 @@ class Ui(tk.Tk):
             self.log(metodo='Processamento de Pagar Finalizado.')
         self.barra_progresso()
 
-        if self.selempresas_cbutton.get():
+        if self.sel_companies.get():
             self.empresas_selecionadas = self.checa_empresas()
             self.log(metodo='Processamento de Empresas Iniciado.')
             empresa = Empresa(dados_origem=self.dados_origem,
@@ -1215,7 +1204,7 @@ class Ui(tk.Tk):
                     self.log(registro_erro=cliente['registro_erro'], retorno_erro=cliente['retorno_erro'])
             self.log(metodo='Processamento de Clientes Finalizado.')
 
-        if self.selreceber_cbutton.get():
+        if self.sel_accounts_receivable.get():
             self.log(metodo='Processamento do Receber Iniciado.')
             receber = Receber(dados_origem=self.dados_origem,
                               dados_destino=self.dados_destino,
@@ -1236,12 +1225,10 @@ class Ui(tk.Tk):
         iterador.conexao_destino(self.dados_destino)
         iterador.limpa_campo_auxiliar(marcador_limpeza)
 
-        self.concluido_message.configure(text="Concluído", foreground='green')
+        self.done_message.configure(text="Concluído", foreground='green')
         self.progressbar['value'] = 100
         self.log(metodo='Integração Concluída.')
-        print("Integracao Concluida")
 
 
-if __name__ == "__main__":
-    app = Ui()
-    app.mainloop()
+app = Ui(root)
+root.mainloop()
