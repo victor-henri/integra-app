@@ -2,51 +2,51 @@ import pymysql
 import SQLs
 
 
-class IteradorSql:
+class IteratorSql:
     def __init__(self):
 
-        self.origem_conexao = None
-        self.destino_conexao = None
+        self.origin_connection = None
+        self.destiny_connection = None
 
-    def conexao_origem(self, dados_origem):
-
-        try:
-            self.origem_conexao = pymysql.connect(host=dados_origem['host'],
-                                                  user=dados_origem['user'],
-                                                  password=dados_origem['password'],
-                                                  database=dados_origem['database'],
-                                                  port=dados_origem['port'],
-                                                  charset='utf8',
-                                                  sql_mode="NO_ENGINE_SUBSTITUTION",
-                                                  cursorclass=pymysql.cursors.DictCursor)
-
-            return {'retorno': 'Conectado', 'descricao': self.origem_conexao}
-
-        except pymysql.err.OperationalError as err:
-            return {'retorno': 'pymysql.err.OperationalError', 'codigo': err.args[0], 'descricao': err.args[1]}
-
-        except Exception as err:
-            return {'retorno': 'Exception', 'codigo': err.args[0], 'descricao': err.args[1]}
-
-    def conexao_destino(self, dados_destino):
+    def connect_origin(self, db_origin):
 
         try:
-            self.destino_conexao = pymysql.connect(host=dados_destino['host'],
-                                                   user=dados_destino['user'],
-                                                   password=dados_destino['password'],
-                                                   database=dados_destino['database'],
-                                                   port=dados_destino['port'],
-                                                   charset='latin1',
-                                                   sql_mode="NO_ENGINE_SUBSTITUTION",
-                                                   cursorclass=pymysql.cursors.DictCursor)
+            self.origin_connection = pymysql.connect(host=db_origin['host'],
+                                                     user=db_origin['user'],
+                                                     password=db_origin['password'],
+                                                     database=db_origin['database'],
+                                                     port=db_origin['port'],
+                                                     charset='utf8',
+                                                     sql_mode="NO_ENGINE_SUBSTITUTION",
+                                                     cursorclass=pymysql.cursors.DictCursor)
 
-            return {'retorno': 'Conectado', 'descricao': self.destino_conexao}
+            return {'return': 'Connected', 'description': self.origin_connection}
 
         except pymysql.err.OperationalError as err:
-            return {'retorno': 'pymysql.err.OperationalError', 'codigo': err.args[0], 'descricao': err.args[1]}
+            return {'return': 'pymysql.err.OperationalError', 'cod': err.args[0], 'description': err.args[1]}
 
         except Exception as err:
-            return {'retorno': 'Exception', 'codigo': err.args[0], 'descricao': err.args[1]}
+            return {'return': 'Exception', 'cod': err.args[0], 'description': err.args[1]}
+
+    def connect_destiny(self, db_destiny):
+
+        try:
+            self.destiny_connection = pymysql.connect(host=db_destiny['host'],
+                                                      user=db_destiny['user'],
+                                                      password=db_destiny['password'],
+                                                      database=db_destiny['database'],
+                                                      port=db_destiny['port'],
+                                                      charset='latin1',
+                                                      sql_mode="NO_ENGINE_SUBSTITUTION",
+                                                      cursorclass=pymysql.cursors.DictCursor)
+
+            return {'return': 'Connected', 'description': self.destiny_connection}
+
+        except pymysql.err.OperationalError as err:
+            return {'return': 'pymysql.err.OperationalError', 'cod': err.args[0], 'description': err.args[1]}
+
+        except Exception as err:
+            return {'return': 'Exception', 'cod': err.args[0], 'description': err.args[1]}
 
     def select_produto(self):
 

@@ -1,14 +1,13 @@
 import tkinter as tk
-from tkinter import *
 import tkinter.font as font
 import tkinter.ttk as ttk
 import ttkbootstrap as ttkb
 from ttkwidgets import CheckboxTreeview
-from tkinter.scrolledtext import ScrolledText
 from PIL import ImageTk, Image
 import logging
+from typing import TypedDict
 import documentacao
-from iteradorSQL import IteradorSql
+from iteradorSQL import IteratorSql
 from fabricante import Fabricante
 from principioativo import PrincipioAtivo
 from produto import Produto
@@ -23,8 +22,8 @@ from fornecedor import Fornecedor
 from pagar import Pagar
 
 
-root = Tk()
-root.geometry("1175x525")
+root = tk.Tk()
+root.geometry("1100x530")
 root.resizable(False, False)
 root.title("IntegraApp")
 theme = ttkb.Style()
@@ -35,34 +34,18 @@ theme.configure('Treeviews', rowheight=23)
 class Ui:
 
     def __init__(self, master):
-
-        self.produtos_ids_separados = None
-        self.fornecedores_selecionados = None
-        self.empresas_selecionadas = None
-        self.clientes_selecionados = None
-        self.concluido_message = None
-        self.fornecedores_pos_insert = None
-        self.erro_label = None
-        self.erro_frame = None
-        self.popup_top = None
-        self.dalerta_img = None
-        self.oalerta_img = None
-        self.descerro = None
-        self.coderro = None
-        self.fornecedores_encontrados_tratados = None
-        self.iid_lista_fornecedores = None
-        self.classes_encontradas = None
-        self.iid_lista_grupo_origem = None
-        self.iid_lista_empresas = None
-        self.dados_destino = None
-        self.dados_origem = None
-        self.principios_encontrados_tratados = None
-        self.fabricantes_encontrados_tratados = None
-
+        
+        self.db_origin = None
+        self.db_destiny = None
+        self.origin_iterator = None
+        self.destiny_iterator = None
         self.body_font = font.Font(family='Roboto', size=10)
         self.title_font = font.Font(family='Roboto', size=12)
+        self.iid_companies_listing = None
+        self.iid_suppliers_listing = None
+        self.iid_origin_groups_listing = None
 
-        # Main Frame
+        # MAIN FRAME
         self.main_frame = ttkb.Frame(master)
         self.main_frame.configure(padding=10)
         self.main_frame.grid()
@@ -128,11 +111,12 @@ class Ui:
         self.id_origin_entry.configure(justify=tk.CENTER, width=8)
         self.id_origin_entry.grid(column=0, row=9, sticky=tk.E)
 
-        self.conn_origin_button = ttkb.Button(self.origin_labelframe, command=self.conexao_origem)
+        self.conn_origin_button = ttkb.Button(self.origin_labelframe, command=self.origin)
         self.conn_origin_button.configure(text="Conectar", width=15)
         self.conn_origin_button.grid(column=0, pady=10, row=11)
 
         self.alert_origin_button = ttkb.Button()
+
         self.origin_message = tk.Message(self.origin_labelframe)
         self.origin_message.configure(font=self.body_font, text="Desconectado", width=100, foreground='red')
         self.origin_message.grid(column=0, row=12)
@@ -191,11 +175,12 @@ class Ui:
         self.id_destiny_entry.configure(justify=tk.CENTER, width=8)
         self.id_destiny_entry.grid(column=0, row=9, sticky=tk.E)
 
-        self.conn_destiny_button = ttkb.Button(self.destiny_labelframe, command=self.conexao_destino)
+        self.conn_destiny_button = ttkb.Button(self.destiny_labelframe, command=self.destiny)
         self.conn_destiny_button.configure(text="Conectar", width=15)
         self.conn_destiny_button.grid(column=0, pady=10, row=11)
 
         self.alert_destiny_button = ttkb.Button()
+
         self.destiny_message = tk.Message(self.destiny_labelframe)
         self.destiny_message.configure(font=self.body_font, text="Desconectado", width=100, foreground='red')
         self.destiny_message.grid(column=0, row=12)
@@ -203,7 +188,7 @@ class Ui:
         # CONNECTIONS[Separator]
         self.database_separator = ttkb.Separator(self.connections_frame)
         self.database_separator.configure(orient=tk.HORIZONTAL)
-        self.database_separator.place(anchor=tk.CENTER, height=350, x=465, y=230)
+        self.database_separator.place(width=45, x=400, y=200)
 
         # SETTINGS
         self.settings_frame = ttkb.Frame(self.tabs_notebook)
@@ -224,7 +209,7 @@ class Ui:
         # SETTINGS[Top Options]
         self.sel_product = tk.BooleanVar()
         self.sel_product.set(False)
-        self.product_checkbutton = ttkb.Checkbutton(self.settings_labelframe, command=self.troca_opcao_produto)
+        self.product_checkbutton = ttkb.Checkbutton(self.settings_labelframe, command=self.swap_product)
         self.product_checkbutton.configure(text="Produto", variable=self.sel_product)
         self.product_checkbutton.grid(column=0, row=0)
 
@@ -255,7 +240,7 @@ class Ui:
         # SETTINGS[Mid Options][Principle]
         self.left_settings_frame = ttkb.Frame(self.settings_labelframe)
         self.left_settings_frame.configure(padding=5)
-        self.left_settings_frame.place(height=250, width=400, x=15, y=60)
+        self.left_settings_frame.place(height=250, width=380, x=5, y=50)
 
         self.principle_labelframe = ttkb.Labelframe(self.left_settings_frame)
         self.principle_labelframe.configure(text="Principio Ativo", height=80, labelanchor=tk.N)
@@ -264,13 +249,13 @@ class Ui:
         self.sel_principle_desc = tk.BooleanVar()
         self.sel_principle_desc.set(False)
         self.principle_desc_checkbutton = ttkb.Checkbutton(self.principle_labelframe,
-                                                           command=self.troca_opcao_principio)
+                                                           command=self.swap_principle)
         self.principle_desc_checkbutton.configure(text="Por Descrição", variable=self.sel_principle_desc)
         self.principle_desc_checkbutton.place(x=25, y=22)
 
         self.sel_principle_id = tk.BooleanVar()
         self.sel_principle_id.set(False)
-        self.principle_id_checkbutton = ttkb.Checkbutton(self.principle_labelframe, command=self.troca_opcao_principio)
+        self.principle_id_checkbutton = ttkb.Checkbutton(self.principle_labelframe, command=self.swap_principle)
         self.principle_id_checkbutton.configure(text="Por ID", variable=self.sel_principle_id)
         self.principle_id_checkbutton.place(x=160, y=22)
 
@@ -284,8 +269,8 @@ class Ui:
 
         # SETTINGS[Middle Options][Manufacturer]
         self.right_settings_frame = ttkb.Frame(self.settings_labelframe)
-        self.right_settings_frame.configure(height=250, padding=5)
-        self.right_settings_frame.place(height=250, width=400, x=450, y=60)
+        self.right_settings_frame.configure(padding=5)
+        self.right_settings_frame.place(height=250, width=380, x=385, y=50)
 
         self.manufacturer_labelframe = ttkb.Labelframe(self.right_settings_frame)
         self.manufacturer_labelframe.configure(text="Fabricante", height=80, labelanchor=tk.N)
@@ -294,14 +279,14 @@ class Ui:
         self.sel_manufacturer_cnpj = tk.BooleanVar()
         self.sel_manufacturer_cnpj.set(False)
         self.manufacturer_cnpj_checkbutton = ttkb.Checkbutton(self.manufacturer_labelframe,
-                                                              command=self.troca_opcao_fabricante)
+                                                              command=self.swap_manufacturer)
         self.manufacturer_cnpj_checkbutton.configure(text="Por CNPJ", variable=self.sel_manufacturer_cnpj)
         self.manufacturer_cnpj_checkbutton.place(x=25, y=22)
 
         self.sel_manufacturer_id = tk.BooleanVar()
         self.sel_manufacturer_id.set(False)
         self.manufacturer_id_checkbutton = ttkb.Checkbutton(self.manufacturer_labelframe,
-                                                            command=self.troca_opcao_fabricante)
+                                                            command=self.swap_manufacturer)
         self.manufacturer_id_checkbutton.configure(text="Por ID", variable=self.sel_manufacturer_id)
         self.manufacturer_id_checkbutton.place(x=145, y=22)
 
@@ -319,32 +304,32 @@ class Ui:
         self.productbar_checkbutton = ttkb.Checkbutton(self.settings_labelframe)
         self.productbar_checkbutton.configure(text="Não importar produtos com barras que iniciam com ",
                                               variable=self.sel_productbar)
-        self.productbar_checkbutton.place(x=10, y=325)
+        self.productbar_checkbutton.place(x=10, y=315)
+
+        self.value_zeros_spinbox = tk.StringVar(value='1')
+        self.zeros_spinbox = ttkb.Spinbox(self.settings_labelframe)
+        self.zeros_spinbox.configure(from_=1, to=12, textvariable=self.value_zeros_spinbox)
+        self.zeros_spinbox.place(width=50, x=315, y=308)
+
+        self.zeros_label = ttkb.Label(self.settings_labelframe)
+        self.zeros_label.configure(text="ou mais zero(s).")
+        self.zeros_label.place(x=370, y=313)
 
         self.sel_erased = tk.BooleanVar()
         self.sel_erased.set(False)
         self.erased_checkbutton = ttkb.Checkbutton(self.settings_labelframe)
         self.erased_checkbutton.configure(text="Não importar registros marcados como apagados.",
                                           variable=self.sel_erased)
-        self.erased_checkbutton.place(x=10, y=350)
-
-        self.zeros_label = ttkb.Label(self.settings_labelframe)
-        self.zeros_label.configure(text="ou mais zero(s).")
-        self.zeros_label.place(x=425, y=322)
-
-        self.value_zeros_spinbox = tk.StringVar(value='1')
-        self.zeros_spinbox = ttkb.Spinbox(self.settings_labelframe)
-        self.zeros_spinbox.configure(from_=1, to=12, textvariable=self.value_zeros_spinbox)
-        self.zeros_spinbox.place(width=50, x=370, y=317)
+        self.erased_checkbutton.place(x=10, y=340)
 
         # SETTINGS[Separators]
         self.top_separator = ttkb.Separator(self.settings_labelframe)
         self.top_separator.configure(orient=tk.HORIZONTAL)
-        self.top_separator.place(anchor=tk.CENTER, width=850, x=430, y=40)
+        self.top_separator.place(width=770, y=40)
 
         self.bottom_separator = ttkb.Separator(self.settings_labelframe)
         self.bottom_separator.configure(orient=tk.HORIZONTAL)
-        self.bottom_separator.place(anchor=tk.CENTER, width=850, x=430, y=310)
+        self.bottom_separator.place(width=770, y=300)
 
         # PRODUCT GROUPS
         self.product_groups_frame = ttkb.Frame(self.tabs_notebook)
@@ -379,7 +364,7 @@ class Ui:
         self.sel_erased_origin_groups = tk.BooleanVar()
         self.sel_erased_origin_groups.set(False)
         self.erased_groups_origin_checkbutton = ttkb.Checkbutton(self.groups_origin_labelframe,
-                                                                 command=self.lista_grupo_origem)
+                                                                 command=self.origin_groups_listing)
         self.erased_groups_origin_checkbutton.configure(text="Não mostrar grupos apagados",
                                                         variable=self.sel_erased_origin_groups)
         self.erased_groups_origin_checkbutton.grid(column=0, row=1, sticky=tk.W)
@@ -387,7 +372,7 @@ class Ui:
         self.sel_all_origin_groups = tk.BooleanVar()
         self.sel_all_origin_groups.set(False)
         self.all_origin_groups_checkbutton = ttkb.Checkbutton(self.groups_origin_labelframe,
-                                                              command=self.marca_grupos_origem)
+                                                              command=self.tag_all_groups)
         self.all_origin_groups_checkbutton.configure(text="Selecionar todos",
                                                      variable=self.sel_all_origin_groups)
         self.all_origin_groups_checkbutton.grid(column=0, row=1, sticky=tk.E)
@@ -411,11 +396,11 @@ class Ui:
 
         self.sel_erased_destiny_groups = tk.BooleanVar()
         self.sel_erased_destiny_groups.set(False)
-        self.erased_groups_origin_checkbutton = ttkb.Checkbutton(self.groups_destiny_labelframe,
-                                                                 command=self.lista_grupo_destino)
-        self.erased_groups_origin_checkbutton.configure(text="Não mostrar grupos apagados",
+        self.erased_groups_destiny_checkbutton = ttkb.Checkbutton(self.groups_destiny_labelframe,
+                                                                 command=self.destiny_groups_listing)
+        self.erased_groups_destiny_checkbutton.configure(text="Não mostrar grupos apagados",
                                                         variable=self.sel_erased_destiny_groups)
-        self.erased_groups_origin_checkbutton.grid(column=0, row=1, sticky=tk.W)
+        self.erased_groups_destiny_checkbutton.grid(column=0, row=1, sticky=tk.W)
 
         # SUPPLIER & BILLS TO PAY
         self.suppliers_frame = ttkb.Frame(self.tabs_notebook)
@@ -454,9 +439,9 @@ class Ui:
 
         self.sel_all_suppliers = tk.BooleanVar()
         self.sel_all_suppliers.set(False)
-        self.all_suppliers_checkbutton = ttkb.Checkbutton(self.suppliers_frame, command=self.marca_fornecedores)
+        self.all_suppliers_checkbutton = ttkb.Checkbutton(self.suppliers_frame, command=self.tag_all_suppliers)
         self.all_suppliers_checkbutton.configure(text="Selecionar todos", variable=self.sel_all_suppliers)
-        self.all_suppliers_checkbutton.place(x=770, y=413)
+        self.all_suppliers_checkbutton.place(x=700, y=375)
 
         # COMPANIES/CUSTOMERS & ACCOUNTS RECEIVABLE
         self.companies_frame = ttkb.Frame(self.tabs_notebook)
@@ -495,9 +480,9 @@ class Ui:
 
         self.sel_all_companies = tk.BooleanVar()
         self.sel_all_companies.set(False)
-        self.all_companies_checkbutton = ttkb.Checkbutton(self.companies_frame, command=self.marca_empresas)
+        self.all_companies_checkbutton = ttkb.Checkbutton(self.companies_frame, command=self.tag_all_companies)
         self.all_companies_checkbutton.configure(text="Selecionar todos", variable=self.sel_all_companies)
-        self.all_companies_checkbutton.place(x=770, y=413)
+        self.all_companies_checkbutton.place(x=700, y=375)
 
         # LOGS
         self.logs_frame = ttkb.Frame(self.tabs_notebook)
@@ -509,17 +494,25 @@ class Ui:
         self.tabs_notebook.configure(padding=5)
         self.tabs_notebook.grid(column=1, row=0)
 
-        self.logs_scrolledtext = ScrolledText(self.logs_frame)
+        self.logs_scrolledtext = ttkb.ScrolledText(self.logs_frame)
         self.logs_scrolledtext.configure(borderwidth=5, font=self.body_font)
-        self.logs_scrolledtext.place(width=905, height=383, x=0, y=0)
+        self.logs_scrolledtext.place(width=810, height=365, x=0, y=0)
 
-        self.start_button = ttkb.Button(self.logs_frame, command=self.iniciar)
+        self.start_button = ttkb.Button(self.logs_frame, command=self.start)
         self.start_button.configure(text="Iniciar", width=20)
-        self.start_button.place(height=30, x=30, y=400)
+        self.start_button.place(height=30, x=30, y=380)
 
         self.progressbar = ttkb.Progressbar(self.logs_frame, mode='determinate')
         self.progressbar.configure(length=600, orient=tk.HORIZONTAL)
-        self.progressbar.place(width=500, x=250, y=410)
+        self.progressbar.place(width=500, x=200, y=390)
+
+        self.done_message = tk.Message(self.logs_frame, font=self.body_font)
+        self.done_message.configure(text="Não Iniciado",
+                                    width=125,
+                                    foreground='grey',
+                                    relief=tk.FLAT,
+                                    borderwidth=1)
+        self.done_message.place(anchor=tk.NW, x=750, y=398)
 
         # DOCUMENTATION
         self.documentation_frame = ttkb.Frame(self.tabs_notebook)
@@ -529,7 +522,7 @@ class Ui:
         self.tabs_notebook.add(self.documentation_frame, text="Documentação")
         self.tabs_notebook.configure(padding=5)
 
-        self.documentation_scrolledtext = ScrolledText(self.documentation_frame)
+        self.documentation_scrolledtext = ttkb.ScrolledText(self.documentation_frame)
         self.documentation_scrolledtext.configure(borderwidth=5, font=self.body_font)
         self.documentation_scrolledtext.insert(tk.END, documentacao.informacao_doc)
         self.documentation_scrolledtext.configure(state=tk.DISABLED)
@@ -601,292 +594,292 @@ class Ui:
         event.widget.destroy()
 
     # Métodos de conexão.
-    def conexao_origem(self):
+    def origin(self):
 
-        self.dados_origem = {'host': self.ip_origin_entry.get(),
-                             'user': self.user_origin_entry.get(),
-                             'password': self.pass_origin_entry.get(),
-                             'database': self.db_origin_entry.get(),
-                             'port': int(self.port_origin_entry.get())}
+        class AccessDatabase(TypedDict):
+            host: str
+            user: str
+            password: str
+            database: str
+            port: int
 
-        iterador = IteradorSql()
-        retorno_origem = iterador.conexao_origem(dados_origem=self.dados_origem)
+        self.db_origin: AccessDatabase = {'host': self.ip_origin_entry.get(),
+                                          'user': self.user_origin_entry.get(),
+                                          'password': self.pass_origin_entry.get(),
+                                          'database': self.db_origin_entry.get(),
+                                          'port': int(self.port_origin_entry.get())}
 
-        if retorno_origem['retorno'] == 'Conectado':
+        self.origin_iterator = IteratorSql()
+        origin_return = self.origin_iterator.connect_origin(self.db_origin)
+
+        if origin_return['return'] == 'Connected':
             self.alert_origin_button.destroy()
             self.origin_message.configure(text="Conectado", foreground='green')
-            self.lista_grupo_origem()
-            self.lista_empresas()
-            self.lista_fornecedores()
+            self.origin_groups_listing()
+            self.companies_listing()
+            self.suppliers_listing()
 
-        elif retorno_origem['retorno'] == 'pymysql.err.OperationalError':
+        elif origin_return['return'] == 'pymysql.err.OperationalError':
             self.alert_origin_button.destroy()
             self.origin_message.configure(text="Falha", foreground='orange')
-            self.coderro = retorno_origem['codigo']
-            self.descerro = retorno_origem['descricao']
-            self.obotao_alerta(self.coderro, self.descerro)
-            self.alert_origin_button.place(anchor="w", height=22, width=22, x=30, y=323)
+            cod_error = origin_return['cod']
+            desc_error = origin_return['description']
+            self.origin_alert(cod_error, desc_error)
+            self.alert_origin_button.place(anchor=tk.W, height=22, width=22, x=30, y=323)
 
         else:
             self.alert_origin_button.destroy()
             self.origin_message.configure(text="Falha", foreground='orange')
-            self.coderro = 20
-            self.descerro = retorno_origem['descricao']
-            self.obotao_alerta(self.coderro, self.descerro)
-            self.alert_origin_button.place(anchor="w", height=22, width=22, x=30, y=323)
+            cod_error = 20
+            desc_error = origin_return['description']
+            self.origin_alert(cod_error, desc_error)
+            self.alert_origin_button.place(anchor=tk.W, height=22, width=22, x=30, y=323)
 
-    def conexao_destino(self):
+    def destiny(self):
 
-        self.dados_destino = {'host': self.ip_destiny_entry.get(),
-                              'user': self.user_destiny_entry.get(),
-                              'password': self.pass_destiny_entry.get(),
-                              'database': self.db_destiny_entry.get(),
-                              'port': int(self.port_destiny_entry.get())}
+        class AccessDatabase(TypedDict):
+            host: str
+            user: str
+            password: str
+            database: str
+            port: int
 
-        iterador = IteradorSql()
-        retorno_destino = iterador.conexao_destino(dados_destino=self.dados_destino)
+        self.db_destiny: AccessDatabase = {'host': self.ip_destiny_entry.get(),
+                                           'user': self.user_destiny_entry.get(),
+                                           'password': self.pass_destiny_entry.get(),
+                                           'database': self.db_destiny_entry.get(),
+                                           'port': int(self.port_destiny_entry.get())}
 
-        if retorno_destino['retorno'] == 'Conectado':
+        self.destiny_iterator = IteratorSql()
+        destiny_return = self.destiny_iterator.connect_destiny(self.db_destiny)
+
+        if destiny_return['return'] == 'Connected':
             self.alert_destiny_button.destroy()
             self.destiny_message.configure(text="Conectado", foreground='green')
-            self.lista_grupo_destino()
+            self.destiny_groups_listing()
 
-        elif retorno_destino['retorno'] == 'pymysql.err.OperationalError':
+        elif destiny_return['return'] == 'pymysql.err.OperationalError':
             self.alert_destiny_button.destroy()
             self.destiny_message.configure(text="Falha", foreground='orange')
-            self.coderro = retorno_destino['codigo']
-            self.descerro = retorno_destino['descricao']
-            self.dbotao_alerta(self.coderro, self.descerro)
-            self.alert_destiny_button.place(anchor="w", height=22, width=22, x=30, y=323)
+            cod_error = destiny_return['cod']
+            desc_error = destiny_return['description']
+            self.destiny_alert(cod_error, desc_error)
+            self.alert_destiny_button.place(anchor=tk.W, height=22, width=22, x=30, y=323)
 
         else:
             self.alert_destiny_button.destroy()
             self.destiny_message.configure(text="Falha", foreground='orange')
-            self.coderro = 20
-            self.descerro = retorno_destino['descricao']
-            self.dbotao_alerta(self.coderro, self.descerro)
-            self.alert_destiny_button.place(anchor="w", height=22, width=22, x=30, y=323)
+            cod_error = 20
+            desc_error = destiny_return['description']
+            self.destiny_alert(cod_error, desc_error)
+            self.alert_destiny_button.place(anchor=tk.W, height=22, width=22, x=30, y=323)
 
-    def obotao_alerta(self, coderro, descerro):
+    def origin_alert(self, cod_error, desc_error):
 
-        self.oalerta_img = tk.PhotoImage(file="imgs/info.png")
-        self.alert_origin_button = ttk.Button(
-            self.origin_labelframe,
-            image=self.oalerta_img,
-            command=lambda: self.retorna_erro(coderro, descerro),
-            bootstyle=ttkb.WARNING)
-        self.alert_origin_button.configure(compound="left", padding=1)
+        alert_image = tk.PhotoImage(file="imgs/info.png")
+        self.alert_origin_button = ttkb.Button(self.origin_labelframe, 
+                                               image=alert_image, 
+                                               command=lambda: self.return_error(cod_error, desc_error), 
+                                               bootstyle=ttkb.WARNING)
+        self.alert_origin_button.configure(compound=tk.LEFT, padding=1)
 
-    def dbotao_alerta(self, coderro, descerro):
+    def destiny_alert(self, cod_error, desc_error):
 
-        self.dalerta_img = tk.PhotoImage(file="imgs/info.png")
-        self.alert_destiny_button = ttk.Button(
-            self.destiny_labelframe,
-            image=self.dalerta_img,
-            command=lambda: self.retorna_erro(coderro, descerro),
-            bootstyle="warning")
-        self.alert_destiny_button.configure(compound="left", padding=1)
+        alert_image = tk.PhotoImage(file="imgs/info.png")
+        self.alert_destiny_button = ttkb.Button(self.destiny_labelframe,
+                                                image=alert_image,
+                                                command=lambda: self.return_error(cod_error, desc_error),
+                                                bootstyle="warning")
+        self.alert_destiny_button.configure(compound=tk.LEFT, padding=1)
 
-    def retorna_erro(self, coderro, descerro):
+    def return_error(self, cod_error, desc_error):
 
-        erro = f"Código: {coderro} | Descrição: {descerro}"
-        self.popup_top = tk.Toplevel()
-        self.popup_top.title("Retorno do Erro")
-        # self.grid_anchor("center")
-        # self.theme.theme_use('integra_visual')
-        self.erro_frame = ttk.Frame(self.popup_top)
-        self.erro_frame.configure(height=200, padding=20, width=200)
-        self.erro_frame.grid(column=0, row=0)
-        self.erro_frame.rowconfigure(1, weight=1)
-        self.erro_frame.columnconfigure(1, weight=1)
-        self.erro_label = ttk.Label(self.erro_frame)
-        self.erro_label.configure(text=erro)
-        self.erro_label.grid(column=1, row=1)
+        erro = f"Código: {cod_error} | Descrição: {desc_error}"
 
-    def log(self, metodo=None, registro_erro=None, retorno_erro=None):
+        error_top = tk.Toplevel()
+        error_top.title("Retorno do Erro")
+
+        theme_error = ttkb.Style(error_top)
+        theme_error.theme_use('integra_visual')
+
+        error_frame = ttk.Frame(error_top)
+        error_frame.configure(height=200, padding=20, width=200)
+        error_frame.grid(column=0, row=0)
+        error_frame.rowconfigure(1, weight=1)
+        error_frame.columnconfigure(1, weight=1)
+
+        error_label = ttk.Label(error_frame)
+        error_label.configure(text=erro)
+        error_label.grid(column=1, row=1)
+
+    def log(self, method=None, error_register=None, error_return=None):
 
         logging.basicConfig(filename='log.txt', level=logging.DEBUG, format='%(asctime)s:%(message)s')
-        separador = "| ============================================================================= |"
-        ident = "| "
+        separator = "| ============================================================================= |"
+        indentation = "| "
 
-        if metodo:
-            self.logs_scrolledtext.insert(tk.INSERT, f"{separador}\n")
-            self.logs_scrolledtext.insert(tk.INSERT, f"{ident}{metodo}\n")
-            self.logs_scrolledtext.insert(tk.INSERT, f"{separador}\n")
-            logging.warning(separador)
-            logging.warning(f"{ident}{metodo}")
-            logging.warning(separador)
+        if method:
+            self.logs_scrolledtext.insert(tk.INSERT, f"{separator}\n")
+            self.logs_scrolledtext.insert(tk.INSERT, f"{indentation}{method}\n")
+            self.logs_scrolledtext.insert(tk.INSERT, f"{separator}\n")
+            logging.warning(separator)
+            logging.warning("| %s", method)
+            logging.warning(separator)
 
-        if registro_erro or retorno_erro:
-            self.logs_scrolledtext.insert(tk.INSERT, f"{separador}\n")
-            self.logs_scrolledtext.insert(tk.INSERT, f"{ident}{registro_erro}\n")
-            self.logs_scrolledtext.insert(tk.INSERT, f"{ident}{retorno_erro}\n")
-            self.logs_scrolledtext.insert(tk.INSERT, f"{separador}\n")
-            logging.warning(separador)
-            logging.warning(f"{ident} {registro_erro}")
-            logging.warning(f"{ident} {retorno_erro}")
-            logging.warning(separador)
+        if error_register or error_return:
+            self.logs_scrolledtext.insert(tk.INSERT, f"{separator}\n")
+            self.logs_scrolledtext.insert(tk.INSERT, f"{indentation}{error_register}\n")
+            self.logs_scrolledtext.insert(tk.INSERT, f"{indentation}{error_return}\n")
+            self.logs_scrolledtext.insert(tk.INSERT, f"{separator}\n")
+            logging.warning(separator)
+            logging.warning("| %s", error_register)
+            logging.warning("| %s", error_return)
+            logging.warning(separator)
 
     # Métodos de listagem automática e exibição dos dados ao conectar.
-    def lista_grupo_origem(self):
-
-        iterador = IteradorSql()
-        iterador.conexao_origem(self.dados_origem)
+    def origin_groups_listing(self):
 
         try:
             if self.sel_erased_origin_groups.get():
-                grupos = iterador.select_grupo_origem_sapagado()
+                groups = self.origin_iterator.select_grupo_origem_sapagado()
                 index = 0
-                self.iid_lista_grupo_origem = []
+                self.iid_origin_groups_listing: int = []
 
-                for grupo in grupos:
+                for group in groups:
                     self.groups_origin_checkboxtreeview.insert(
-                        "", index=tk.END, iid=index, text='', values=('', grupo['id_grupo'], grupo['descricao']))
-                    self.iid_lista_grupo_origem.append(index)
+                        "", index=tk.END, iid=index, text='', values=('', group['id_grupo'], group['descricao']))
+                    self.iid_origin_groups_listing.append(index)
                     index += 1
 
             else:
-                grupos = iterador.select_grupo_origem_capagado()
+                groups = self.origin_iterator.select_grupo_origem_capagado()
                 index = 0
-                self.iid_lista_grupo_origem = []
+                self.iid_origin_groups_listing: int = []
 
-                for grupo in grupos:
+                for group in groups:
                     self.groups_origin_checkboxtreeview.insert(
-                        "", index=tk.END, iid=index, text='', values=('', grupo['id_grupo'], grupo['descricao']))
-                    self.iid_lista_grupo_origem.append(index)
+                        "", index=tk.END, iid=index, text='', values=('', group['id_grupo'], group['descricao']))
+                    self.iid_origin_groups_listing.append(index)
                     index += 1
 
-        except Exception as err_lista_grupo_origem:
-            print(f"Exceção no método lista_grupo_origem: {err_lista_grupo_origem}")
+        except Exception as error:
+            print(f"Exception in method origin_groups_listing: {error}")
 
-    def lista_grupo_destino(self):
-
-        iterador = IteradorSql()
-        iterador.conexao_destino(self.dados_destino)
+    def destiny_groups_listing(self):
 
         try:
             if self.sel_erased_destiny_groups.get():
-                grupos = iterador.select_grupo_destino_sapagado()
+                groups = self.destiny_iterator.select_grupo_destino_sapagado()
                 index = 0
-                iid_lista_grupos_destino = []
+                iid_destiny_groups_listing: int = []
 
-                for grupo in grupos:
+                for group in groups:
                     self.groups_destiny_checkboxtreeview.insert(
-                        "", index=tk.END, iid=index, text='', values=(grupo['id_grupo'], grupo['descricao']))
-                    iid_lista_grupos_destino.append(index)
+                        "", index=tk.END, iid=index, text='', values=(group['id_grupo'], group['descricao']))
+                    iid_destiny_groups_listing.append(index)
                     index += 1
 
             else:
-                grupos = iterador.select_grupo_destino_capagado()
+                groups = self.destiny_iterator.select_grupo_destino_capagado()
                 index = 0
-                iid_lista_grupos_destino = []
+                iid_destiny_groups_listing: int = []
 
-                for grupo in grupos:
+                for group in groups:
                     self.groups_destiny_checkboxtreeview.insert(
-                        "", index=tk.END, iid=index, text='', values=(grupo['id_grupo'], grupo['descricao']))
-                    iid_lista_grupos_destino.append(index)
+                        "", index=tk.END, iid=index, text='', values=(group['id_grupo'], group['descricao']))
+                    iid_destiny_groups_listing.append(index)
                     index += 1
 
-        except Exception as err_lista_grupo_destino:
-            print(f"Exceção no método lista_grupo_destino: {err_lista_grupo_destino}")
+        except Exception as error:
+            print(f"Exception in method destiny_groups_listing: {error}")
 
-    def lista_empresas(self):
-
-        iterador = IteradorSql()
-        iterador.conexao_origem(self.dados_origem)
+    def companies_listing(self):
 
         try:
-            empresas = iterador.select_listagem_empresa()
+            companies = self.origin_iterator.select_listagem_empresa()
             index = 0
-            self.iid_lista_empresas = []
+            self.iid_companies_listing: int = []
 
-            for empresa in empresas:
+            for company in companies:
                 self.companies_checkboxtreeview.insert(
-                    "", index='end', iid=index, text='', values=(empresa['id_empresa'], empresa['nome_fantasia']))
-                self.iid_lista_empresas.append(index)
+                    "", index='end', iid=index, text='', values=(company['id_empresa'], company['nome_fantasia']))
+                self.iid_companies_listing.append(index)
                 index += 1
 
-        except Exception as err_lista_empresas:
-            print(f"Exceção no método lista_empresas: {err_lista_empresas}")
+        except Exception as error:
+            print(f"Exception in method companies_listing: {error}")
 
-    def lista_fornecedores(self):
-
-        iterador = IteradorSql()
-        iterador.conexao_origem(self.dados_origem)
+    def suppliers_listing(self):
 
         try:
-            fornecedores = iterador.select_listagem_fornecedor()
+            suppliers = self.origin_iterator.select_listagem_fornecedor()
             index = 0
-            self.iid_lista_fornecedores = []
+            self.iid_suppliers_listing = []
 
-            for fornecedor in fornecedores:
-                self.suppliers_checkboxtreeview.insert("",
-                                                  index='end',
-                                                  iid=index,
-                                                  text='',
-                                                  values=(fornecedor['id_fornecedor'],
-                                                          fornecedor['razao_social']))
-                self.iid_lista_fornecedores.append(index)
+            for supplier in suppliers:
+                self.suppliers_checkboxtreeview.insert(
+                    "", index='end', iid=index,text='', values=(supplier['id_fornecedor'], supplier['razao_social']))
+                self.iid_suppliers_listing.append(index)
                 index += 1
 
-        except Exception as err_lista_fornecedores:
-            print(f"Exceção no método lista_fornecedores: {err_lista_fornecedores}")
+        except Exception as error:
+            print(f"Exception in method suppliers_listing: {error}")
 
     # Métodos de marcação de todos os registros na Interface.
-    def marca_empresas(self):
+    def tag_all_companies(self):
 
-        for iid in self.iid_lista_empresas:
+        for iid in self.iid_companies_listing:
             self.companies_checkboxtreeview.change_state(item=iid, state='checked')
 
-    def marca_fornecedores(self):
+    def tag_all_suppliers(self):
 
-        for iid in self.iid_lista_fornecedores:
+        for iid in self.iid_suppliers_listing:
             self.suppliers_checkboxtreeview.change_state(item=iid, state='checked')
 
-    def marca_grupos_origem(self):
+    def tag_all_groups(self):
 
-        for iid in self.iid_lista_grupo_origem:
+        for iid in self.iid_origin_groups_listing:
             self.groups_origin_checkboxtreeview.change_state(item=iid, state='checked')
 
     # Métodos de coleta dos registros selecionados na Interface.
-    def checa_empresas(self):
+    def get_companies(self):
 
-        empresas_selecionadas_l = []
+        companies: int = []
 
-        for empresa in self.companies_checkboxtreeview.get_checked():
-            id_empresa = self.companies_checkboxtreeview.item(item=empresa, option='values')
-            empresas_selecionadas_l.append(id_empresa[0])
-        empresas_selecionadas = tuple(empresas_selecionadas_l)
+        for company in self.companies_checkboxtreeview.get_checked():
+            company_id = self.companies_checkboxtreeview.item(item=company, option='values')
+            companies.append(company_id[0])
+        selected_companies: int = tuple(companies)
 
-        return empresas_selecionadas
+        return selected_companies
 
-    def checa_fornecedores(self):
+    def get_suppliers(self):
 
-        fornecedores_selecionadas_l = []
+        suppliers: int = []
 
-        for fornecedor in self.suppliers_checkboxtreeview.get_checked():
-            id_fornecedor = self.suppliers_checkboxtreeview.item(item=fornecedor, option='values')
-            fornecedores_selecionadas_l.append(id_fornecedor[0])
-        fornecedores_selecionados = tuple(fornecedores_selecionadas_l)
+        for supplier in self.suppliers_checkboxtreeview.get_checked():
+            supplier_id = self.suppliers_checkboxtreeview.item(item=supplier, option='values')
+            suppliers.append(supplier_id[0])
+        selected_suppliers = tuple(suppliers)
 
-        return fornecedores_selecionados
+        return selected_suppliers
 
-    def checa_grupos_origem(self):
+    def get_groups(self):
 
-        grupos_selecionados = []
+        selected_groups = []
 
-        for grupo in self.groups_origin_checkboxtreeview.get_checked():
-            valores = self.groups_origin_checkboxtreeview.item(item=grupo, option='values')
-            grupo_selecionado = {'novo_id': int(valores[0]), 'antigo_id': int(valores[1])}
-            grupos_selecionados.append(grupo_selecionado)
+        for group in self.groups_origin_checkboxtreeview.get_checked():
+            values = self.groups_origin_checkboxtreeview.item(item=group, option='values')
+            selected_group = {'novo_id': int(values[0]), 'antigo_id': int(values[1])}
+            selected_groups.append(selected_group)
 
-        return grupos_selecionados
+        return selected_groups
 
     # Métodos de retorno de dados da Interface.
-    def retorna_comunicador_destino(self):
+    def return_destiny_communicator(self):
 
-        filial_id = str(self.id_destiny_entry.get())
-        tabela_comunicador = {'1': '1', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6',
+        branch_id: str = str(self.id_destiny_entry.get())
+        communicator_table = {'1': '1', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6',
                               '7': '7', '8': '8', '9': '9', '10': 'A', '11': 'B', '12': 'C',
                               '13': 'D', '14': 'E', '15': 'F',
                               '16': 'G', '17': 'H', '18': 'I', '19': 'J', '20': 'K', '21': 'L',
@@ -901,26 +894,20 @@ class Ui:
                               '70': 'q', '71': 'r', '72': 's', '73': 't', '74': 'u', '75': 'v',
                               '76': 'w', '77': 'x', '78': 'y', '79': 'z'}
 
-        comunicador = tabela_comunicador.get(filial_id, 'not found')
-        if comunicador == 'not found':
-            print("caracter de comunicação não encontrado")
+        communicator = communicator_table.get(branch_id, 'Not Found')
+        if communicator == 'Not Found':
+            print("Communicator character not found.")
 
-        return comunicador
+        return communicator
 
-    def retorna_filial_id_origem(self):
+    def return_origin_branch_id(self):
+        return self.id_origin_entry.get()
 
-        filial_id_origem = self.id_origin_entry.get()
-
-        return filial_id_origem
-
-    def retorna_filial_id_destino(self):
-
-        filial_id_destino = self.id_destiny_entry.get()
-
-        return filial_id_destino
+    def return_destiny_branch_id(self):
+        return self.id_destiny_entry.get()
 
     # Métodos de troca automática de estado dos botões.
-    def troca_opcao_fabricante(self):
+    def swap_manufacturer(self):
 
         if self.sel_manufacturer_cnpj.get():
             self.manufacturer_id_checkbutton.configure(state=tk.DISABLED)
@@ -934,7 +921,7 @@ class Ui:
         else:
             self.manufacturer_cnpj_checkbutton.configure(state=tk.NORMAL)
 
-    def troca_opcao_principio(self):
+    def swap_principle(self):
 
         if self.sel_principle_desc.get():
             self.principle_id_checkbutton.configure(state=tk.DISABLED)
@@ -948,7 +935,7 @@ class Ui:
         else:
             self.principle_desc_checkbutton.configure(state=tk.NORMAL)
 
-    def troca_opcao_produto(self):
+    def swap_product(self):
 
         if self.sel_product.get():
             self.bars_checkbutton.configure(state=tk.NORMAL)
@@ -963,271 +950,275 @@ class Ui:
             self.price_checkbutton.configure(state=tk.DISABLED)
 
     # Método de incremento da barra de progresso
-    def barra_progresso(self):
-
+    def progress_bar(self):
         self.progressbar['value'] += 5
-        # self.update_idletasks()
 
     # Método de execução
-    def iniciar(self):
+    def start(self):
 
-        comunicador = self.retorna_comunicador_destino()
-        filial_id_origem = int(self.retorna_filial_id_origem())
-        filial_id_destino = int(self.retorna_filial_id_destino())
-        id_fabricante = self.manufacturer_id_entry.get()
-        id_principio = self.principle_id_entry.get()
-        zeros_barras = int(self.zeros_spinbox.get())
+        communicator = self.return_destiny_communicator()
+        origin_branch_id = int(self.return_origin_branch_id())
+        destiny_branch_id = int(self.return_destiny_branch_id())
+        manufacturer_id = self.manufacturer_id_entry.get()
+        principle_id = self.principle_id_entry.get()
+        zeros = int(self.zeros_spinbox.get())
 
-        marcador_atualizacao_produto = {'fabricante_por_cnpj': 'nao',
-                                        'fabricante_por_id': 'nao',
-                                        'principio_por_desc': 'nao',
-                                        'principio_por_id': 'nao',
-                                        'classe_terapeutica_por_desc': 'nao',
-                                        'classe_terapeutica_por_padrao': 'nao',
-                                        'remover_produtos_barras_zerados': 'nao',
-                                        'quantidade_zeros_barras': zeros_barras}
+        product_update = {'fabricante_por_cnpj': 'nao',
+                          'fabricante_por_id': 'nao',
+                          'principio_por_desc': 'nao',
+                          'principio_por_id': 'nao',
+                          'classe_terapeutica_por_desc': 'nao',
+                          'classe_terapeutica_por_padrao': 'nao',
+                          'remover_produtos_barras_zerados': 'nao',
+                          'quantidade_zeros_barras': zeros}
 
-        marcador_limpeza = {'fabricante': 'nao',
-                            'principio_ativo': 'nao',
-                            'produto': 'nao',
-                            'barras': 'nao',
-                            'estoque': 'nao',
-                            'lote': 'nao',
-                            'preco_filial': 'nao',
-                            'fornecedor': 'nao',
-                            'pagar': 'nao',
-                            'empresa': 'nao',
-                            'cliente': 'nao',
-                            'receber': 'nao'}
+        data_cleaning = {'fabricante': 'nao',
+                         'principio_ativo': 'nao',
+                         'produto': 'nao',
+                         'barras': 'nao',
+                         'estoque': 'nao',
+                         'lote': 'nao',
+                         'preco_filial': 'nao',
+                         'fornecedor': 'nao',
+                         'pagar': 'nao',
+                         'empresa': 'nao',
+                         'cliente': 'nao',
+                         'receber': 'nao'}
 
-        marcador_apagado = {'apagado': 'nao'}
+        erased = {'apagado': 'nao'}
+
         if self.sel_erased.get():
-            marcador_apagado.update({'apagado': 'sim'})
+            erased.update({'apagado': 'sim'})
 
+        # INITIATION
         self.progressbar['value'] = 0
-        self.concluido_message = tk.Message(self.logs_frame, font=self.body_font)
-        self.concluido_message.configure(text="Em Andamento",
-                                         width=125,
-                                         foreground='orange',
-                                         relief=tk.FLAT,
-                                         borderwidth=1)
-        self.concluido_message.place(anchor=tk.NW, x=750, y=398)
-        self.log(metodo='Integração Iniciada.')
+        self.done_message.configure(text="Em Andamento", width=125, foreground='orange')
+        self.log(method='Integração Iniciada.')
 
+        # MANUFACTURER
         if self.sel_manufacturer_cnpj.get():
-            self.log(metodo='Processamento de Fabricantes Iniciado.')
-            fabricante = Fabricante(dados_origem=self.dados_origem,
-                                    dados_destino=self.dados_destino,
-                                    comunicador=comunicador)
-            fabricantes_log = fabricante.inicia_fabricantes(marcador_apagado)
-            marcador_limpeza.update({'fabricante': 'sim'})
-            self.fabricantes_encontrados_tratados = fabricante.retorna_fabricantes_tratados()
-            if fabricantes_log:
-                for fabricante in fabricantes_log:
-                    self.log(registro_erro=fabricante['registro_erro'], retorno_erro=fabricante['retorno_erro'])
-            self.log(metodo='Processamento de Fabricantes Finalizado.')
-        self.barra_progresso()
+            self.log(method='Processamento de Fabricantes Iniciado.')
+            manufacturer = Fabricante(dados_origem=self.db_origin,
+                                      dados_destino=self.db_destiny,
+                                      comunicador=communicator)
+            manufacturer_log = manufacturer.inicia_fabricantes(erased)
+            data_cleaning.update({'fabricante': 'sim'})
+            manufacturers_found = manufacturer.retorna_fabricantes_tratados()
+            if manufacturer_log:
+                for manufacturer in manufacturer_log:
+                    self.log(error_register=manufacturer['registro_erro'], error_return=manufacturer['retorno_erro'])
+            self.log(method='Processamento de Fabricantes Finalizado.')
+        self.progress_bar()
 
+        # PRINCIPLE
         if self.sel_principle_desc.get():
-            self.log(metodo='Processamento de Principios Ativos Iniciado.')
-            principio_ativo = PrincipioAtivo(dados_origem=self.dados_origem,
-                                             dados_destino=self.dados_destino,
-                                             comunicador=comunicador)
-            principio_ativo_log = principio_ativo.inicia_principios_ativos(marcador_apagado)
-            marcador_limpeza.update({'principio_ativo': 'sim'})
-            self.principios_encontrados_tratados = principio_ativo.retorna_principios_tratados()
-            if principio_ativo_log:
-                for principio in principio_ativo_log:
-                    self.log(registro_erro=principio['registro_erro'], retorno_erro=principio['retorno_erro'])
-            self.log(metodo='Processamento de Principios Ativos Finalizado.')
-        self.barra_progresso()
+            self.log(method='Processamento de Principios Ativos Iniciado.')
+            principle = PrincipioAtivo(dados_origem=self.db_origin,
+                                       dados_destino=self.db_destiny,
+                                       comunicador=communicator)
+            principle_log = principle.inicia_principios_ativos(erased)
+            data_cleaning.update({'principio_ativo': 'sim'})
+            principles_found = principle.retorna_principios_tratados()
+            if principle_log:
+                for principle in principle_log:
+                    self.log(error_register=principle['registro_erro'], error_return=principle['retorno_erro'])
+            self.log(method='Processamento de Principios Ativos Finalizado.')
+        self.progress_bar()
 
+        # PRODUCT
         if self.sel_product.get():
-            grupos_selecionados = self.checa_grupos_origem()
-            self.log(metodo='Processamento de Produtos Iniciado.')
-            produto = Produto(dados_origem=self.dados_origem,
-                              dados_destino=self.dados_destino,
-                              comunicador=comunicador,
-                              fabricantes_encontrados_tratados=self.fabricantes_encontrados_tratados,
-                              principios_encontrados_tratados=self.principios_encontrados_tratados,
-                              id_fabricante=id_fabricante,
-                              id_principio=id_principio,
-                              grupos_selecionados=grupos_selecionados)
+            selected_groups = self.get_groups()
+            self.log(method='Processamento de Produtos Iniciado.')
+            product = Produto(dados_origem=self.db_origin,
+                              dados_destino=self.db_destiny,
+                              comunicador=communicator,
+                              fabricantes_encontrados_tratados=manufacturers_found,
+                              principios_encontrados_tratados=principles_found,
+                              id_fabricante=manufacturer_id,
+                              id_principio=principle_id,
+                              grupos_selecionados=selected_groups)
 
             if self.sel_productbar.get():
-                marcador_atualizacao_produto.update({'remover_produtos_barras_zerados': 'sim'})
+                product_update.update({'remover_produtos_barras_zerados': 'sim'})
 
             if self.sel_manufacturer_cnpj.get():
-                marcador_atualizacao_produto.update({'fabricante_por_cnpj': 'sim'})
+                product_update.update({'fabricante_por_cnpj': 'sim'})
 
             if self.sel_manufacturer_id.get():
-                marcador_atualizacao_produto.update({'fabricante_por_id': 'sim'})
+                product_update.update({'fabricante_por_id': 'sim'})
 
             if self.sel_principle_desc.get():
-                marcador_atualizacao_produto.update({'principio_por_desc': 'sim'})
+                product_update.update({'principio_por_desc': 'sim'})
 
             if self.sel_principle_id.get():
-                marcador_atualizacao_produto.update({'principio_por_id': 'sim'})
+                product_update.update({'principio_por_id': 'sim'})
 
-            produtos_log = produto.inicia_produtos(marcador_produto=marcador_atualizacao_produto,
-                                                   apagado=marcador_apagado)
-            marcador_limpeza.update({'produto': 'sim'})
-            self.produtos_ids_separados = produto.retorna_produtos_ids()
-            if produtos_log:
-                for produto in produtos_log:
-                    self.log(registro_erro=produto['registro_erro'], retorno_erro=produto['retorno_erro'])
-            self.log(metodo='Processamento de Produtos Finalizado.')
-        self.barra_progresso()
+            product_log = product.inicia_produtos(marcador_produto=product_update, apagado=erased)
+            data_cleaning.update({'produto': 'sim'})
+            product_ids = product.retorna_produtos_ids()
+            if product_log:
+                for product in product_log:
+                    self.log(error_register=product['registro_erro'], error_return=product['retorno_erro'])
+            self.log(method='Processamento de Produtos Finalizado.')
+        self.progress_bar()
 
+        # BARS
         if self.sel_bars.get():
-            self.log(metodo='Processamento de Barras Adicionais Iniciado.')
-            barras = BarrasAdicional(dados_origem=self.dados_origem,
-                                     dados_destino=self.dados_destino,
-                                     comunicador=comunicador,
-                                     produtos_ids=self.produtos_ids_separados)
-            barras_log = barras.inicia_barras(marcador_apagado)
-            marcador_limpeza.update({'barras': 'sim'})
-            if barras_log:
-                for barras in barras_log:
-                    self.log(registro_erro=barras['registro_erro'], retorno_erro=barras['retorno_erro'])
-            self.log(metodo='Processamento de Barras Adicionais Finalizado.')
-        self.barra_progresso()
+            self.log(method='Processamento de Barras Adicionais Iniciado.')
+            bars = BarrasAdicional(dados_origem=self.db_origin,
+                                   dados_destino=self.db_destiny,
+                                   comunicador=communicator,
+                                   produtos_ids=product_ids)
+            bars_log = bars.inicia_barras(erased)
+            data_cleaning.update({'barras': 'sim'})
+            if bars_log:
+                for bar in bars_log:
+                    self.log(error_register=bar['registro_erro'], error_return=bar['retorno_erro'])
+            self.log(method='Processamento de Barras Adicionais Finalizado.')
+        self.progress_bar()
 
+        # STOCK
         if self.sel_stock.get():
-            self.log(metodo='Processamento de Estoque Iniciado.')
-            estoque = Estoque(dados_origem=self.dados_origem,
-                              dados_destino=self.dados_destino,
-                              filial_id_origem=filial_id_origem,
-                              filial_id_destino=filial_id_destino,
-                              comunicador=comunicador,
-                              produtos_ids=self.produtos_ids_separados)
-            estoque_log = estoque.inicia_estoque(marcador_apagado)
-            marcador_limpeza.update({'estoque': 'sim'})
-            if estoque_log:
-                for registro in estoque_log:
-                    self.log(registro_erro=registro['registro_erro'], retorno_erro=registro['retorno_erro'])
-            self.log(metodo='Processamento de Estoque Finalizado.')
-        self.barra_progresso()
+            self.log(method='Processamento de Estoque Iniciado.')
+            stock = Estoque(dados_origem=self.db_origin,
+                            dados_destino=self.db_destiny,
+                            filial_id_origem=origin_branch_id,
+                            filial_id_destino=destiny_branch_id,
+                            comunicador=communicator,
+                            produtos_ids=product_ids)
+            stock_log = stock.inicia_estoque(erased)
+            data_cleaning.update({'estoque': 'sim'})
+            if stock_log:
+                for stock in stock_log:
+                    self.log(error_register=stock['registro_erro'], error_return=stock['retorno_erro'])
+            self.log(method='Processamento de Estoque Finalizado.')
+        self.progress_bar()
 
+        # PARTITION
         if self.sel_partition.get():
-            self.log(metodo='Processamento de Lotes Iniciado.')
-            lotes = Lote(dados_origem=self.dados_origem,
-                         dados_destino=self.dados_destino,
-                         filial_id_origem=filial_id_origem,
-                         filial_id_destino=filial_id_destino,
-                         comunicador=comunicador,
-                         produtos_ids=self.produtos_ids_separados)
-            lotes_log = lotes.inicia_lotes(marcador_apagado)
-            marcador_limpeza.update({'lote': 'sim'})
-            if lotes_log:
-                for lote in lotes_log:
-                    self.log(registro_erro=lote['registro_erro'], retorno_erro=lote['retorno_erro'])
-                self.log(metodo='Processamento de Lotes Finalizado.')
-        self.barra_progresso()
+            self.log(method='Processamento de Lotes Iniciado.')
+            partition = Lote(dados_origem=self.db_origin,
+                             dados_destino=self.db_destiny,
+                             filial_id_origem=origin_branch_id,
+                             filial_id_destino=destiny_branch_id,
+                             comunicador=communicator,
+                             produtos_ids=product_ids)
+            partition_log = partition.inicia_lotes(erased)
+            data_cleaning.update({'lote': 'sim'})
+            if partition_log:
+                for partition in partition_log:
+                    self.log(error_register=partition['registro_erro'], error_return=partition['retorno_erro'])
+                self.log(method='Processamento de Lotes Finalizado.')
+        self.progress_bar()
 
+        # PRICE
         if self.sel_price.get():
-            self.log(metodo='Processamento de Preço Filial Iniciado.')
-            preco_filial = PrecoFilial(dados_origem=self.dados_origem,
-                                       dados_destino=self.dados_destino,
-                                       filial_id_origem=filial_id_origem,
-                                       filial_id_destino=filial_id_destino,
-                                       comunicador=comunicador,
-                                       produtos_ids=self.produtos_ids_separados)
-            preco_filial_log = preco_filial.inicia_precos_filial(marcador_apagado)
-            marcador_limpeza.update({'preco_filial': 'sim'})
-            if preco_filial_log:
-                for preco in preco_filial_log:
-                    self.log(registro_erro=preco['registro_erro'], retorno_erro=preco['retorno_erro'])
-                self.log(metodo='Processamento de Preço Filial Finalizado.')
-        self.barra_progresso()
+            self.log(method='Processamento de Preço Filial Iniciado.')
+            price = PrecoFilial(dados_origem=self.db_origin,
+                                dados_destino=self.db_destiny,
+                                filial_id_origem=origin_branch_id,
+                                filial_id_destino=destiny_branch_id,
+                                comunicador=communicator,
+                                produtos_ids=product_ids)
+            price_log = price.inicia_precos_filial(erased)
+            data_cleaning.update({'preco_filial': 'sim'})
+            if price_log:
+                for price in price_log:
+                    self.log(error_register=price['registro_erro'], error_return=price['retorno_erro'])
+                self.log(method='Processamento de Preço Filial Finalizado.')
+        self.progress_bar()
 
+        # SUPPLIER
         if self.sel_suppliers.get():
-            self.fornecedores_selecionados = self.checa_fornecedores()
+            selected_suppliers = self.get_suppliers()
 
-            self.log(metodo='Processamento de Fornecedores Iniciado.')
-            fornecedor = Fornecedor(dados_origem=self.dados_origem,
-                                    dados_destino=self.dados_destino,
-                                    fornecedores_selecionados=self.fornecedores_selecionados,
-                                    comunicador=comunicador)
-            fornecedores_log = fornecedor.inicia_fornecedores(marcador_apagado)
-            marcador_limpeza.update({'fornecedor': 'sim'})
-            self.fornecedores_encontrados_tratados = fornecedor.retorna_fornecedores_tratados()
-            self.fornecedores_pos_insert = fornecedor.retorna_fornecedores_pos_insert()
-            if fornecedores_log:
-                for fornecedor in fornecedores_log:
-                    self.log(registro_erro=fornecedor['registro_erro'], retorno_erro=fornecedor['retorno_erro'])
-            self.log(metodo='Processamento de Fornecedores Finalizado.')
-        self.barra_progresso()
+            self.log(method='Processamento de Fornecedores Iniciado.')
+            supplier = Fornecedor(dados_origem=self.db_origin,
+                                  dados_destino=self.db_destiny,
+                                  fornecedores_selecionados=selected_suppliers,
+                                  comunicador=communicator)
+            supplier_log = supplier.inicia_fornecedores(erased)
+            data_cleaning.update({'fornecedor': 'sim'})
+            suppliers_found = supplier.retorna_fornecedores_tratados()
+            suppliers_after_insert = supplier.retorna_fornecedores_pos_insert()
+            if supplier_log:
+                for supplier in supplier_log:
+                    self.log(error_register=supplier['registro_erro'], error_return=supplier['retorno_erro'])
+            self.log(method='Processamento de Fornecedores Finalizado.')
+        self.progress_bar()
 
+        # BILLS TO PAY
         if self.sel_bills.get():
-            self.log(metodo='Processamento de Pagar Iniciado.')
-            pagar = Pagar(dados_origem=self.dados_origem,
-                          dados_destino=self.dados_destino,
-                          filial_id_origem=filial_id_origem,
-                          filial_id_destino=filial_id_destino,
-                          fornecedores_encontrados=self.fornecedores_encontrados_tratados,
-                          fornecedores_selecionados=self.fornecedores_selecionados,
-                          fornecedores_pos_insert=self.fornecedores_pos_insert,
-                          comunicador=comunicador)
-            pagar_log = pagar.inicia_pagar(marcador_apagado)
-            marcador_limpeza.update({'pagar': 'sim'})
-            if pagar_log:
-                for pagar in pagar_log:
-                    self.log(registro_erro=pagar['registro_erro'], retorno_erro=pagar['retorno_erro'])
-            self.log(metodo='Processamento de Pagar Finalizado.')
-        self.barra_progresso()
+            self.log(method='Processamento de Pagar Iniciado.')
+            bills = Pagar(dados_origem=self.db_origin,
+                          dados_destino=self.db_destiny,
+                          filial_id_origem=origin_branch_id,
+                          filial_id_destino=destiny_branch_id,
+                          fornecedores_encontrados=suppliers_found,
+                          fornecedores_selecionados=selected_suppliers,
+                          fornecedores_pos_insert=suppliers_after_insert,
+                          comunicador=communicator)
+            bills_log = bills.inicia_pagar(erased)
+            data_cleaning.update({'pagar': 'sim'})
+            if bills_log:
+                for bills in bills_log:
+                    self.log(error_register=bills['registro_erro'], error_return=bills['retorno_erro'])
+            self.log(method='Processamento de Pagar Finalizado.')
+        self.progress_bar()
 
+        # COMPANY/CUSTOMERS
         if self.sel_companies.get():
-            self.empresas_selecionadas = self.checa_empresas()
-            self.log(metodo='Processamento de Empresas Iniciado.')
-            empresa = Empresa(dados_origem=self.dados_origem,
-                              dados_destino=self.dados_destino,
-                              empresas_selecionadas=self.empresas_selecionadas,
-                              comunicador=comunicador)
-            empresas_log = empresa.inicia_empresas(marcador_apagado)
-            marcador_limpeza.update({'empresa': 'sim'})
-            if empresas_log:
-                for empresa in empresas_log:
-                    self.log(registro_erro=empresa['registro_erro'], retorno_erro=empresa['retorno_erro'])
-            self.log(metodo='Processamento de Empresas Finalizado.')
+            selected_companies = self.get_companies()
+            self.log(method='Processamento de Empresas Iniciado.')
+            company = Empresa(dados_origem=self.db_origin,
+                              dados_destino=self.db_destiny,
+                              empresas_selecionadas=selected_companies,
+                              comunicador=communicator)
+            company_log = company.inicia_empresas(erased)
+            data_cleaning.update({'empresa': 'sim'})
+            if company_log:
+                for company in company_log:
+                    self.log(error_register=company['registro_erro'], error_return=company['retorno_erro'])
+            self.log(method='Processamento de Empresas Finalizado.')
 
-            self.log(metodo='Processamento de Clientes Iniciado.')
-            cliente = Cliente(dados_origem=self.dados_origem,
-                              dados_destino=self.dados_destino,
-                              empresas_selecionadas=self.empresas_selecionadas,
-                              comunicador=comunicador)
-            clientes_log = cliente.inicia_clientes(marcador_apagado)
-            marcador_limpeza.update({'cliente': 'sim'})
-            self.clientes_selecionados = cliente.retorna_clientes_ids()
-            if clientes_log:
-                for cliente in clientes_log:
-                    self.log(registro_erro=cliente['registro_erro'], retorno_erro=cliente['retorno_erro'])
-            self.log(metodo='Processamento de Clientes Finalizado.')
+            self.log(method='Processamento de Clientes Iniciado.')
+            customer = Cliente(dados_origem=self.db_origin,
+                               dados_destino=self.db_destiny,
+                               empresas_selecionadas=selected_companies,
+                               comunicador=communicator)
+            customer_log = customer.inicia_clientes(erased)
+            data_cleaning.update({'cliente': 'sim'})
+            selected_customers = customer.retorna_clientes_ids()
+            if customer_log:
+                for customer in customer_log:
+                    self.log(error_register=customer['registro_erro'], error_return=customer['retorno_erro'])
+            self.log(method='Processamento de Clientes Finalizado.')
 
+        # ACCOUNTS RECEIVABLE
         if self.sel_accounts_receivable.get():
-            self.log(metodo='Processamento do Receber Iniciado.')
-            receber = Receber(dados_origem=self.dados_origem,
-                              dados_destino=self.dados_destino,
-                              filial_id_origem=filial_id_origem,
-                              filial_id_destino=filial_id_destino,
-                              empresas_selecionadas=self.empresas_selecionadas,
-                              clientes_selecionados=self.clientes_selecionados,
-                              comunicador=comunicador)
-            receber_log = receber.inicia_receber(marcador_apagado)
-            marcador_limpeza.update({'receber': 'sim'})
-            if receber_log:
-                for receber in receber_log:
-                    self.log(registro_erro=receber['registro_erro'], retorno_erro=receber['retorno_erro'])
-            self.log(metodo='Processamento do Receber Finalizado.')
-        self.barra_progresso()
+            self.log(method='Processamento do Receber Iniciado.')
+            accounts = Receber(dados_origem=self.db_origin,
+                               dados_destino=self.db_destiny,
+                               filial_id_origem=origin_branch_id,
+                               filial_id_destino=destiny_branch_id,
+                               empresas_selecionadas=selected_companies,
+                               clientes_selecionados=selected_customers,
+                               comunicador=communicator)
+            accounts_log = accounts.inicia_receber(erased)
+            data_cleaning.update({'receber': 'sim'})
+            if accounts_log:
+                for account in accounts_log:
+                    self.log(error_register=account['registro_erro'], error_return=account['retorno_erro'])
+            self.log(method='Processamento do Receber Finalizado.')
+        self.progress_bar()
 
-        iterador = IteradorSql()
-        iterador.conexao_destino(self.dados_destino)
-        iterador.limpa_campo_auxiliar(marcador_limpeza)
+        iterator = IteratorSql()
+        iterator.connect_destiny(self.db_destiny)
+        iterator.limpa_campo_auxiliar(data_cleaning)
 
         self.done_message.configure(text="Concluído", foreground='green')
         self.progressbar['value'] = 100
-        self.log(metodo='Integração Concluída.')
+        self.log(method='Integração Concluída.')
 
 
 app = Ui(root)
