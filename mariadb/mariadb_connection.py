@@ -1,13 +1,10 @@
-from interfaces.connection import ConnectionInterface
 from typing import TypedDict, Type
+from interfaces.connection import ConnectionInterface
 import pymysql
 
 
 class AccessDatabase(TypedDict):
-    """_summary_
-
-    Args:
-        TypedDict (_type_): _description_
+    """Typing class
     """
     host: str
     user: str
