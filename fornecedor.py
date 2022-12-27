@@ -1,7 +1,7 @@
-from iteradorSQL import IteradorSql
+from mariadb.mariadb_repository import RepositoryMariaDb
 
 
-class Fornecedor:
+class Fornecedor(RepositoryMariaDb):
     def __init__(self, dados_origem, dados_destino, fornecedores_selecionados, comunicador):
 
         self.dados_origem = dados_origem
