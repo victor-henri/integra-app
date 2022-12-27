@@ -1,8 +1,8 @@
 from interfaces.repository import RepositoryInterface
-from mariadb_connection import ConnectionMariaDb
+from mariadb.mariadb_connection import ConnectionMariaDb
 from typing import Type
 import pymysql
-import SQLs
+import sqls
 
 
 class RepositoryMariaDb(RepositoryInterface):
@@ -37,14 +37,14 @@ class RepositoryMariaDb(RepositoryInterface):
 
         return log
 
-    def select_produto(self):
+    def select_product(self):
         # Origem
-        self.__cursor.execute(SQLs.query_select_produto)
+        self.__cursor.execute(sqls.SELECT_PRODUCT)
         product = self.__cursor.fetchall()
 
         return product
 
-    def insert_produto(self, products):
+    def insert_product(self, products):
         # Destino
 
         product_logs = []
@@ -56,7 +56,7 @@ class RepositoryMariaDb(RepositoryInterface):
 
             if product['novo_id'] is None:
                 try:
-                    self.__cursor.execute(SQLs.query_insert_produto, product)
+                    self.__cursor.execute(sqls.INSERT_PRODUCT, product)
 
                 except UnicodeEncodeError as error:
                     log = self.__unicode_error(data, error)
@@ -72,45 +72,65 @@ class RepositoryMariaDb(RepositoryInterface):
 
         return product_logs
 
-    def consulta_produto_pos_insert(self, dados_tabela):
+    def query_tables(self, table_data):
         # Destino
+        # consulta_produto_pos_insert
 
-        if dados_tabela['tabela'] == 'produto':
+        if table_data['tabela'] == 'produto':
             self.__cursor.execute('SELECT id_produto, campo_auxiliar '
                                    'FROM produto '
                                    'WHERE campo_auxiliar IS NOT NULL;')
-            dados_pos_insert = self.__cursor.fetchall()
+            data_after_insert = self.__cursor.fetchall()
 
-        elif dados_tabela['tabela'] == 'fabricante':
+        elif table_data['tabela'] == 'fabricante':
             self.__cursor.execute('SELECT id_fabricante, campos_auxiliar '
                                    'FROM fabricante '
                                    'WHERE campo_auxiliar IS NOT NULL;')
-            dados_pos_insert = self.__cursor.fetchall()
+            data_after_insert = self.__cursor.fetchall()
 
-        elif dados_tabela['tabela'] == 'principio_ativo':
+        elif table_data['tabela'] == 'principio_ativo':
             self.__cursor.execute('SELECT id_principio_ativo, campo_auxiliar '
                                    'FROM principio_ativo '
                                    'WHERE campo_auxiliar IS NOT NULL;')
-            dados_pos_insert = self.__cursor.fetchall()
+            data_after_insert = self.__cursor.fetchall()
 
-        return dados_pos_insert
+        return data_after_insert
 
-    def atualiza_campo_produto_pos_insert(self, dados_atualizacao):
+    def consulta_pos_insert(self, produto):
         # Destino
+        # Verificar este metodo
 
-        if dados_atualizacao['campo'] == 'fabricante':
+        if produto['tabela'] == 'produto':
+            self.__cursor.execute(sqls.SELECT_PRODUCT_AFTER_INSERT)
+            consulta_pos_insert = self.__cursor.fetchall()
+
+        elif produto['tabela'] == 'fabricante':
+            self.__cursor.execute(sqls.SELECT_MANUFACTURER_AFTER_INSERT)
+            consulta_pos_insert = self.__cursor.fetchall()
+
+        else:
+            self.__cursor.execute(sqls.SELECT_PRINCIPLE_AFTER_INSERT)
+            consulta_pos_insert = self.__cursor.fetchall()
+
+        return consulta_pos_insert
+
+    def update_product(self, data_update):
+        # Destino
+        # atualiza_campo_produto_pos_insert
+
+        if data_update['campo'] == 'fabricante':
             self.__cursor.execute('UPDATE produto '
                                    'SET id_fabricante = %(valor)s '
-                                   'WHERE id_produto = %(id_produto)s;', dados_atualizacao)
+                                   'WHERE id_produto = %(id_produto)s;', data_update)
 
         else:
             self.__cursor.execute('UPDATE produto '
                                    'SET id_principio_ativo = %(valor)s '
-                                   'WHERE id_produto = %(id_produto)s;', dados_atualizacao)
+                                   'WHERE id_produto = %(id_produto)s;', data_update)
 
-    def select_fabricante_origem(self):
+    def select_manufacturer(self):
         # Origem
-        self.__cursor.execute(SQLs.query_select_fabricante)
+        self.__cursor.execute(sqls.SELECT_MANUFACTURER)
         manufacturer = self.__cursor.fetchall()
 
         return manufacturer
@@ -119,12 +139,12 @@ class RepositoryMariaDb(RepositoryInterface):
     #     # Destino
     #     # Remover este método
 
-    #     self.__cursor.execute(SQLs.query_select_fabricante)
+    #     self.__cursor.execute(sqls.query_select_fabricante)
     #     manufacturer = self.__cursor.fetchall()
 
     #     return manufacturer
 
-    def insert_fabricante(self, manufacturers):
+    def insert_manufacturer(self, manufacturers):
         # Destino
 
         manufacturer_logs = []
@@ -135,7 +155,7 @@ class RepositoryMariaDb(RepositoryInterface):
                     'second_value': manufacturer['descricao']}
 
             try:
-                self.__cursor.execute(SQLs.query_insert_fabricante, manufacturer)
+                self.__cursor.execute(sqls.INSERT_MANUFACTURER, manufacturer)
 
             except UnicodeEncodeError as error:
                 log = self.__unicode_error(data, error)
@@ -149,10 +169,10 @@ class RepositoryMariaDb(RepositoryInterface):
 
         return manufacturer_logs
 
-    def select_principio_ativo_origem(self):
+    def select_principle(self):
         # Origem
 
-        self.__cursor.execute(SQLs.query_select_principio)
+        self.__cursor.execute(sqls.SELECT_PRINCIPLE)
         principle = self.__cursor.fetchall()
 
         return principle
@@ -161,12 +181,12 @@ class RepositoryMariaDb(RepositoryInterface):
     #     # Destino
     #     # Remover este metodo
 
-    #     self.__cursor.execute(SQLs.query_select_principio)
+    #     self.__cursor.execute(sqls.query_select_principio)
     #     principio_ativo = self.__cursor.fetchall()
 
     #     return principio_ativo
 
-    def insert_principios(self, principles):
+    def insert_principle(self, principles):
         # Destino
 
         principle_logs = []
@@ -177,7 +197,7 @@ class RepositoryMariaDb(RepositoryInterface):
                     'second_value': principle['descricao']}
 
             try:
-                self.__cursor.execute(SQLs.query_insert_principio, principle)
+                self.__cursor.execute(sqls.INSERT_PRINCIPLE, principle)
 
             except UnicodeEncodeError as error:
                 log = self.__unicode_error(data, error)
@@ -191,14 +211,14 @@ class RepositoryMariaDb(RepositoryInterface):
 
         return principle_logs
 
-    def select_barras(self):
+    def select_bar(self):
         # Origem
-        self.__cursor.execute(SQLs.query_select_barras)
+        self.__cursor.execute(sqls.SELECT_BAR)
         bars = self.__cursor.fetchall()
 
         return bars
 
-    def insert_barras(self, bars):
+    def insert_bar(self, bars):
         # Destino
 
         bar_logs = []
@@ -209,7 +229,7 @@ class RepositoryMariaDb(RepositoryInterface):
                     'second_value': item['barras']}
 
             try:
-                self.__cursor.execute(SQLs.query_insert_barras, item)
+                self.__cursor.execute(sqls.INSERT_BAR, item)
 
             except UnicodeEncodeError as error:
                 log = self.__unicode_error(data, error)
@@ -223,14 +243,14 @@ class RepositoryMariaDb(RepositoryInterface):
 
         return bar_logs
 
-    def select_estoque(self):
+    def select_stock(self):
         # Origem
-        self.__cursor.execute(SQLs.query_select_estoque)
+        self.__cursor.execute(sqls.SELECT_STOCK)
         stock = self.__cursor.fetchall()
 
         return stock
 
-    def insert_estoque(self, stocks):
+    def insert_stock(self, stocks):
         # Destino
 
         stock_logs = []
@@ -244,10 +264,10 @@ class RepositoryMariaDb(RepositoryInterface):
             if stock['existe'] == 'S':
                 estoque_atual = int(stock['estoque'])
                 try:
-                    self.__cursor.execute(SQLs.query_select_atualizacao_estoque, stock)
+                    self.__cursor.execute(sqls.SELECT_UPDATE_STOCK, stock)
                     estoque_existente = self.__cursor.fetchone()
                     estoque_existente.update({'estoque': estoque_existente['estoque'] + estoque_atual})
-                    self.__cursor.execute(SQLs.query_update_estoque, estoque_existente)
+                    self.__cursor.execute(sqls.UPDATE_STOCK, estoque_existente)
 
                 except UnicodeEncodeError as error:
                     log = self.__unicode_error(data, error)
@@ -261,7 +281,7 @@ class RepositoryMariaDb(RepositoryInterface):
 
             else:
                 try:
-                    self.__cursor.execute(SQLs.query_insert_estoque, stock)
+                    self.__cursor.execute(sqls.INSERT_STOCK, stock)
 
                 except UnicodeEncodeError as error:
                     log = self.__unicode_error(data, error)
@@ -275,21 +295,24 @@ class RepositoryMariaDb(RepositoryInterface):
 
         return stock_logs
 
-    def select_produto_pos_insert(self):
+    def select_get_products(self):
         # Destino
+        # select_produto_pos_insert
+
         self.__cursor.execute('SELECT id_produto, campo_auxiliar FROM produto;')
         product = self.__cursor.fetchall()
 
         return product
 
-    def select_lote(self):
+    def select_partition(self):
         # Origem
-        self.__cursor.execute(SQLs.query_select_lote)
+
+        self.__cursor.execute(sqls.SELECT_PARTITION)
         partition = self.__cursor.fetchall()
 
         return partition
 
-    def insert_lote(self, partitions):
+    def insert_partition(self, partitions):
         # Destino
 
         partition_logs = []
@@ -300,7 +323,7 @@ class RepositoryMariaDb(RepositoryInterface):
                     'second_value': partition['lote_descricao']}
 
             try:
-                self.__cursor.execute(SQLs.query_insert_lote, partition)
+                self.__cursor.execute(sqls.INSERT_PARTITION, partition)
 
             except UnicodeEncodeError as error:
                 log = self.__unicode_error(data, error)
@@ -314,14 +337,15 @@ class RepositoryMariaDb(RepositoryInterface):
 
         return partition_logs
 
-    def select_preco_filial(self):
+    def select_price(self):
         # Origem
-        self.__cursor.execute(SQLs.query_select_preco)
+
+        self.__cursor.execute(sqls.SELECT_PRICE)
         price = self.__cursor.fetchall()
 
         return price
 
-    def insert_precos_filial(self, prices):
+    def insert_price(self, prices):
         # Destino
 
         price_logs = []
@@ -332,7 +356,7 @@ class RepositoryMariaDb(RepositoryInterface):
                     'second_value': price['id_produto']}
 
             try:
-                self.__cursor.execute(SQLs.query_insert_preco, price)
+                self.__cursor.execute(sqls.INSERT_PRICE, price)
 
             except UnicodeEncodeError as error:
                 log = self.__unicode_error(data, error)
@@ -346,35 +370,35 @@ class RepositoryMariaDb(RepositoryInterface):
 
         return price_logs
 
-    def select_empresas(self, selected_companies):
+    def select_company(self, selected_companies):
         # Origem
-        self.__cursor.execute(SQLs.query_select_empresa, (selected_companies,))
+        self.__cursor.execute(sqls.SELECT_COMPANY, (selected_companies,))
         company = self.__cursor.fetchall()
 
         return company
 
-    def select_fornecedor_origem(self, selected_suppliers):
+    def select_origin_supplier(self, selected_suppliers):
         # Origem
-        self.__cursor.execute(SQLs.query_select_fornecedor_origem, (selected_suppliers,))
+        self.__cursor.execute(sqls.SELECT_SUPPLIER_ORIGIN, (selected_suppliers,))
         supplier = self.__cursor.fetchall()
 
         return supplier
 
-    def select_fornecedor_destino(self):
+    def select_destiny_supplier(self):
         # Destino
-        self.__cursor.execute(SQLs.query_select_fornecedor_destino)
+        self.__cursor.execute(sqls.SELECT_SUPPLIER_DESTINY)
         supplier = self.__cursor.fetchall()
 
         return supplier
 
-    def select_cliente(self, selected_companies):
+    def select_customer(self, selected_companies):
         # Origem
-        self.__cursor.execute(SQLs.query_select_cliente, (selected_companies,))
+        self.__cursor.execute(sqls.SELECT_CUSTOMER, (selected_companies,))
         customer = self.__cursor.fetchall()
 
         return customer
 
-    def insert_empresa(self, companies):
+    def insert_company(self, companies):
         # Destino
 
         company_logs = []
@@ -385,7 +409,7 @@ class RepositoryMariaDb(RepositoryInterface):
                     'second_value': company['nome_fantasia']}
 
             try:
-                self.__cursor.execute(SQLs.query_insert_empresa, company)
+                self.__cursor.execute(sqls.INSERT_COMPANY, company)
 
             except UnicodeEncodeError as error:
                 log = self.__unicode_error(data, error)
@@ -399,7 +423,7 @@ class RepositoryMariaDb(RepositoryInterface):
 
         return company_logs
 
-    def insert_fornecedor(self, suppliers):
+    def insert_supplier(self, suppliers):
         # Destino
 
         supplier_logs = []
@@ -410,7 +434,7 @@ class RepositoryMariaDb(RepositoryInterface):
                     'second_value': supplier['nome_fantasia']}
 
             try:
-                self.__cursor.execute(SQLs.query_insert_fornecedor, supplier)
+                self.__cursor.execute(sqls.INSERT_SUPPLIER, supplier)
 
             except UnicodeEncodeError as error:
                 log = self.__unicode_error(data, error)
@@ -424,7 +448,7 @@ class RepositoryMariaDb(RepositoryInterface):
 
         return supplier_logs
 
-    def insert_cliente(self, customers):
+    def insert_customer(self, customers):
         # Destino
 
         customer_logs = []
@@ -435,7 +459,7 @@ class RepositoryMariaDb(RepositoryInterface):
                     'second_value': customer['nome']}
 
             try:
-                self.__cursor.execute(SQLs.query_insert_cliente, customer)
+                self.__cursor.execute(sqls.INSERT_CUSTOMER, customer)
 
             except UnicodeEncodeError as error:
                 log = self.__unicode_error(data, error)
@@ -448,11 +472,11 @@ class RepositoryMariaDb(RepositoryInterface):
                 continue
 
         # Atualiza o id_empresa da tabela cliente com os novos ids de empresas inseridas
-        self.__cursor.execute(SQLs.query_update_cliente)
+        self.__cursor.execute(sqls.UPDATE_CUSTOMER)
 
         return customer_logs
 
-    def insert_receber(self, accounts):
+    def insert_account(self, accounts):
         # Destino
 
         account_logs = []
@@ -463,7 +487,7 @@ class RepositoryMariaDb(RepositoryInterface):
                     'second_value': account['valor']}
 
             try:
-                self.__cursor.execute(SQLs.query_insert_receber, account)
+                self.__cursor.execute(sqls.INSERT_ACCOUNT, account)
 
             except UnicodeEncodeError as error:
                 log = self.__unicode_error(data, error)
@@ -477,45 +501,32 @@ class RepositoryMariaDb(RepositoryInterface):
 
         # Atualiza o id_cliente da tabela receber com os novos ids de clientes inseridos a partir do
         # campo campo_auxiliar que recebeu o id_cliente do banco de origem.
-        self.__cursor.execute(SQLs.query_atualiza_receber_cliente)
+        self.__cursor.execute(sqls.UPDATE_CUSTOMER_ACCOUNT)
 
         # Atualiza o id_empresa da tabela receber com os novos ids de empresas.
-        self.__cursor.execute(SQLs.query_atualiza_receber_empresa)
+        self.__cursor.execute(sqls.UPDATE_COMPANY_ACCOUNT)
 
         return account_logs
 
-    def consulta_fornecedor_pos_insert(self):
+    def select_supplier_after_insert(self):
         # Destino
-        self.__cursor.execute(SQLs.query_consulta_pos_insert_fornecedor)
+        # consulta_fornecedor_pos_insert
+
+        self.__cursor.execute(sqls.SELECT_SUPPLIER_AFTER_INSERT)
         suppliers = self.__cursor.fetchall()
 
         return suppliers
 
-    def consulta_produto_comparacao(self):
+    def select_product_comparison(self):
         # Destino
-        self.__cursor.execute(SQLs.query_consulta_comparacao_produto)
+        # consulta_produto_comparacao
+
+        self.__cursor.execute(sqls.SELECT_PRODUCT_COMPARISON)
         products = self.__cursor.fetchall()
 
         return products
 
-    def consulta_pos_insert(self, produto):
-        # Destino
-
-        if produto['tabela'] == 'produto':
-            self.__cursor.execute(SQLs.query_consulta_pos_insert_produto)
-            consulta_pos_insert = self.__cursor.fetchall()
-
-        elif produto['tabela'] == 'fabricante':
-            self.__cursor.execute(SQLs.query_consulta_pos_insert_fabricante)
-            consulta_pos_insert = self.__cursor.fetchall()
-
-        else:
-            self.__cursor.execute(SQLs.query_consulta_pos_insert_principio)
-            consulta_pos_insert = self.__cursor.fetchall()
-
-        return consulta_pos_insert
-
-    def insert_pagar(self, bills):
+    def insert_bill(self, bills):
         # Destino
 
         bill_logs = []
@@ -526,7 +537,7 @@ class RepositoryMariaDb(RepositoryInterface):
                     'second_value': bill['valor']}
 
             try:
-                self.__cursor.execute(SQLs.query_insert_pagar, bill)
+                self.__cursor.execute(sqls.INSERT_BILL, bill)
 
             except UnicodeEncodeError as error:
                 log = self.__unicode_error(data, error)
@@ -540,106 +551,106 @@ class RepositoryMariaDb(RepositoryInterface):
 
         return bill_logs
 
-    def select_receber(self, clientes_selecionados):
+    def select_account(self, selected_customers):
         # Origem
 
-        self.__cursor.execute(SQLs.query_select_receber, (clientes_selecionados,))
-        receber = self.__cursor.fetchall()
+        self.__cursor.execute(sqls.SELECT_ACCOUNT, (selected_customers,))
+        account = self.__cursor.fetchall()
 
-        return receber
+        return account
 
-    def select_pagar(self, fornecedores_selecionados):
+    def select_bill(self, selected_suppliers):
         # Origem
 
-        self.__cursor.execute(SQLs.query_select_pagar, (fornecedores_selecionados,))
-        pagar = self.__cursor.fetchall()
+        self.__cursor.execute(sqls.SELECT_BILL, (selected_suppliers,))
+        bill = self.__cursor.fetchall()
 
-        return pagar
+        return bill
 
-    def select_grupo_origem_sapagado(self):
+    def select_origin_group_nerased(self):
         # Origem
 
-        self.__cursor.execute(SQLs.query_select_grporigem_sapagado)
-        grupo = self.__cursor.fetchall()
+        self.__cursor.execute(sqls.SELECT_ORIGIN_GROUP_NERASED)
+        group = self.__cursor.fetchall()
 
-        return grupo
+        return group
 
-    def select_grupo_origem_capagado(self):
+    def select_origin_group_erased(self):
         # Origem
 
-        self.__cursor.execute(SQLs.query_select_grporigem_capagado)
-        grupo = self.__cursor.fetchall()
+        self.__cursor.execute(sqls.SELECT_ORIGIN_GROUP_ERASED)
+        group = self.__cursor.fetchall()
 
-        return grupo
+        return group
 
-    def select_grupo_destino_sapagado(self):
+    def select_group_destiny_nerased(self):
         # Destino
 
-        self.__cursor.execute(SQLs.query_select_grpdestino_sapagado)
-        grupo = self.__cursor.fetchall()
+        self.__cursor.execute(sqls.SELECT_GROUP_DESTINY_NERASED)
+        group = self.__cursor.fetchall()
 
-        return grupo
+        return group
 
-    def select_grupo_destino_capagado(self):
+    def select_group_destiny_erased(self):
         # Destino
 
-        self.__cursor.execute(SQLs.query_select_grpdestino_capagado)
-        grupo = self.__cursor.fetchall()
+        self.__cursor.execute(sqls.SELECT_GROUP_DESTINY_ERASED)
+        group = self.__cursor.fetchall()
 
-        return grupo
+        return group
 
-    def select_listagem_empresa(self):
+    def select_listing_company(self):
         # Origem
 
-        self.__cursor.execute(SQLs.query_select_listagem_empresa)
-        empresa = self.__cursor.fetchall()
+        self.__cursor.execute(sqls.SELECT_LISTING_COMPANY)
+        company = self.__cursor.fetchall()
 
-        return empresa
+        return company
 
-    def select_listagem_fornecedor(self):
+    def select_listing_supplier(self):
         # Origem
 
-        self.__cursor.execute(SQLs.query_select_listagem_fornecedor)
-        fornecedor = self.__cursor.fetchall()
+        self.__cursor.execute(sqls.SELECT_LISTING_SUPPLIER)
+        supplier = self.__cursor.fetchall()
 
-        return fornecedor
+        return supplier
 
-    def limpa_campo_auxiliar(self, marcador_limpeza):
+    def data_cleaning(self, cleaning_marker):
         # Destino
 
-        if marcador_limpeza['fabricante'] == 'sim':
-            self.__cursor.execute(SQLs.query_update_limpeza_fabricante)
+        if cleaning_marker['fabricante'] == 'sim':
+            self.__cursor.execute(sqls.UPDATE_CLEANING_MANUFACTURER)
 
-        if marcador_limpeza['principio_ativo'] == 'sim':
-            self.__cursor.execute(SQLs.query_update_limpeza_principio_ativo)
+        if cleaning_marker['principio_ativo'] == 'sim':
+            self.__cursor.execute(sqls.UPDATE_CLEANING_PRINCIPLE)
 
-        if marcador_limpeza['produto'] == 'sim':
-            self.__cursor.execute(SQLs.query_update_limpeza_produto)
+        if cleaning_marker['produto'] == 'sim':
+            self.__cursor.execute(sqls.UPDATE_CLEANING_PRODUCT)
 
-        if marcador_limpeza['barras'] == 'sim':
-            self.__cursor.execute(SQLs.query_update_limpeza_barras)
+        if cleaning_marker['barras'] == 'sim':
+            self.__cursor.execute(sqls.UPDATE_CLEANING_BARS)
 
-        if marcador_limpeza['estoque'] == 'sim':
-            self.__cursor.execute(SQLs.query_update_limpeza_estoque)
+        if cleaning_marker['estoque'] == 'sim':
+            self.__cursor.execute(sqls.UPDATE_CLEANING_STOCK)
 
-        if marcador_limpeza['lote'] == 'sim':
-            self.__cursor.execute(SQLs.query_update_limpeza_lote)
+        if cleaning_marker['lote'] == 'sim':
+            self.__cursor.execute(sqls.UPDATE_CLEANING_PARTITION)
 
-        if marcador_limpeza['preco_filial'] == 'sim':
-            self.__cursor.execute(SQLs.query_update_limpeza_preco_filial)
+        if cleaning_marker['preco_filial'] == 'sim':
+            self.__cursor.execute(sqls.UPDATE_CLEANING_PRICE)
 
-        if marcador_limpeza['fornecedor'] == 'sim':
-            self.__cursor.execute(SQLs.query_update_limpeza_fornecedor)
+        if cleaning_marker['fornecedor'] == 'sim':
+            self.__cursor.execute(sqls.UPDATE_CLEANING_SUPPLIER)
 
-        if marcador_limpeza['pagar'] == 'sim':
-            self.__cursor.execute(SQLs.query_update_limpeza_pagar)
+        if cleaning_marker['pagar'] == 'sim':
+            self.__cursor.execute(sqls.UPDATE_CLEANING_BILL)
 
-        if marcador_limpeza['empresa'] == 'sim':
-            self.__cursor.execute(SQLs.query_update_limpeza_empresa)
+        if cleaning_marker['empresa'] == 'sim':
+            self.__cursor.execute(sqls.UPDATE_CLEANING_COMPANY)
 
-        if marcador_limpeza['cliente'] == 'sim':
-            self.__cursor.execute(SQLs.query_update_limpeza_cliente)
-            self.__cursor.execute(SQLs.query_update_limpeza_cliente2)
+        if cleaning_marker['cliente'] == 'sim':
+            self.__cursor.execute(sqls.UPDATE_CLEANING_CUSTOMER)
+            self.__cursor.execute(sqls.UPDATE_CLEANING_CUSTOMER2)
 
-        if marcador_limpeza['receber'] == 'sim':
-            self.__cursor.execute(SQLs.query_update_limpeza_receber)
+        if cleaning_marker['receber'] == 'sim':
+            self.__cursor.execute(sqls.UPDATE_CLEANING_ACCOUNT)
