@@ -1,7 +1,5 @@
-from iteradorSQL import IteradorSql
+class Bar:
 
-
-class BarrasAdicional:
     def __init__(self, dados_origem, dados_destino, comunicador, produtos_ids):
 
         self.dados_origem = dados_origem

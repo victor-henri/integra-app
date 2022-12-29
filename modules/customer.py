@@ -1,7 +1,4 @@
-from iteradorSQL import IteradorSql
-
-
-class Cliente:
+class Customer:
     def __init__(self, dados_origem, dados_destino, empresas_selecionadas, comunicador):
 
         self.dados_origem = dados_origem

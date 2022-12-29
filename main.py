@@ -1,27 +1,24 @@
 import tkinter as tk
 import tkinter.font as font
 import tkinter.ttk as ttk
-import ttkbootstrap as ttkb
-from ttkwidgets import CheckboxTreeview
-from PIL import ImageTk, Image
-import logging
 from typing import TypedDict
+import logging
+from PIL import ImageTk, Image
+from ttkwidgets import CheckboxTreeview
+import ttkbootstrap as ttkb
 import documentacao
-from iteradorSQL import IteratorSql
-from fabricante import Fabricante
-from principioativo import PrincipioAtivo
-from produto import Produto
-from barras import BarrasAdicional
-from estoque import Estoque
-from lote import Lote
-from precofilial import PrecoFilial
-from empresa import Empresa
-from cliente import Cliente
-from receber import Receber
-from fornecedor import Fornecedor
-from pagar import Pagar
+from run import Run
 
 
+class AccessDatabase(TypedDict):
+    host: str
+    user: str
+    password: str
+    database: str
+    port: int
+
+
+run = Run()
 root = tk.Tk()
 root.geometry("1100x530")
 root.resizable(False, False)
@@ -34,16 +31,12 @@ theme.configure('Treeviews', rowheight=23)
 class Ui:
 
     def __init__(self, master):
-        
-        self.db_origin = None
-        self.db_destiny = None
-        self.origin_iterator = None
-        self.destiny_iterator = None
+
         self.body_font = font.Font(family='Roboto', size=10)
         self.title_font = font.Font(family='Roboto', size=12)
-        self.iid_companies_listing = None
-        self.iid_suppliers_listing = None
-        self.iid_origin_groups_listing = None
+        self.iid_companies = None
+        self.iid_suppliers = None
+        self.__iid_origin_groups = None
 
         # MAIN FRAME
         self.main_frame = ttkb.Frame(master)
@@ -596,81 +589,50 @@ class Ui:
     # Métodos de conexão.
     def origin(self):
 
-        class AccessDatabase(TypedDict):
-            host: str
-            user: str
-            password: str
-            database: str
-            port: int
+        db_origin: AccessDatabase = {'host': self.ip_origin_entry.get(),
+                                     'user': self.user_origin_entry.get(),
+                                     'password': self.pass_origin_entry.get(),
+                                     'database': self.db_origin_entry.get(),
+                                     'port': int(self.port_origin_entry.get())}
 
-        self.db_origin: AccessDatabase = {'host': self.ip_origin_entry.get(),
-                                          'user': self.user_origin_entry.get(),
-                                          'password': self.pass_origin_entry.get(),
-                                          'database': self.db_origin_entry.get(),
-                                          'port': int(self.port_origin_entry.get())}
+        log_return = run.connect_origin(db_origin)
 
-        self.origin_iterator = IteratorSql()
-        origin_return = self.origin_iterator.connect_origin(self.db_origin)
-
-        if origin_return['return'] == 'Connected':
+        if log_return['return'] == 'Connected':
             self.alert_origin_button.destroy()
             self.origin_message.configure(text="Conectado", foreground='green')
+
             self.origin_groups_listing()
             self.companies_listing()
             self.suppliers_listing()
 
-        elif origin_return['return'] == 'pymysql.err.OperationalError':
-            self.alert_origin_button.destroy()
-            self.origin_message.configure(text="Falha", foreground='orange')
-            cod_error = origin_return['cod']
-            desc_error = origin_return['description']
-            self.origin_alert(cod_error, desc_error)
-            self.alert_origin_button.place(anchor=tk.W, height=22, width=22, x=30, y=323)
-
         else:
             self.alert_origin_button.destroy()
             self.origin_message.configure(text="Falha", foreground='orange')
-            cod_error = 20
-            desc_error = origin_return['description']
+            cod_error = log_return['cod']
+            desc_error = log_return['description']
             self.origin_alert(cod_error, desc_error)
             self.alert_origin_button.place(anchor=tk.W, height=22, width=22, x=30, y=323)
 
     def destiny(self):
 
-        class AccessDatabase(TypedDict):
-            host: str
-            user: str
-            password: str
-            database: str
-            port: int
+        db_destiny: AccessDatabase = {'host': self.ip_destiny_entry.get(),
+                                      'user': self.user_destiny_entry.get(),
+                                      'password': self.pass_destiny_entry.get(),
+                                      'database': self.db_destiny_entry.get(),
+                                      'port': int(self.port_destiny_entry.get())}
 
-        self.db_destiny: AccessDatabase = {'host': self.ip_destiny_entry.get(),
-                                           'user': self.user_destiny_entry.get(),
-                                           'password': self.pass_destiny_entry.get(),
-                                           'database': self.db_destiny_entry.get(),
-                                           'port': int(self.port_destiny_entry.get())}
+        log_return = run.connect_destiny(db_destiny)
 
-        self.destiny_iterator = IteratorSql()
-        destiny_return = self.destiny_iterator.connect_destiny(self.db_destiny)
-
-        if destiny_return['return'] == 'Connected':
+        if log_return['return'] == 'Connected':
             self.alert_destiny_button.destroy()
             self.destiny_message.configure(text="Conectado", foreground='green')
             self.destiny_groups_listing()
 
-        elif destiny_return['return'] == 'pymysql.err.OperationalError':
-            self.alert_destiny_button.destroy()
-            self.destiny_message.configure(text="Falha", foreground='orange')
-            cod_error = destiny_return['cod']
-            desc_error = destiny_return['description']
-            self.destiny_alert(cod_error, desc_error)
-            self.alert_destiny_button.place(anchor=tk.W, height=22, width=22, x=30, y=323)
-
         else:
             self.alert_destiny_button.destroy()
             self.destiny_message.configure(text="Falha", foreground='orange')
-            cod_error = 20
-            desc_error = destiny_return['description']
+            cod_error = log_return['cod']
+            desc_error = log_return['description']
             self.destiny_alert(cod_error, desc_error)
             self.alert_destiny_button.place(anchor=tk.W, height=22, width=22, x=30, y=323)
 
@@ -737,89 +699,119 @@ class Ui:
             logging.warning(separator)
 
     # Métodos de listagem automática e exibição dos dados ao conectar.
-    def origin_groups_listing(self):
+    def origin_groups(self):
+
+        index: int = 0
+        option_selected: dict = {'database': 'origin'}
 
         try:
             if self.sel_erased_origin_groups.get():
-                groups = self.origin_iterator.select_grupo_origem_sapagado()
-                index = 0
-                self.iid_origin_groups_listing: int = []
+
+                option_selected.update({'option': 'filtered'})
+                groups = run.get_groups(option_selected)
+                self.__iid_origin_groups: list[int] = []
 
                 for group in groups:
                     self.groups_origin_checkboxtreeview.insert(
-                        "", index=tk.END, iid=index, text='', values=('', group['id_grupo'], group['descricao']))
-                    self.iid_origin_groups_listing.append(index)
+                        "",
+                        index=tk.END,
+                        iid=index,
+                        text='',
+                        values=('', group['id_grupo'], group['descricao']))
+                    self.__iid_origin_groups.append(index)
                     index += 1
 
             else:
-                groups = self.origin_iterator.select_grupo_origem_capagado()
-                index = 0
-                self.iid_origin_groups_listing: int = []
+
+                option_selected.update({'option': 'not_filtered'})
+                groups = run.get_groups(option_selected)
+                self.__iid_origin_groups: list[int] = []
 
                 for group in groups:
                     self.groups_origin_checkboxtreeview.insert(
-                        "", index=tk.END, iid=index, text='', values=('', group['id_grupo'], group['descricao']))
-                    self.iid_origin_groups_listing.append(index)
+                        "",
+                        index=tk.END,
+                        iid=index,
+                        text='',
+                        values=('', group['id_grupo'], group['descricao']))
+                    self.__iid_origin_groups.append(index)
                     index += 1
 
         except Exception as error:
             print(f"Exception in method origin_groups_listing: {error}")
 
-    def destiny_groups_listing(self):
+    def destiny_groups(self):
+
+        index: int = 0
+        option_selected: dict = {'database': 'destiny'}
 
         try:
             if self.sel_erased_destiny_groups.get():
-                groups = self.destiny_iterator.select_grupo_destino_sapagado()
-                index = 0
-                iid_destiny_groups_listing: int = []
+
+                option_selected.update({'option': 'filtered'})
+                groups = run.get_groups(option_selected)
 
                 for group in groups:
                     self.groups_destiny_checkboxtreeview.insert(
-                        "", index=tk.END, iid=index, text='', values=(group['id_grupo'], group['descricao']))
-                    iid_destiny_groups_listing.append(index)
+                        "",
+                        index=tk.END,
+                        iid=index,
+                        text='',
+                        values=(group['id_grupo'], group['descricao']))
                     index += 1
 
             else:
-                groups = self.destiny_iterator.select_grupo_destino_capagado()
-                index = 0
-                iid_destiny_groups_listing: int = []
+
+                option_selected.update({'option': 'not_filtered'})
+                groups = run.get_groups(option_selected)
 
                 for group in groups:
                     self.groups_destiny_checkboxtreeview.insert(
-                        "", index=tk.END, iid=index, text='', values=(group['id_grupo'], group['descricao']))
-                    iid_destiny_groups_listing.append(index)
+                        "",
+                        index=tk.END,
+                        iid=index,
+                        text='',
+                        values=(group['id_grupo'], group['descricao']))
                     index += 1
 
         except Exception as error:
             print(f"Exception in method destiny_groups_listing: {error}")
 
-    def companies_listing(self):
+    def companies(self):
 
         try:
-            companies = self.origin_iterator.select_listagem_empresa()
-            index = 0
-            self.iid_companies_listing: int = []
+            companies = run.get_companies()
+            index: int = 0
+            self.iid_companies: list[int] = []
 
             for company in companies:
                 self.companies_checkboxtreeview.insert(
-                    "", index='end', iid=index, text='', values=(company['id_empresa'], company['nome_fantasia']))
-                self.iid_companies_listing.append(index)
+                    "",
+                    index='end',
+                    iid=index,
+                    text='',
+                    values=(company['id_empresa'], company['nome_fantasia']))
+                self.iid_companies.append(index)
                 index += 1
 
         except Exception as error:
             print(f"Exception in method companies_listing: {error}")
 
-    def suppliers_listing(self):
+    def suppliers(self):
 
         try:
-            suppliers = self.origin_iterator.select_listagem_fornecedor()
-            index = 0
-            self.iid_suppliers_listing = []
+            suppliers = run.get_suppliers()
+            index: int = 0
+            self.iid_suppliers: list[int] = []
 
             for supplier in suppliers:
                 self.suppliers_checkboxtreeview.insert(
-                    "", index='end', iid=index,text='', values=(supplier['id_fornecedor'], supplier['razao_social']))
-                self.iid_suppliers_listing.append(index)
+                    "",
+                    index='end',
+                    iid=index,
+                    text='',
+                    values=(supplier['id_fornecedor'], supplier['razao_social']))
+                self.iid_suppliers.append(index)
                 index += 1
 
         except Exception as error:
@@ -828,17 +820,17 @@ class Ui:
     # Métodos de marcação de todos os registros na Interface.
     def tag_all_companies(self):
 
-        for iid in self.iid_companies_listing:
+        for iid in self.iid_companies:
             self.companies_checkboxtreeview.change_state(item=iid, state='checked')
 
     def tag_all_suppliers(self):
 
-        for iid in self.iid_suppliers_listing:
+        for iid in self.iid_suppliers:
             self.suppliers_checkboxtreeview.change_state(item=iid, state='checked')
 
     def tag_all_groups(self):
 
-        for iid in self.iid_origin_groups_listing:
+        for iid in self.__iid_origin_groups:
             self.groups_origin_checkboxtreeview.change_state(item=iid, state='checked')
 
     # Métodos de coleta dos registros selecionados na Interface.
@@ -956,12 +948,15 @@ class Ui:
     # Método de execução
     def start(self):
 
+       # PRE STARTUP
         communicator = self.return_destiny_communicator()
         origin_branch_id = int(self.return_origin_branch_id())
         destiny_branch_id = int(self.return_destiny_branch_id())
         manufacturer_id = self.manufacturer_id_entry.get()
         principle_id = self.principle_id_entry.get()
         zeros = int(self.zeros_spinbox.get())
+
+        erased = {'apagado': 'nao'}
 
         product_update = {'fabricante_por_cnpj': 'nao',
                           'fabricante_por_id': 'nao',
@@ -972,7 +967,7 @@ class Ui:
                           'remover_produtos_barras_zerados': 'nao',
                           'quantidade_zeros_barras': zeros}
 
-        data_cleaning = {'fabricante': 'nao',
+        module_marker = {'fabricante': 'nao',
                          'principio_ativo': 'nao',
                          'produto': 'nao',
                          'barras': 'nao',
@@ -985,48 +980,85 @@ class Ui:
                          'cliente': 'nao',
                          'receber': 'nao'}
 
-        erased = {'apagado': 'nao'}
-
-        if self.sel_erased.get():
-            erased.update({'apagado': 'sim'})
-
-        # INITIATION
         self.progressbar['value'] = 0
         self.done_message.configure(text="Em Andamento", width=125, foreground='orange')
         self.log(method='Integração Iniciada.')
 
-        # MANUFACTURER
+        # MARKERS
+        if self.sel_erased.get():
+            erased.update({'apagado': 'sim'})
+
         if self.sel_manufacturer_cnpj.get():
+            module_marker.update({'fabricante': 'sim'})
+
+        if self.sel_principle_desc.get():
+            module_marker.update({'principio_ativo': 'sim'})
+
+        if self.sel_product.get():
+            module_marker.update({'produto': 'sim'})
+
+        if self.sel_bars.get():
+            module_marker.update({'barras': 'sim'})
+
+        if self.sel_stock.get():
+            module_marker.update({'estoque': 'sim'})
+
+        if self.sel_partition.get():
+            module_marker.update({'lote': 'sim'})
+
+        if self.sel_price.get():
+            module_marker.update({'preco_filial': 'sim'})
+
+        if self.sel_suppliers.get():
+            module_marker.update({'fornecedor': 'sim'})
+
+        if self.sel_bills.get():
+            module_marker.update({'pagar': 'sim'})
+
+        if self.sel_companies.get():
+            module_marker.update({'empresa': 'sim'})
+            module_marker.update({'cliente': 'sim'})
+
+        if self.sel_accounts_receivable.get():
+            module_marker.update({'receber': 'sim'})
+
+        # START PROCESS
+        run.start_process(erased, communicator, module_marker)
+
+        # GET LOGS
+        self.__logs = run.get_logs()
+
+        # PROCESS LOGS
+        if self.sel_manufacturer_cnpj.get():
+
             self.log(method='Processamento de Fabricantes Iniciado.')
-            manufacturer = Fabricante(dados_origem=self.db_origin,
-                                      dados_destino=self.db_destiny,
-                                      comunicador=communicator)
-            manufacturer_log = manufacturer.inicia_fabricantes(erased)
-            data_cleaning.update({'fabricante': 'sim'})
-            manufacturers_found = manufacturer.retorna_fabricantes_tratados()
-            if manufacturer_log:
+            if self.__logs['manufacturer_logs']:
+
+                manufacturer_log = self.__logs['manufacturer_logs']
                 for manufacturer in manufacturer_log:
-                    self.log(error_register=manufacturer['registro_erro'], error_return=manufacturer['retorno_erro'])
+                    self.log(error_register=manufacturer['error_register'],
+                             error_return=manufacturer['error_return'])
             self.log(method='Processamento de Fabricantes Finalizado.')
         self.progress_bar()
 
         # PRINCIPLE
-        if self.sel_principle_desc.get():
+
             self.log(method='Processamento de Principios Ativos Iniciado.')
             principle = PrincipioAtivo(dados_origem=self.db_origin,
                                        dados_destino=self.db_destiny,
                                        comunicador=communicator)
             principle_log = principle.inicia_principios_ativos(erased)
-            data_cleaning.update({'principio_ativo': 'sim'})
+            
             principles_found = principle.retorna_principios_tratados()
             if principle_log:
                 for principle in principle_log:
-                    self.log(error_register=principle['registro_erro'], error_return=principle['retorno_erro'])
+                    self.log(error_register=principle['registro_erro'], 
+                             error_return=principle['retorno_erro'])
             self.log(method='Processamento de Principios Ativos Finalizado.')
         self.progress_bar()
 
         # PRODUCT
-        if self.sel_product.get():
+
             selected_groups = self.get_groups()
             self.log(method='Processamento de Produtos Iniciado.')
             product = Produto(dados_origem=self.db_origin,
@@ -1054,7 +1086,7 @@ class Ui:
                 product_update.update({'principio_por_id': 'sim'})
 
             product_log = product.inicia_produtos(marcador_produto=product_update, apagado=erased)
-            data_cleaning.update({'produto': 'sim'})
+            
             product_ids = product.retorna_produtos_ids()
             if product_log:
                 for product in product_log:
@@ -1063,14 +1095,14 @@ class Ui:
         self.progress_bar()
 
         # BARS
-        if self.sel_bars.get():
+
             self.log(method='Processamento de Barras Adicionais Iniciado.')
             bars = BarrasAdicional(dados_origem=self.db_origin,
                                    dados_destino=self.db_destiny,
                                    comunicador=communicator,
                                    produtos_ids=product_ids)
             bars_log = bars.inicia_barras(erased)
-            data_cleaning.update({'barras': 'sim'})
+            
             if bars_log:
                 for bar in bars_log:
                     self.log(error_register=bar['registro_erro'], error_return=bar['retorno_erro'])
@@ -1078,7 +1110,7 @@ class Ui:
         self.progress_bar()
 
         # STOCK
-        if self.sel_stock.get():
+
             self.log(method='Processamento de Estoque Iniciado.')
             stock = Estoque(dados_origem=self.db_origin,
                             dados_destino=self.db_destiny,
@@ -1087,7 +1119,7 @@ class Ui:
                             comunicador=communicator,
                             produtos_ids=product_ids)
             stock_log = stock.inicia_estoque(erased)
-            data_cleaning.update({'estoque': 'sim'})
+            
             if stock_log:
                 for stock in stock_log:
                     self.log(error_register=stock['registro_erro'], error_return=stock['retorno_erro'])
@@ -1095,7 +1127,7 @@ class Ui:
         self.progress_bar()
 
         # PARTITION
-        if self.sel_partition.get():
+
             self.log(method='Processamento de Lotes Iniciado.')
             partition = Lote(dados_origem=self.db_origin,
                              dados_destino=self.db_destiny,
@@ -1104,7 +1136,7 @@ class Ui:
                              comunicador=communicator,
                              produtos_ids=product_ids)
             partition_log = partition.inicia_lotes(erased)
-            data_cleaning.update({'lote': 'sim'})
+            
             if partition_log:
                 for partition in partition_log:
                     self.log(error_register=partition['registro_erro'], error_return=partition['retorno_erro'])
@@ -1112,7 +1144,7 @@ class Ui:
         self.progress_bar()
 
         # PRICE
-        if self.sel_price.get():
+
             self.log(method='Processamento de Preço Filial Iniciado.')
             price = PrecoFilial(dados_origem=self.db_origin,
                                 dados_destino=self.db_destiny,
@@ -1121,7 +1153,7 @@ class Ui:
                                 comunicador=communicator,
                                 produtos_ids=product_ids)
             price_log = price.inicia_precos_filial(erased)
-            data_cleaning.update({'preco_filial': 'sim'})
+            
             if price_log:
                 for price in price_log:
                     self.log(error_register=price['registro_erro'], error_return=price['retorno_erro'])
@@ -1129,7 +1161,7 @@ class Ui:
         self.progress_bar()
 
         # SUPPLIER
-        if self.sel_suppliers.get():
+
             selected_suppliers = self.get_suppliers()
 
             self.log(method='Processamento de Fornecedores Iniciado.')
@@ -1138,7 +1170,7 @@ class Ui:
                                   fornecedores_selecionados=selected_suppliers,
                                   comunicador=communicator)
             supplier_log = supplier.inicia_fornecedores(erased)
-            data_cleaning.update({'fornecedor': 'sim'})
+            
             suppliers_found = supplier.retorna_fornecedores_tratados()
             suppliers_after_insert = supplier.retorna_fornecedores_pos_insert()
             if supplier_log:
@@ -1148,7 +1180,8 @@ class Ui:
         self.progress_bar()
 
         # BILLS TO PAY
-        if self.sel_bills.get():
+
+
             self.log(method='Processamento de Pagar Iniciado.')
             bills = Pagar(dados_origem=self.db_origin,
                           dados_destino=self.db_destiny,
@@ -1159,7 +1192,7 @@ class Ui:
                           fornecedores_pos_insert=suppliers_after_insert,
                           comunicador=communicator)
             bills_log = bills.inicia_pagar(erased)
-            data_cleaning.update({'pagar': 'sim'})
+            
             if bills_log:
                 for bills in bills_log:
                     self.log(error_register=bills['registro_erro'], error_return=bills['retorno_erro'])
@@ -1167,7 +1200,7 @@ class Ui:
         self.progress_bar()
 
         # COMPANY/CUSTOMERS
-        if self.sel_companies.get():
+
             selected_companies = self.get_companies()
             self.log(method='Processamento de Empresas Iniciado.')
             company = Empresa(dados_origem=self.db_origin,
@@ -1175,7 +1208,7 @@ class Ui:
                               empresas_selecionadas=selected_companies,
                               comunicador=communicator)
             company_log = company.inicia_empresas(erased)
-            data_cleaning.update({'empresa': 'sim'})
+            
             if company_log:
                 for company in company_log:
                     self.log(error_register=company['registro_erro'], error_return=company['retorno_erro'])
@@ -1187,7 +1220,7 @@ class Ui:
                                empresas_selecionadas=selected_companies,
                                comunicador=communicator)
             customer_log = customer.inicia_clientes(erased)
-            data_cleaning.update({'cliente': 'sim'})
+            
             selected_customers = customer.retorna_clientes_ids()
             if customer_log:
                 for customer in customer_log:
@@ -1195,7 +1228,7 @@ class Ui:
             self.log(method='Processamento de Clientes Finalizado.')
 
         # ACCOUNTS RECEIVABLE
-        if self.sel_accounts_receivable.get():
+
             self.log(method='Processamento do Receber Iniciado.')
             accounts = Receber(dados_origem=self.db_origin,
                                dados_destino=self.db_destiny,
@@ -1205,7 +1238,7 @@ class Ui:
                                clientes_selecionados=selected_customers,
                                comunicador=communicator)
             accounts_log = accounts.inicia_receber(erased)
-            data_cleaning.update({'receber': 'sim'})
+            
             if accounts_log:
                 for account in accounts_log:
                     self.log(error_register=account['registro_erro'], error_return=account['retorno_erro'])

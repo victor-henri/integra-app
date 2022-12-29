@@ -180,16 +180,10 @@ UPDATE_COMPANY_ACCOUNT = 'UPDATE contas_receber ' \
                          'SET contas_receber.id_empresa = cliente.id_empresa;'
 
 # query_select_grporigem_sapagado
-SELECT_ORIGIN_GROUP_NERASED = 'SELECT id_grupo, descricao FROM grupo WHERE apagado = "N" ORDER BY id_grupo;'
+SELECT_GROUP_FILTERED = 'SELECT id_grupo, descricao FROM grupo WHERE apagado = "N" ORDER BY id_grupo;'
 
 # query_select_grporigem_capagado
-SELECT_ORIGIN_GROUP_ERASED = 'SELECT id_grupo, descricao FROM grupo ORDER BY id_grupo;'
-
-# query_select_grpdestino_sapagado
-SELECT_GROUP_DESTINY_NERASED = 'SELECT id_grupo, descricao FROM grupo WHERE apagado = "N" ORDER BY id_grupo;'
-
-# query_select_grpdestino_capagado
-SELECT_GROUP_DESTINY_ERASED = 'SELECT id_grupo, descricao FROM grupo ORDER BY id_grupo;'
+SELECT_GROUP_NOT_FILTERED = 'SELECT id_grupo, descricao FROM grupo ORDER BY id_grupo;'
 
 # query_select_listagem_empresa
 SELECT_LISTING_COMPANY = 'SELECT id_empresa, nome_fantasia FROM empresa ORDER BY id_empresa;'

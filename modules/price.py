@@ -1,7 +1,4 @@
-from iteradorSQL import IteradorSql
-
-
-class Lote:
+class Price:
     def __init__(self, dados_origem, dados_destino, comunicador, filial_id_origem, filial_id_destino, produtos_ids):
 
         self.dados_origem = dados_origem
@@ -11,78 +8,78 @@ class Lote:
         self.filial_id_destino = filial_id_destino
         self.produtos_ids = produtos_ids
 
-    def inicia_lotes(self, apagado):
+    def inicia_precos_filial(self, apagado):
 
         iterador = IteradorSql()
         iterador.conexao_origem(self.dados_origem)
         iterador.conexao_destino(self.dados_destino)
-        lote = iterador.select_lote()
+        precos = iterador.select_preco_filial()
 
         if apagado['apagado'] == 'sim':
-            lote = self.remove_apagado(lote)
+            precos = self.remove_apagado(precos)
 
         id_produtos = self.produtos_ids['id_produtos']
         produtos_encontrados = self.produtos_ids['produtos_encontrados']
 
-        lotes_selecionados = self.separa_lotes_selecionados(id_produtos, lote)
-        lotes_tratados = self.tratamento_lote(produtos_encontrados, lotes_selecionados)
-        lotes_log = iterador.insert_lote(lotes_tratados)
+        precos_filial_selecionados = self.separa_precos_selecionados(id_produtos, precos)
+        precos_filial_tratados = self.tratamento_precos_filial(produtos_encontrados, precos_filial_selecionados)
+        preco_filial_log = iterador.insert_precos_filial(precos_filial_tratados)
 
-        return lotes_log
+        return preco_filial_log
 
     @staticmethod
-    def remove_apagado(lote):
+    def remove_apagado(precos):
 
-        for registro in lote:
+        for registro in precos:
             if registro['apagado'] == 'S':
-                lote.remove(registro)
+                precos.remove(registro)
             else:
                 continue
 
-        return lote
+        return precos
 
-    def separa_lotes_selecionados(self, id_produtos, lote):
+    def separa_precos_selecionados(self, id_produtos, precos):
 
-        lotes_selecionados = []
+        precos_selecionados = []
 
-        for registro in lote:
-            id_produto = int(registro['id_produto'])
-            lote_filial = int(registro['id_filial'])
-            if id_produto in id_produtos and lote_filial == self.filial_id_origem:
-                lotes_selecionados.append(registro)
+        for registro in precos:
+            produto_id = int(registro['id_produto'])
+            preco_filial = int(registro['id_filial'])
+            if produto_id in id_produtos and preco_filial == self.filial_id_origem:
+                precos_selecionados.append(registro)
             else:
                 continue
 
-        return lotes_selecionados
+        return precos_selecionados
 
-    def tratamento_lote(self, produtos_encontrados, lotes):
+    def tratamento_precos_filial(self, produtos_encontrados, precos):
 
         iterador = IteradorSql()
         iterador.conexao_destino(self.dados_destino)
         tabela_produto = {'tabela': 'produto'}
         produtos_pos_insert = iterador.consulta_pos_insert(tabela_produto)
 
-        for lote in lotes:
-            antigo_id = int(lote['id_produto'])
+        for preco in precos[:]:
+            antigo_id = int(preco['id_produto'])
             id_encontrado = self.compara_produto(antigo_id, produtos_encontrados)
             if id_encontrado is None:
                 novo_id = self.busca_id_atual(antigo_id, produtos_pos_insert)
-                lote.update({'id_produto_ant': antigo_id})
-                lote.update({'id_produto': novo_id})
+                preco.update({'id_produto_ant': antigo_id})
+                preco.update({'id_produto': novo_id})
             else:
-                lote.update({'id_produto_ant': lote['id_produto']})
-                lote.update({'id_produto': id_encontrado})
+                precos.remove(preco)
 
-            datas = {'validade': lote['data_validade'], 'fabricacao': lote['data_fabricacao']}
+            datas = {'inicio': preco['inicio_promocao'],
+                     'final': preco['final_promocao']}
 
             datas_tratadas = self.trata_campo_data(datas)
 
-            lote.update({'data_validade': datas_tratadas['validade']})
-            lote.update({'data_fabricacao': datas_tratadas['fabricacao']})
-            lote.update({'id_filial': self.filial_id_destino})
-            lote.update({'comunicador': self.comunicador})
+            preco.update({'inicio_promocao': datas_tratadas['inicio']})
+            preco.update({'final_promocao': datas_tratadas['final']})
+            preco.update({'id_filial': self.filial_id_destino})
+            preco.update({'comunicador': self.comunicador})
 
-        return lotes
+        return precos
 
     @staticmethod
     def compara_produto(antigo_id, produtos):

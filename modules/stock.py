@@ -1,7 +1,4 @@
-from iteradorSQL import IteradorSql
-
-
-class Estoque:
+class Stock:
     def __init__(self, dados_origem, dados_destino, comunicador, filial_id_origem, filial_id_destino, produtos_ids):
 
         self.dados_origem = dados_origem

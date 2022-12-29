@@ -1,8 +1,7 @@
-from iteradorSQL import IteradorSql
 from datetime import datetime
 
 
-class Produto:
+class Product:
 
     def __init__(self,
                  fabricantes_encontrados_tratados,

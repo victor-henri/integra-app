@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import TypedDict, Type
+from typing import TypedDict
 
 
 class AccessDatabase(TypedDict):
@@ -12,157 +12,157 @@ class AccessDatabase(TypedDict):
 class RepositoryInterface(ABC):
 
     @classmethod @abstractmethod
-    def select_produto(self):
+    def create_cursor(self) -> None:
         pass
 
     @classmethod @abstractmethod
-    def insert_produto(self, produtos):
+    def __unicode_error(self, data: dict, error: UnicodeEncodeError) -> dict:
         pass
 
     @classmethod @abstractmethod
-    def consulta_produto_pos_insert(self, dados_tabela):
+    def __exception_error(self, data: dict, error: Exception) -> dict:
+        pass
+
+    # SELECTS
+
+    @classmethod @abstractmethod
+    def select_manufacturer(self) -> list[dict]:
         pass
 
     @classmethod @abstractmethod
-    def atualiza_campo_produto_pos_insert(self, dados_atualizacao):
+    def select_principle(self) -> list[dict]:
         pass
 
     @classmethod @abstractmethod
-    def select_fabricante_origem(self):
+    def select_group_filtered(self) -> list[dict]:
         pass
 
     @classmethod @abstractmethod
-    def insert_fabricante(self, fabricantes):
+    def select_group_not_filtered(self) -> list[dict]:
         pass
 
     @classmethod @abstractmethod
-    def select_principio_ativo_origem(self):
+    def select_product(self) -> list[dict]:
         pass
 
     @classmethod @abstractmethod
-    def select_principio_ativo_destino(self):
+    def select_stock(self) -> list[dict]:
         pass
 
     @classmethod @abstractmethod
-    def insert_principios(self, principios):
+    def select_partition(self) -> list[dict]:
         pass
 
     @classmethod @abstractmethod
-    def select_barras(self):
+    def select_price(self) -> list[dict]:
         pass
 
     @classmethod @abstractmethod
-    def insert_barras(self, barras_selecionados):
+    def select_bar(self) -> list[dict]:
         pass
 
     @classmethod @abstractmethod
-    def select_estoque(self):
+    def select_company(self, selected_companies) -> list[dict]:
         pass
 
     @classmethod @abstractmethod
-    def insert_estoque(self, estoques):
+    def select_customer(self, selected_companies) -> list[dict]:
         pass
 
     @classmethod @abstractmethod
-    def select_produto_pos_insert(self):
+    def select_account(self, selected_customers) -> list[dict]:
         pass
 
     @classmethod @abstractmethod
-    def select_lote(self):
+    def select_origin_supplier(self, selected_suppliers) -> list[dict]:
         pass
 
     @classmethod @abstractmethod
-    def insert_lote(self, lotes):
+    def select_destiny_supplier(self) -> list[dict]:
         pass
 
     @classmethod @abstractmethod
-    def select_preco_filial(self):
+    def select_bill(self, selected_suppliers) -> list[dict]:
         pass
 
     @classmethod @abstractmethod
-    def insert_precos_filial(self, precos):
+    def select_get_products(self) -> list[dict]:
         pass
 
     @classmethod @abstractmethod
-    def select_empresas(self, empresas_selecionadas):
+    def select_product_comparison(self) -> list[dict]:
         pass
 
     @classmethod @abstractmethod
-    def select_fornecedor_origem(self, fornecedores_selecionados):
+    def select_listing_company(self) -> list[dict]:
         pass
 
     @classmethod @abstractmethod
-    def select_fornecedor_destino(self):
+    def select_listing_supplier(self) -> list[dict]:
         pass
 
     @classmethod @abstractmethod
-    def select_cliente(self, empresas_selecionadas):
+    def select_supplier_after_insert(self) -> list[dict]:
         pass
 
     @classmethod @abstractmethod
-    def insert_empresa(self, empresas):
+    def query_tables(self, table_data) -> list[dict]:
+        pass
+
+    # INSERTS
+
+    @classmethod @abstractmethod
+    def insert_manufacturer(self, manufacturers) -> list[dict]:
         pass
 
     @classmethod @abstractmethod
-    def insert_fornecedor(self, fornecedores):
+    def insert_principle(self, principles) -> list[dict]:
         pass
 
     @classmethod @abstractmethod
-    def insert_cliente(self, clientes):
+    def insert_product(self, products) -> list[dict]:
         pass
 
     @classmethod @abstractmethod
-    def insert_receber(self, recebers):
+    def insert_stock(self, stocks) -> list[dict]:
         pass
 
     @classmethod @abstractmethod
-    def consulta_fornecedor_pos_insert(self):
+    def insert_partition(self, partitions) -> list[dict]:
         pass
 
     @classmethod @abstractmethod
-    def consulta_produto_comparacao(self):
+    def insert_price(self, prices) -> list[dict]:
         pass
 
     @classmethod @abstractmethod
-    def consulta_pos_insert(self, produto):
+    def insert_bar(self, bars) -> list[dict]:
         pass
 
     @classmethod @abstractmethod
-    def insert_pagar(self, pagars):
+    def insert_company(self, companies) -> list[dict]:
         pass
 
     @classmethod @abstractmethod
-    def select_receber(self, clientes_selecionados):
+    def insert_customer(self, customers) -> list[dict]:
         pass
 
     @classmethod @abstractmethod
-    def select_pagar(self, fornecedores_selecionados):
+    def insert_account(self, accounts) -> list[dict]:
         pass
 
     @classmethod @abstractmethod
-    def select_grupo_origem_sapagado(self):
+    def insert_supplier(self, suppliers) -> list[dict]:
         pass
 
     @classmethod @abstractmethod
-    def select_grupo_origem_capagado(self):
+    def insert_bill(self, bills) -> list[dict]:
         pass
 
     @classmethod @abstractmethod
-    def select_grupo_destino_sapagado(self):
+    def update_product(self, data_update) -> None:
         pass
 
     @classmethod @abstractmethod
-    def select_grupo_destino_capagado(self):
-        pass
-
-    @classmethod @abstractmethod
-    def select_listagem_empresa(self):
-        pass
-
-    @classmethod @abstractmethod
-    def select_listagem_fornecedor(self):
-        pass
-
-    @classmethod @abstractmethod
-    def limpa_campo_auxiliar(self, marcador_limpeza):
+    def data_cleaning(self, cleaning_marker) -> None:
         pass

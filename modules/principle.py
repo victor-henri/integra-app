@@ -1,7 +1,4 @@
-from iteradorSQL import IteradorSql
-
-
-class PrincipioAtivo:
+class Principle:
     def __init__(self, dados_origem, dados_destino, comunicador):
 
         self.dados_origem = dados_origem

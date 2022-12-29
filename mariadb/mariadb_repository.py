@@ -1,6 +1,6 @@
-from interfaces.repository import RepositoryInterface
-from mariadb.mariadb_connection import ConnectionMariaDb
 from typing import Type
+from interfaces.repository import RepositoryInterface
+from mariadb.mariadb_connection import ConnectionInterface
 import sqls
 
 
@@ -11,7 +11,7 @@ class RepositoryMariaDb(RepositoryInterface):
         RepositoryInterface (_type_): _description_
     """
 
-    def __init__(self, connection: Type[ConnectionMariaDb]):
+    def __init__(self, connection: Type[ConnectionInterface]):
         self.__connection = connection
         self.__cursor = None
 
@@ -24,7 +24,7 @@ class RepositoryMariaDb(RepositoryInterface):
         error_register = f"{data['first_column']}: {data['first_value']}" \
                             f" | {data['second_column']}: {data['second_value']} não importado."
         error_return = f"Erro na codificação de caracteres - Descrição: {error}"
-        log = {'registro_erro': error_register, 'retorno_erro': error_return}
+        log = {'error_register': error_register, 'error_return': error_return}
 
         return log
 
@@ -32,20 +32,20 @@ class RepositoryMariaDb(RepositoryInterface):
         error_register = f"{data['first_column']}: {data['first_value']}" \
                          f" | {data['second_column']}: {data['second_value']} não importado."
         error_return = f"Descrição: {error}"
-        log = {'registro_erro': error_register, 'retorno_erro': error_return}
+        log = {'error_register': error_register, 'error_return': error_return}
 
         return log
 
     # SELECTS
 
-    def select_manufacturer(self):
+    def select_manufacturer(self) -> list[dict]:
 
         self.__cursor.execute(sqls.SELECT_MANUFACTURER)
         manufacturer = self.__cursor.fetchall()
 
         return manufacturer
 
-    def select_principle(self):
+    def select_principle(self) -> list[dict]:
         # Origem
 
         self.__cursor.execute(sqls.SELECT_PRINCIPLE)
@@ -53,53 +53,33 @@ class RepositoryMariaDb(RepositoryInterface):
 
         return principle
 
-    def select_origin_group_nerased(self):
-        # Origem
-
-        self.__cursor.execute(sqls.SELECT_ORIGIN_GROUP_NERASED)
+    def select_group_filtered(self) -> list[dict]:
+        self.__cursor.execute(sqls.SELECT_GROUP_FILTERED)
         group = self.__cursor.fetchall()
 
         return group
 
-    def select_origin_group_erased(self):
-        # Origem
-
-        self.__cursor.execute(sqls.SELECT_ORIGIN_GROUP_ERASED)
+    def select_group_not_filtered(self) -> list[dict]:
+        self.__cursor.execute(sqls.SELECT_GROUP_NOT_FILTERED)
         group = self.__cursor.fetchall()
 
         return group
 
-    def select_destiny_group_nerased(self):
-        # Destino
-
-        self.__cursor.execute(sqls.SELECT_GROUP_DESTINY_NERASED)
-        group = self.__cursor.fetchall()
-
-        return group
-
-    def select_destiny_group_erased(self):
-        # Destino
-
-        self.__cursor.execute(sqls.SELECT_GROUP_DESTINY_ERASED)
-        group = self.__cursor.fetchall()
-
-        return group
-
-    def select_product(self):
+    def select_product(self) -> list[dict]:
         # Origem
         self.__cursor.execute(sqls.SELECT_PRODUCT)
         product = self.__cursor.fetchall()
 
         return product
 
-    def select_stock(self):
+    def select_stock(self) -> list[dict]:
         # Origem
         self.__cursor.execute(sqls.SELECT_STOCK)
         stock = self.__cursor.fetchall()
 
         return stock
 
-    def select_partition(self):
+    def select_partition(self) -> list[dict]:
         # Origem
 
         self.__cursor.execute(sqls.SELECT_PARTITION)
@@ -107,7 +87,7 @@ class RepositoryMariaDb(RepositoryInterface):
 
         return partition
 
-    def select_price(self):
+    def select_price(self) -> list[dict]:
         # Origem
 
         self.__cursor.execute(sqls.SELECT_PRICE)
@@ -115,28 +95,28 @@ class RepositoryMariaDb(RepositoryInterface):
 
         return price
 
-    def select_bar(self):
+    def select_bar(self) -> list[dict]:
         # Origem
         self.__cursor.execute(sqls.SELECT_BAR)
         bars = self.__cursor.fetchall()
 
         return bars
 
-    def select_company(self, selected_companies):
+    def select_company(self, selected_companies) -> list[dict]:
         # Origem
         self.__cursor.execute(sqls.SELECT_COMPANY, (selected_companies,))
         company = self.__cursor.fetchall()
 
         return company
 
-    def select_customer(self, selected_companies):
+    def select_customer(self, selected_companies) -> list[dict]:
         # Origem
         self.__cursor.execute(sqls.SELECT_CUSTOMER, (selected_companies,))
         customer = self.__cursor.fetchall()
 
         return customer
 
-    def select_account(self, selected_customers):
+    def select_account(self, selected_customers) -> list[dict]:
         # Origem
 
         self.__cursor.execute(sqls.SELECT_ACCOUNT, (selected_customers,))
@@ -144,21 +124,21 @@ class RepositoryMariaDb(RepositoryInterface):
 
         return account
 
-    def select_origin_supplier(self, selected_suppliers):
+    def select_origin_supplier(self, selected_suppliers) -> list[dict]:
         # Origem
         self.__cursor.execute(sqls.SELECT_SUPPLIER_ORIGIN, (selected_suppliers,))
         supplier = self.__cursor.fetchall()
 
         return supplier
 
-    def select_destiny_supplier(self):
+    def select_destiny_supplier(self) -> list[dict]:
         # Destino
         self.__cursor.execute(sqls.SELECT_SUPPLIER_DESTINY)
         supplier = self.__cursor.fetchall()
 
         return supplier
 
-    def select_bill(self, selected_suppliers):
+    def select_bill(self, selected_suppliers) -> list[dict]:
         # Origem
 
         self.__cursor.execute(sqls.SELECT_BILL, (selected_suppliers,))
@@ -166,7 +146,7 @@ class RepositoryMariaDb(RepositoryInterface):
 
         return bill
 
-    def select_get_products(self):
+    def select_get_products(self) -> list[dict]:
         # Destino
         # select_produto_pos_insert
 
@@ -175,7 +155,7 @@ class RepositoryMariaDb(RepositoryInterface):
 
         return product
 
-    def select_product_comparison(self):
+    def select_product_comparison(self) -> list[dict]:
         # Destino
         # consulta_produto_comparacao
 
@@ -184,7 +164,7 @@ class RepositoryMariaDb(RepositoryInterface):
 
         return products
 
-    def select_listing_company(self):
+    def select_listing_company(self) -> list[dict]:
         # Origem
 
         self.__cursor.execute(sqls.SELECT_LISTING_COMPANY)
@@ -192,7 +172,7 @@ class RepositoryMariaDb(RepositoryInterface):
 
         return company
 
-    def select_listing_supplier(self):
+    def select_listing_supplier(self) -> list[dict]:
         # Origem
 
         self.__cursor.execute(sqls.SELECT_LISTING_SUPPLIER)
@@ -200,7 +180,7 @@ class RepositoryMariaDb(RepositoryInterface):
 
         return supplier
 
-    def select_supplier_after_insert(self):
+    def select_supplier_after_insert(self) -> list[dict]:
         # Destino
         # consulta_fornecedor_pos_insert
 
@@ -209,7 +189,7 @@ class RepositoryMariaDb(RepositoryInterface):
 
         return suppliers
 
-    def query_tables(self, table_data):
+    def query_tables(self, table_data) -> list[dict]:
         # Destino
         # consulta_produto_pos_insert
 
@@ -229,10 +209,10 @@ class RepositoryMariaDb(RepositoryInterface):
 
     # INSERTS
 
-    def insert_manufacturer(self, manufacturers):
-        # Destino
+    def insert_manufacturer(self, manufacturers) -> list[dict]:
 
-        manufacturer_logs = []
+        logs: list[dict] = []
+
         for manufacturer in manufacturers:
             data = {'first_column': 'id_fabricante',
                     'first_value': manufacturer['id_fabricante'],
@@ -244,20 +224,20 @@ class RepositoryMariaDb(RepositoryInterface):
 
             except UnicodeEncodeError as error:
                 log = self.__unicode_error(data, error)
-                manufacturer_logs.append(log)
+                logs.append(log)
                 continue
 
             except Exception as error:
                 log = self.__exception_error(data, error)
-                manufacturer_logs.append(log)
+                logs.append(log)
                 continue
 
-        return manufacturer_logs
+        return logs
 
-    def insert_principle(self, principles):
-        # Destino
+    def insert_principle(self, principles) -> list[dict]:
 
-        principle_logs = []
+        logs: list[dict] = []
+
         for principle in principles:
             data = {'first_column': 'id_principio_ativo',
                     'first_value': principle['id_principio_ativo'],
@@ -269,20 +249,20 @@ class RepositoryMariaDb(RepositoryInterface):
 
             except UnicodeEncodeError as error:
                 log = self.__unicode_error(data, error)
-                principle_logs.append(log)
+                logs.append(log)
                 continue
 
             except Exception as error:
                 log = self.__exception_error(data, error)
-                principle_logs.append(log)
+                logs.append(log)
                 continue
 
-        return principle_logs
+        return logs
 
-    def insert_product(self, products):
-        # Destino
+    def insert_product(self, products) -> list[dict]:
 
-        product_logs = []
+        logs: list[dict] = []
+
         for product in products:
             data = {'first_column': 'id_produto',
                     'first_value': product['id_produto'],
@@ -295,22 +275,21 @@ class RepositoryMariaDb(RepositoryInterface):
 
                 except UnicodeEncodeError as error:
                     log = self.__unicode_error(data, error)
-                    product_logs.append(log)
+                    logs.append(log)
                     continue
 
                 except Exception as error:
                     log = self.__exception_error(data, error)
-                    product_logs.append(log)
+                    logs.append(log)
                     continue
             else:
                 continue
 
-        return product_logs
+        return logs
 
-    def insert_stock(self, stocks):
-        # Destino
+    def insert_stock(self, stocks) -> list[dict]:
 
-        stock_logs = []
+        logs: list[dict] = []
 
         for stock in stocks:
             data = {'first_column': 'id_produto',
@@ -328,12 +307,12 @@ class RepositoryMariaDb(RepositoryInterface):
 
                 except UnicodeEncodeError as error:
                     log = self.__unicode_error(data, error)
-                    stock_logs.append(log)
+                    logs.append(log)
                     continue
 
                 except Exception as error:
                     log = self.__exception_error(data, error)
-                    stock_logs.append(log)
+                    logs.append(log)
                     continue
 
             else:
@@ -342,20 +321,20 @@ class RepositoryMariaDb(RepositoryInterface):
 
                 except UnicodeEncodeError as error:
                     log = self.__unicode_error(data, error)
-                    stock_logs.append(log)
+                    logs.append(log)
                     continue
 
                 except Exception as error:
                     log = self.__exception_error(data, error)
-                    stock_logs.append(log)
+                    logs.append(log)
                     continue
 
-        return stock_logs
+        return logs
 
-    def insert_partition(self, partitions):
-        # Destino
+    def insert_partition(self, partitions) -> list[dict]:
 
-        partition_logs = []
+        logs: list[dict] = []
+
         for partition in partitions:
             data = {'first_column': 'id_produto',
                     'first_value': partition['id_produto'],
@@ -367,20 +346,20 @@ class RepositoryMariaDb(RepositoryInterface):
 
             except UnicodeEncodeError as error:
                 log = self.__unicode_error(data, error)
-                partition_logs.append(log)
+                logs.append(log)
                 continue
 
             except Exception as error:
                 log = self.__exception_error(data, error)
-                partition_logs.append(log)
+                logs.append(log)
                 continue
 
-        return partition_logs
+        return logs
 
-    def insert_price(self, prices):
-        # Destino
+    def insert_price(self, prices) -> list[dict]:
 
-        price_logs = []
+        logs: list[dict] = []
+
         for price in prices:
             data = {'first_column': 'id_produto',
                     'first_value': price['id_produto'],
@@ -392,20 +371,20 @@ class RepositoryMariaDb(RepositoryInterface):
 
             except UnicodeEncodeError as error:
                 log = self.__unicode_error(data, error)
-                price_logs.append(log)
+                logs.append(log)
                 continue
 
             except Exception as error:
                 log = self.__exception_error(data, error)
-                price_logs.append(log)
+                logs.append(log)
                 continue
 
-        return price_logs
+        return logs
 
-    def insert_bar(self, bars):
-        # Destino
+    def insert_bar(self, bars) -> list[dict]:
 
-        bar_logs = []
+        logs: list[dict] = []
+
         for item in bars:
             data = {'first_column': 'id_produto',
                     'first_value': item['id_produto'],
@@ -417,20 +396,20 @@ class RepositoryMariaDb(RepositoryInterface):
 
             except UnicodeEncodeError as error:
                 log = self.__unicode_error(data, error)
-                bar_logs.append(log)
+                logs.append(log)
                 continue
 
             except Exception as error:
                 log = self.__exception_error(data, error)
-                bar_logs.append(log)
+                logs.append(log)
                 continue
 
-        return bar_logs
+        return logs
 
-    def insert_company(self, companies):
-        # Destino
+    def insert_company(self, companies) -> list[dict]:
 
-        company_logs = []
+        logs: list[dict] = []
+
         for company in companies:
             data = {'first_column': 'id_empresa',
                     'first_value': company['id_empresa'],
@@ -442,20 +421,20 @@ class RepositoryMariaDb(RepositoryInterface):
 
             except UnicodeEncodeError as error:
                 log = self.__unicode_error(data, error)
-                company_logs.append(log)
+                logs.append(log)
                 continue
 
             except Exception as error:
                 log = self.__exception_error(data, error)
-                company_logs.append(log)
+                logs.append(log)
                 continue
 
-        return company_logs
+        return logs
 
-    def insert_customer(self, customers):
-        # Destino
+    def insert_customer(self, customers) -> list[dict]:
 
-        customer_logs = []
+        logs: list[dict] = []
+
         for customer in customers:
             data = {'first_column': 'id_cliente',
                     'first_value': customer['id_cliente'],
@@ -467,23 +446,23 @@ class RepositoryMariaDb(RepositoryInterface):
 
             except UnicodeEncodeError as error:
                 log = self.__unicode_error(data, error)
-                customer_logs.append(log)
+                logs.append(log)
                 continue
 
             except Exception as error:
                 log = self.__exception_error(data, error)
-                customer_logs.append(log)
+                logs.append(log)
                 continue
 
         # Atualiza o id_empresa da tabela cliente com os novos ids de empresas inseridas
         self.__cursor.execute(sqls.UPDATE_CUSTOMER)
 
-        return customer_logs
+        return logs
 
-    def insert_account(self, accounts):
-        # Destino
+    def insert_account(self, accounts) -> list[dict]:
 
-        account_logs = []
+        logs: list[dict] = []
+
         for account in accounts:
             data = {'first_column': 'id_cliente',
                     'first_value': account['id_cliente'],
@@ -495,12 +474,12 @@ class RepositoryMariaDb(RepositoryInterface):
 
             except UnicodeEncodeError as error:
                 log = self.__unicode_error(data, error)
-                account_logs.append(log)
+                logs.append(log)
                 continue
 
             except Exception as error:
                 log = self.__exception_error(data, error)
-                account_logs.append(log)
+                logs.append(log)
                 continue
 
         # Atualiza o id_cliente da tabela receber com os novos ids de clientes inseridos a partir do
@@ -510,12 +489,12 @@ class RepositoryMariaDb(RepositoryInterface):
         # Atualiza o id_empresa da tabela receber com os novos ids de empresas.
         self.__cursor.execute(sqls.UPDATE_COMPANY_ACCOUNT)
 
-        return account_logs
+        return logs
 
-    def insert_supplier(self, suppliers):
-        # Destino
+    def insert_supplier(self, suppliers) -> list[dict]:
 
-        supplier_logs = []
+        logs: list[dict] = []
+
         for supplier in suppliers:
             data = {'first_column': 'id_fornecedor',
                     'first_value': supplier['id_fornecedor'],
@@ -527,20 +506,20 @@ class RepositoryMariaDb(RepositoryInterface):
 
             except UnicodeEncodeError as error:
                 log = self.__unicode_error(data, error)
-                supplier_logs.append(log)
+                logs.append(log)
                 continue
 
             except Exception as error:
                 log = self.__exception_error(data, error)
-                supplier_logs.append(log)
+                logs.append(log)
                 continue
 
-        return supplier_logs
+        return logs
 
-    def insert_bill(self, bills):
-        # Destino
+    def insert_bill(self, bills) -> list[dict]:
 
-        bill_logs = []
+        logs: list[dict] = []
+
         for bill in bills:
             data = {'first_column': 'nota_fiscal',
                     'first_value': bill['nota_fiscal'],
@@ -552,17 +531,17 @@ class RepositoryMariaDb(RepositoryInterface):
 
             except UnicodeEncodeError as error:
                 log = self.__unicode_error(data, error)
-                bill_logs.append(log)
+                logs.append(log)
                 continue
 
             except Exception as error:
                 log = self.__exception_error(data, error)
-                bill_logs.append(log)
+                logs.append(log)
                 continue
 
-        return bill_logs
+        return logs
 
-    def update_product(self, data_update):
+    def update_product(self, data_update) -> None:
         # Destino
         # atualiza_campo_produto_pos_insert
 
@@ -613,7 +592,7 @@ class RepositoryMariaDb(RepositoryInterface):
 
     #     return principio_ativo
 
-    def data_cleaning(self, cleaning_marker):
+    def data_cleaning(self, cleaning_marker) -> None:
         # Destino
 
         if cleaning_marker['fabricante'] == 'sim':

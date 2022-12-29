@@ -1,7 +1,4 @@
-from iteradorSQL import IteradorSql
-
-
-class Pagar:
+class Bill:
     def __init__(self,
                  dados_origem,
                  dados_destino,
