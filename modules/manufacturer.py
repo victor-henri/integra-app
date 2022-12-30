@@ -11,7 +11,7 @@ class Manufacturer:
 
     def start_manufacturers(self):
 
-        if self.__erased == 'sim':
+        if self.__erased is True:
             self.__remove_erased()
 
         self.__search_manufacturers()

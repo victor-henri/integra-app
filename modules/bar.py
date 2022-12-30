@@ -1,96 +1,78 @@
 class Bar:
 
-    def __init__(self, dados_origem, dados_destino, comunicador, produtos_ids):
+    def __init__(self, erased, communicator, origin_bars, products_id, products_found, products_after_insert):
 
-        self.dados_origem = dados_origem
-        self.dados_destino = dados_destino
-        self.comunicador = comunicador
-        self.produtos_ids = produtos_ids
+        self.__erased = erased
+        self.__communicator = communicator
+        self.__origin_bars = origin_bars
+        self.__products_id = products_id
+        self.__products_found = products_found
+        self.__products_after_insert = products_after_insert
+        self.__selected_bars = []
 
-    def inicia_barras(self, apagado):
+    def start_bars(self):
 
-        iterador = IteradorSql()
-        iterador.conexao_origem(self.dados_origem)
-        iterador.conexao_destino(self.dados_destino)
-        barras = iterador.select_barras()
+        if self.__erased is True:
+            self.__remove_erased()
 
-        if apagado['apagado'] == 'sim':
-            barras = self.remove_apagado(barras)
+        self.__extract_selected_bars()
+        self.__bars_treatment()
 
-        id_produtos = self.produtos_ids['id_produtos']
-        produtos_encontrados = self.produtos_ids['produtos_encontrados']
+    def __remove_erased(self):
 
-        barras_selecionados = self.separa_barras_selecionados(id_produtos, barras)
-        barras_tratados = self.tratamento_barras(produtos_encontrados, barras_selecionados)
-        barras_log = iterador.insert_barras(barras_tratados)
-
-        return barras_log
-
-    @staticmethod
-    def remove_apagado(barras):
-
-        for registro in barras:
-            if registro['apagado'] == 'S':
-                barras.remove(registro)
+        for bars in self.__origin_bars:
+            if bars['apagado'] == 'S':
+                self.__origin_bars.remove(bars)
             else:
                 continue
 
-        return barras
+    def __extract_selected_bars(self):
 
-    @staticmethod
-    def separa_barras_selecionados(id_produtos, barras):
+        for bars in self.__origin_bars:
+            product_id = int(bars['id_produto'])
 
-        barras_selecionados = []
-
-        for registro in barras:
-            id_produto = int(registro['id_produto'])
-            if id_produto in id_produtos:
-                barras_selecionados.append(registro)
+            if product_id in self.__products_id:
+                self.__selected_bars.append(bars)
             else:
                 continue
 
-        return barras_selecionados
+    def __bars_treatment(self):
 
-    def tratamento_barras(self, produtos_encontrados, barras):
+        for bars in self.__selected_bars:
+            old_id = int(bars['id_produto'])
+            id_found = self.__return_new_id(old_id)
 
-        iterador = IteradorSql()
-        iterador.conexao_destino(self.dados_destino)
-        tabela_produto = {'tabela': 'produto'}
-        produtos_pos_insert = iterador.consulta_pos_insert(tabela_produto)
-
-        for registro in barras:
-            antigo_id = int(registro['id_produto'])
-            id_encontrado = self.compara_produto(antigo_id, produtos_encontrados)
-            if id_encontrado is None:
-                novo_id = self.busca_id_atual(antigo_id, produtos_pos_insert)
-                registro.update({'id_produto_ant': antigo_id})
-                registro.update({'id_produto': novo_id})
+            if id_found is None:
+                new_id = self.__return_id_after_insert(old_id)
+                bars.update({'id_produto_ant': old_id})
+                bars.update({'id_produto': new_id})
             else:
-                registro.update({'id_produto_ant': registro['id_produto']})
-                registro.update({'id_produto': id_encontrado})
+                bars.update({'id_produto_ant': bars['id_produto']})
+                bars.update({'id_produto': id_found})
 
-            registro['comunicador'] = self.comunicador
+            bars['comunicador'] = self.__communicator
 
-        return barras
+    def __return_new_id(self, old_id):
 
-    @staticmethod
-    def compara_produto(antigo_id, produtos):
+        for product in self.__products_found:
+            product_id = int(product['id_produto'])
+            new_id = int(product['novo_id'])
 
-        for produto in produtos:
-            id_produto = int(produto['id_produto'])
-            novo_id = int(produto['novo_id'])
-            if antigo_id == id_produto:
-                return novo_id
+            if old_id == product_id:
+                return new_id
             else:
                 continue
 
-    @staticmethod
-    def busca_id_atual(id_produto_ant, produtos):
+    def __return_id_after_insert(self, product_id):
 
-        for produto in produtos:
-            antigo_id = int(produto['campo_auxiliar'])
-            novo_id = int(produto['id_produto'])
-            if id_produto_ant == antigo_id:
-                return novo_id
+        for product in self.__products_after_insert:
+            old_id = int(product['campo_auxiliar'])
+            new_id = int(product['id_produto'])
+
+            if product_id == old_id:
+                return new_id
             else:
                 continue
+
+    def get_bars(self):
+        return self.__selected_bars

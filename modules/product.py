@@ -4,336 +4,316 @@ from datetime import datetime
 class Product:
 
     def __init__(self,
-                 fabricantes_encontrados_tratados,
-                 principios_encontrados_tratados,
-                 grupos_selecionados,
-                 id_fabricante,
-                 id_principio,
-                 dados_origem,
-                 dados_destino,
-                 comunicador):
+                 erased,
+                 communicator,
+                 product_options,
+                 origin_products,
+                 selected_groups,
+                 manufacturers_found,
+                 manufacturer_id,
+                 principles_found,
+                 principle_id,
+                 products_comparison):
 
-        self.principios_encontrados_tratados = principios_encontrados_tratados
-        self.fabricantes_encontrados_tratados = fabricantes_encontrados_tratados
-        self.grupos_selecionados = grupos_selecionados
-        self.id_fabricante = id_fabricante
-        self.id_principio = id_principio
-        self.dados_origem = dados_origem
-        self.dados_destino = dados_destino
-        self.comunicador = comunicador
-        self.produtos_pre_insert = None
-        self.produtos_ids_separados = None
+        self.__erased = erased
+        self.__communicator = communicator
+        self.__product_options = product_options
+        self.__origin_products = origin_products
+        self.__selected_groups = selected_groups
+        self.__selected_products = None
+        self.__manufacturers_found = manufacturers_found
+        self.__manufacturer_id = manufacturer_id
+        self.__principles_found = principles_found
+        self.__principle_id = principle_id
+        self.__products_comparison = products_comparison
+        self.__selected_products_id = []
+        self.__products_found = []
 
-    def inicia_produtos(self, marcador_produto, apagado):
 
-        iterador = IteradorSql()
-        iterador.conexao_origem(self.dados_origem)
-        iterador.conexao_destino(self.dados_destino)
-        produtos = iterador.select_produto()
+    def start_product(self):
 
-        if apagado['apagado'] == 'sim':
-            produtos = self.remove_apagado(produtos)
+        if self.__erased is True:
+            self.__remove_erased()
 
-        produtos_processamento = self.separa_produtos_selecionados(produtos, self.grupos_selecionados)
+        self.__extract_selected_products()
 
-        if marcador_produto['remover_produtos_barras_zerados'] == 'sim':
-            quantidade_zeros = marcador_produto['quantidade_zeros_barras']
-            produtos_processamento = self.remove_produtos_barras_zerados(produtos_processamento, quantidade_zeros)
-        if marcador_produto['fabricante_por_cnpj'] == 'sim':
-            produtos_processamento = self.atualizacao_fabricantes_por_cnpj(produtos_processamento)
-        if marcador_produto['fabricante_por_id'] == 'sim':
-            produtos_processamento = self.atualizacao_fabricantes_por_id(produtos_processamento)
-        if marcador_produto['principio_por_desc'] == 'sim':
-            produtos_processamento = self.atualizacao_principio_por_desc(produtos_processamento)
-        if marcador_produto['principio_por_id'] == 'sim':
-            produtos_processamento = self.atualizacao_principio_por_id(produtos_processamento)
+        if self.__product_options['remover_produtos_barras_zerados'] is True:
+            zeros = self.__product_options['quantidade_zeros_barras']
+            self.__remove_products_zeros_bar(zeros)
 
-        produtos_tratados = self.tratamento_produtos(produtos_processamento)
-        self.produtos_ids_separados = self.separa_produtos_ids(produtos_tratados)
-        produtos_log = iterador.insert_produto(produtos_tratados)
-        self.atualizacao_pos_insert(produtos_tratados)
+        if self.__product_options['fabricante_por_cnpj'] is True:
+            self.__update_manufacturers_cnpj()
 
-        return produtos_log
+        if self.__product_options['fabricante_por_id'] is True:
+            self.__update_manufacturers_id()
 
-    @staticmethod
-    def remove_apagado(produtos):
+        if self.__product_options['principio_por_desc'] is True:
+            self.__update_principles_description()
 
-        for registro in produtos:
-            if registro['apagado'] == 'S':
-                produtos.remove(registro)
+        if self.__product_options['principio_por_id'] is True:
+            self.__update_principles_id()
+
+        self.__product_treatment()
+        self.__data_selection()
+
+    def __remove_erased(self):
+
+        for product in self.__origin_products:
+            if product['apagado'] == 'S':
+                self.__origin_products.remove(product)
             else:
                 continue
 
-        return produtos
+    def __extract_selected_products(self):
 
-    def separa_produtos_selecionados(self, produtos, grupos_selecionados):
+        groups_id_list: list[int] = []
 
-        lista_grupos = []
+        for group in self.__selected_groups:
+            groups_id_list.append(int(group['antigo_id']))
 
-        for grupo in grupos_selecionados:
-            lista_grupos.append(int(grupo['antigo_id']))
+        self.__selected_products: list[dict] = []
 
-        produtos_selecionados = []
+        for product in self.__origin_products:
+            current_group_id = int(product['id_grupo'])
 
-        for produto in produtos:
-            atual_grupo_id = int(produto['id_grupo'])
-            if atual_grupo_id in lista_grupos:
-                produtos_selecionados.append(produto)
+            if current_group_id in groups_id_list:
+                self.__selected_products.append(product)
             else:
                 continue
 
-        for produto in produtos_selecionados:
-            atual_id = int(produto['id_grupo'])
-            novo_id = self.retorna_grupo(atual_id, grupos_selecionados)
-            produto['id_grupo'] = novo_id
+        for product in self.__selected_products:
+            current_group_id = int(product['id_grupo'])
+            new_id = self.__return_group(current_group_id)
+            product.update({'id_grupo': new_id})
 
-        return produtos_selecionados
+    def __return_group(self, current_group_id):
 
-    @staticmethod
-    def retorna_grupo(atual_id, grupos):
+        for group in self.__selected_groups:
+            old_group_id = int(group['antigo_id'])
+            new_id = int(group['novo_id'])
 
-        for grupo in grupos:
-            antigo_id = int(grupo['antigo_id'])
-            novo_id = int(grupo['novo_id'])
-            if atual_id == antigo_id:
-                return novo_id
+            if current_group_id == old_group_id:
+                return new_id
             else:
                 continue
 
-    def remove_produtos_barras_zerados(self, produtos, quantidade_zeros):
+    def __remove_products_zeros_bar(self, zeros):
 
-        for produto in produtos:
-            retorno = self.conta_zeros(produto['barras'], quantidade_zeros)
-            if retorno is True:
-                produtos.remove(produto)
+        for product in self.__selected_products:
+            result = self.__count_zeros(product['barras'], zeros)
+
+            if result is True:
+                self.__selected_products.remove(product)
             else:
                 continue
 
-        return produtos
+    def __count_zeros(self, bars, amount_zeros):
 
-    @staticmethod
-    def conta_zeros(barras, quantidade_zeros):
+        counter: int = 0
+        zeros: str = ''
 
-        contador = 0
-        zeros = ''
-
-        while contador < quantidade_zeros:
+        while counter < amount_zeros:
             zeros += '0'
-            contador += 1
+            counter += 1
 
-        corte = barras[:quantidade_zeros]
-        resultado = zeros in corte
+        cut_piece: str = bars[:amount_zeros]
+        result: bool = zeros in cut_piece
+        return result
 
-        return resultado
+    def __update_manufacturers_cnpj(self):
 
-    def atualizacao_fabricantes_por_cnpj(self, produtos):
+        for product in self.__selected_products:
 
-        for produto in produtos:
-            if produto['id_fabricante'] is None:
-                produto['id_fabricante_ant'] = None
+            if product['id_fabricante'] is None:
+                product['id_fabricante_ant'] = None
             else:
-                atual_id = int(produto['id_fabricante'])
-                novo_id = self.retorna_novoid_fabricante(atual_id, self.fabricantes_encontrados_tratados)
-                if novo_id:
-                    produto.update({'id_fabricante': novo_id, 'id_fabricante_ant': None})
+                current_id = int(product['id_fabricante'])
+                new_id = self.__return_manufacturer_new_id(current_id)
+
+                if new_id:
+                    product.update({'id_fabricante': new_id, 'id_fabricante_ant': None})
                 else:
-                    produto.update({'id_fabricante_ant': atual_id, 'id_fabricante': None})
+                    product.update({'id_fabricante_ant': current_id, 'id_fabricante': None})
 
-        return produtos
+    def __return_manufacturer_new_id(self, current_id):
 
-    @staticmethod
-    def retorna_novoid_fabricante(atual_id, fabricantes):
+        for manufacturer in self.__manufacturers_found:
+            manufacturer_id = int(manufacturer['id_fabricante'])
+            new_id = int(manufacturer['novo_id'])
 
-        for fabricante in fabricantes:
-            fabricante_id = int(fabricante['id_fabricante'])
-            novo_id = int(fabricante['novo_id'])
-            if atual_id == fabricante_id:
-                return novo_id
+            if current_id == manufacturer_id:
+                return new_id
             else:
                 continue
 
-    def atualizacao_fabricantes_por_id(self, produtos):
-        for produto in produtos:
-            produto['id_fabricante'] = int(self.id_fabricante)
+    def __update_manufacturers_id(self):
 
-        return produtos
+        for product in self.__selected_products:
+            product['id_fabricante'] = int(self.__manufacturer_id)
 
-    def atualizacao_principio_por_desc(self, produtos):
+    def __update_principles_description(self):
 
-        for produto in produtos:
-            if produto['id_principio_ativo'] is None:
-                produto['id_principio_ant'] = None
+        for product in self.__selected_products:
+
+            if product['id_principio_ativo'] is None:
+                product['id_principio_ant'] = None
             else:
-                atual_id = int(produto['id_principio_ativo'])
-                novo_id = self.retorna_novo_id_principios(atual_id, self.principios_encontrados_tratados)
-                if novo_id:
-                    produto.update({'id_principio_ativo': novo_id, 'id_principio_ant': None})
+                current_id = int(product['id_principio_ativo'])
+                new_id = self.__return_principle_new_id(current_id)
+
+                if new_id:
+                    product.update({'id_principio_ativo': new_id, 'id_principio_ant': None})
                 else:
-                    produto.update({'id_principio_ant': atual_id, 'id_principio_ativo': None})
+                    product.update({'id_principio_ant': current_id, 'id_principio_ativo': None})
 
-        return produtos
+    def __return_principle_new_id(self, current_id):
 
-    @staticmethod
-    def retorna_novo_id_principios(atual_id, principios):
+        for principle in self.__principles_found:
+            principle_id = int(principle['id_principio_ativo'])
 
-        for principio in principios:
-            principio_ativo_id = int(principio['id_principio_ativo'])
-            if atual_id == principio_ativo_id:
-                return principio_ativo_id
+            if current_id == principle_id:
+                return principle_id
             else:
                 continue
 
-    def atualizacao_principio_por_id(self, produtos):
+    def __update_principles_id(self):
 
-        for produto in produtos:
-            produto['id_principio_ativo'] = int(self.id_principio)
+        for product in self.__selected_products:
+            product['id_principio_ativo'] = int(self.__principle_id)
 
-        return produtos
+    def __product_treatment(self):
 
-    def tratamento_produtos(self, produtos):
+        for product in self.__selected_products:
+            origin_product_bar = int(product['barras'])
+            destiny_product_id = self.__comparison(origin_product_bar)
 
-        iterador = IteradorSql()
-        iterador.conexao_destino(self.dados_destino)
-        produtos_comparacao = iterador.consulta_produto_comparacao()
+            if destiny_product_id is None:
+                dates = {'inicio_promocao': product['inicio_promocao'],
+                         'final_promocao': product['final_promocao'],
+                         'data_cadastro': product['data_cadastro'],
+                         'data_alteracao': product['data_alteracao']}
 
-        for produto in produtos:
-            barras_origem = int(produto['barras'])
-            id_existente = self.compara_produtos(barras_origem, produtos_comparacao)
+                treated_dates = self.__dates_treatment(dates)
 
-            if id_existente is None:
-                datas = {'inicio_promocao': produto['inicio_promocao'],
-                         'final_promocao': produto['final_promocao'],
-                         'data_cadastro': produto['data_cadastro'],
-                         'data_alteracao': produto['data_alteracao']}
-
-                datas_tratadas = self.trata_campo_data(datas)
-
-                produto.update({'inicio_promocao': datas_tratadas['inicio_promocao']})
-                produto.update({'final_promocao': datas_tratadas['final_promocao']})
-                produto.update({'data_cadastro': datas_tratadas['data_cadastro']})
-                produto.update({'data_alteracao': datas_tratadas['data_alteracao']})
-                produto.update({'novo_id': None})
-                produto.update({'comunicador': self.comunicador})
+                product.update({'inicio_promocao': treated_dates['inicio_promocao']})
+                product.update({'final_promocao': treated_dates['final_promocao']})
+                product.update({'data_cadastro': treated_dates['data_cadastro']})
+                product.update({'data_alteracao': treated_dates['data_alteracao']})
+                product.update({'novo_id': None})
+                product.update({'comunicador': self.__communicator})
             else:
-                produto.update({'novo_id': id_existente})
+                product.update({'novo_id': destiny_product_id})
 
-        return produtos
+    def __comparison(self, origin_product_bar):
 
-    @staticmethod
-    def compara_produtos(barras_origem, produtos):
+        for product in self.__products_comparison:
+            destiny_product_bar = int(product['barras'])
+            destiny_product_id = int(product['id_produto'])
 
-        for produto in produtos:
-            barras_destino = int(produto['barras'])
-            id_produto_destino = int(produto['id_produto'])
-            if barras_origem == barras_destino:
-                return id_produto_destino
+            if origin_product_bar == destiny_product_bar:
+                return destiny_product_id
             else:
                 continue
 
-    @staticmethod
-    def trata_campo_data(datas):
+    def __dates_treatment(self, dates):
 
-        for chave, data in datas.items():
-            if data is None:
+        for key, date in dates.items():
+            if date is None:
                 pass
             else:
-                if data == '0000-00-00':
-                    nova_data = datetime(1899, 12, 30)
-                    data_formatada = nova_data.strftime('%Y-%m-%d')
-                    datas.update({chave: data_formatada})
+                if date == '0000-00-00':
+                    new_date = datetime(1899, 12, 30)
+                    formatted_date = new_date.strftime('%Y-%m-%d')
+                    dates.update({key: formatted_date})
                 else:
-                    data_formatada = data.strftime('%Y-%m-%d')
-                    datas.update({chave: data_formatada})
+                    formatted_date = date.strftime('%Y-%m-%d')
+                    dates.update({key: formatted_date})
 
-        return datas
+        return dates
 
-    @staticmethod
-    def separa_produtos_ids(produtos):
+    def __data_selection(self):
 
-        id_produtos = []
-        produtos_encontrados = []
+        self.__selected_products_id = []
+        self.__products_found = []
 
-        for produto in produtos:
-            produto_id = int(produto['id_produto'])
-            id_produtos.append(produto_id)
+        for product in self.__selected_products:
+            product_id = int(product['id_produto'])
+            self.__selected_products_id.append(product_id)
 
-            if produto['novo_id'] is None:
+            if product['novo_id'] is None:
                 continue
             else:
-                produtos_encontrados.append(produto)
+                self.__products_found.append(product)
 
-        return {'id_produtos': id_produtos,
-                'produtos_encontrados': produtos_encontrados}
+    def update_after_insert(self, products_after_insert, manufacturers_after_insert, principles_after_insert):
 
-    def retorna_produtos_ids(self):
-        return self.produtos_ids_separados
+        manufacturer_data = []
+        principle_data = []
 
-    def atualizacao_pos_insert(self, produtos):
+        for product in self.__selected_products:
+            product_id = int(product['id_produto'])
+            new_product_id = self.__return_product_id(product_id, products_after_insert)
 
-        iterador = IteradorSql()
-        iterador.conexao_destino(self.dados_destino)
-
-        tabela_produto = {'tabela': 'produto'}
-        tabela_fabricante = {'tabela': 'fabricante'}
-        tabela_principio = {'tabela': 'principio_ativo'}
-
-        produtos_pos_insert = iterador.consulta_pos_insert(tabela_produto)
-        fabricantes_pos_insert = iterador.consulta_pos_insert(tabela_fabricante)
-        principio_pos_insert = iterador.consulta_pos_insert(tabela_principio)
-
-        for produto in produtos:
-            produto_id = int(produto['id_produto'])
-            novo_produto_id = self.retorna_id_produto_pos_insert(produto_id, produtos_pos_insert)
-
-            if produto['id_fabricante_ant'] is None:
+            if product['id_fabricante_ant'] is None:
                 pass
             else:
-                fabricante_id = int(produto['id_fabricante_ant'])
-                novo_fabricante_id = self.retorna_id_fabricante_pos_insert(fabricante_id, fabricantes_pos_insert)
-                dados_fabricante = {'campo': 'fabricante',
-                                    'valor': novo_fabricante_id,
-                                    'id_produto': novo_produto_id}
-                iterador.atualiza_campo_produto_pos_insert(dados_fabricante)
+                manufacturer_id = int(product['id_fabricante_ant'])
+                new_manufacturer_id = self.__return_manufacturer_id(manufacturer_id, manufacturers_after_insert)
+                manufacturer = {'campo': 'fabricante',
+                                'valor': new_manufacturer_id,
+                                'id_produto': new_product_id}
+                manufacturer_data.append(manufacturer)
 
-            if produto['id_principio_ant'] is None:
+            if product['id_principio_ant'] is None:
                 pass
             else:
-                principio_id = int(produto['id_principio_ant'])
-                novo_principio_id = self.retorna_id_principio_pos_insert(principio_id, principio_pos_insert)
-                dados_principio = {'campo': 'principio_ativo',
-                                   'valor': novo_principio_id,
-                                   'id_produto': novo_produto_id}
-                iterador.atualiza_campo_produto_pos_insert(dados_principio)
+                principio_id = int(product['id_principio_ant'])
+                novo_principio_id = self.__return_principle_id(principio_id, principles_after_insert)
+                principle = {'campo': 'principio_ativo',
+                             'valor': novo_principio_id,
+                             'id_produto': new_product_id}
+                principle_data.append(principle)
 
-    @staticmethod
-    def retorna_id_produto_pos_insert(produto_id, produtos):
+        return {'manufacturer': manufacturer_data, 'principle': principle_data}
 
-        for produto in produtos:
-            antigo_produto_id = int(produto['campo_auxiliar'])
-            novo_produto_id = int(produto['id_produto'])
-            if produto_id == antigo_produto_id:
-                return novo_produto_id
+    def __return_product_id(self, product_id, products):
+
+        for product in products:
+            old_product_id = int(product['campo_auxiliar'])
+            new_product_id = int(product['id_produto'])
+
+            if product_id == old_product_id:
+                return new_product_id
             else:
                 continue
 
-    @staticmethod
-    def retorna_id_fabricante_pos_insert(fabricante_id, fabricantes):
+    def __return_manufacturer_id(self, manufacturer_id, manufacturers):
 
-        for fabricante in fabricantes:
-            antigo_fabricante_id = int(fabricante['campo_auxiliar'])
-            novo_fabricante_id = int(fabricante['id_fabricante'])
-            if fabricante_id == antigo_fabricante_id:
-                return novo_fabricante_id
+        for manufacturer in manufacturers:
+            old_manufacturer_id = int(manufacturer['campo_auxiliar'])
+            new_manufacturer_id = int(manufacturer['id_fabricante'])
+
+            if manufacturer_id == old_manufacturer_id:
+                return new_manufacturer_id
             else:
                 continue
 
-    @staticmethod
-    def retorna_id_principio_pos_insert(principio_id, principios):
+    def __return_principle_id(self, principio_id, principles):
 
-        for principio in principios:
-            antigo_principio_id = int(principio['campo_auxiliar'])
-            novo_principio_id = int(principio['id_principio_ativo'])
-            if principio_id == antigo_principio_id:
-                return novo_principio_id
+        for principle in principles:
+            old_principle_id = int(principle['campo_auxiliar'])
+            new_principle_id = int(principle['id_principio_ativo'])
+
+            if principio_id == old_principle_id:
+                return new_principle_id
             else:
                 continue
+
+    def get_products(self):
+        return self.__selected_products
+
+    def get_products_id(self):
+        return self.__selected_products_id
+
+    def get_products_found(self):
+        return self.__products_found

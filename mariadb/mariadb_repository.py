@@ -545,15 +545,16 @@ class RepositoryMariaDb(RepositoryInterface):
         # Destino
         # atualiza_campo_produto_pos_insert
 
-        if data_update['campo'] == 'fabricante':
-            self.__cursor.execute('UPDATE produto '
-                                   'SET id_fabricante = %(valor)s '
-                                   'WHERE id_produto = %(id_produto)s;', data_update)
+        for register in data_update:
+            if register['campo'] == 'fabricante':
+                self.__cursor.execute('UPDATE produto '
+                                      'SET id_fabricante = %(valor)s '
+                                      'WHERE id_produto = %(id_produto)s;', register)
 
-        else:
-            self.__cursor.execute('UPDATE produto '
-                                   'SET id_principio_ativo = %(valor)s '
-                                   'WHERE id_produto = %(id_produto)s;', data_update)
+            else:
+                self.__cursor.execute('UPDATE produto '
+                                      'SET id_principio_ativo = %(valor)s '
+                                      'WHERE id_produto = %(id_produto)s;', register)
 
     # def consulta_pos_insert(self, table_data):
     #     # Destino

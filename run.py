@@ -2,6 +2,9 @@ from typing import TypedDict
 from mariadb.mariadb_connection import ConnectionMariaDb
 from mariadb.mariadb_repository import RepositoryMariaDb
 from modules.manufacturer import Manufacturer
+from modules.principle import Principle
+from modules.product import Product
+from modules.bar import Bar
 
 
 class AccessDatabase(TypedDict):
@@ -21,6 +24,8 @@ class Run():
         self.__origin_repository = None
         self.__destiny_connection = None
         self.__destiny_repository = None
+        self.__manufacturer_log = None
+        self.__principle_log = None
         self.__logs = None
 
     def connect_origin(self, access_data: TypedDict[AccessDatabase]) -> dict:
@@ -80,7 +85,7 @@ class Run():
     def get_logs(self):
         return self.__logs
 
-    def start_process(self, erased, communicator, module_marker):
+    def start_process(self, erased, communicator, module_marker, selected_groups, product_options, manufacturer_id, principle_id):
 
         # MANUFACTURER
         if module_marker['fabricante'] == 'sim':
@@ -99,58 +104,72 @@ class Run():
             self.__manufacturer_log = self.__destiny_repository.insert_manufacturer(manufacturers_not_found)
 
         # PRINCIPLE
-        if self.sel_principle_desc.get():
+        if module_marker['principio_ativo'] == 'sim':
 
-            principle = PrincipioAtivo(dados_origem=self.db_origin,
-                                       dados_destino=self.db_destiny,
-                                       comunicador=communicator)
-            principle_log = principle.inicia_principios_ativos(erased)
+            origin_principles = self.__origin_repository.select_principle()
+            destiny_principles = self.__destiny_repository.select_principle()
 
-            principles_found = principle.retorna_principios_tratados()
-
+            principle = Principle(erased=erased,
+                                  communicator=communicator,
+                                  origin_principles=origin_principles,
+                                  destiny_principles=destiny_principles)
+                                  
+            principle.start_principles()
+            principles_found = principle.get_principles_found()
+            principles_not_found = principle.get_principles_not_found()
+            self.__principle_log = self.__destiny_repository.insert_principle(principles_not_found)
 
         # PRODUCT
-        if self.sel_product.get():
-            selected_groups = self.get_groups()
+        if module_marker['produto'] == 'sim':
 
-            product = Produto(dados_origem=self.db_origin,
-                              dados_destino=self.db_destiny,
-                              comunicador=communicator,
-                              fabricantes_encontrados_tratados=manufacturers_found,
-                              principios_encontrados_tratados=principles_found,
-                              id_fabricante=manufacturer_id,
-                              id_principio=principle_id,
-                              grupos_selecionados=selected_groups)
+            product_table = {'tabela': 'produto'}
+            manufacturer_table = {'tabela': 'fabricante'}
+            principle_table = {'tabela': 'principio_ativo'}
 
-            if self.sel_productbar.get():
-                product_update.update({'remover_produtos_barras_zerados': 'sim'})
+            origin_products = self.__origin_repository.select_product()
+            products_comparison = self.__destiny_repository.select_product_comparison()
 
-            if self.sel_manufacturer_cnpj.get():
-                product_update.update({'fabricante_por_cnpj': 'sim'})
+            product = Product(erased=erased,
+                              communicator=communicator,
+                              product_options=product_options,
+                              origin_products=origin_products,
+                              selected_groups=selected_groups,
+                              manufacturers_found=manufacturers_found,
+                              manufacturer_id=manufacturer_id,
+                              principles_found=principles_found,
+                              principle_id=principle_id,
+                              products_comparison=products_comparison)
 
-            if self.sel_manufacturer_id.get():
-                product_update.update({'fabricante_por_id': 'sim'})
+            product.start_product()
+            products_not_found = product.get_products()
+            self.__product_log = self.__destiny_repository.insert_product(products_not_found)
 
-            if self.sel_principle_desc.get():
-                product_update.update({'principio_por_desc': 'sim'})
+            products_after_insert = self.__destiny_repository.query_tables(product_table)
+            manufacturers_after_insert = self.__destiny_repository.query_tables(manufacturer_table)
+            principles_after_insert = self.__destiny_repository.query_tables(principle_table)
 
-            if self.sel_principle_id.get():
-                product_update.update({'principio_por_id': 'sim'})
-
-            product_log = product.inicia_produtos(marcador_produto=product_update, apagado=erased)
-
-            product_ids = product.retorna_produtos_ids()
-
+            data_update = product.update_after_insert(products_after_insert, manufacturers_after_insert, principles_after_insert)
+            self.__destiny_repository.update_product(data_update['manufacturer'])
+            self.__destiny_repository.update_product(data_update['principle'])
+            
+            products_id = product.get_products_id()
+            products_found = product.get_products_found()
 
         # BARS
-        if self.sel_bars.get():
+        if module_marker['barras'] == 'sim':
 
-            bars = BarrasAdicional(dados_origem=self.db_origin,
-                                   dados_destino=self.db_destiny,
-                                   comunicador=communicator,
-                                   produtos_ids=product_ids)
-            bars_log = bars.inicia_barras(erased)
+            origin_bars = self.__origin_repository.select_bar()
 
+            bars = Bar(erased=erased,
+                       communicator=communicator,
+                       origin_bars=origin_bars,
+                       products_id=products_id,
+                       products_found=products_found,
+                       products_after_insert=products_after_insert)
+
+            bars.start_bars()
+            selected_bars = bars.get_bars()
+            self.__bar_log = self.__destiny_repository.insert_bar(selected_bars)
 
         # STOCK
         if self.sel_stock.get():
@@ -253,7 +272,8 @@ class Run():
 
 
         # LOGS
-        self.__logs.update({'manufacturer_logs': self.__manufacturer_log})
+        self.__logs.update({'manufacturer_logs': self.__manufacturer_log,
+                            'principle_logs': self.__principle_log})
 
         iterator = IteratorSql()
         iterator.connect_destiny(self.db_destiny)

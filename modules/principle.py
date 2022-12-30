@@ -1,76 +1,60 @@
 class Principle:
-    def __init__(self, dados_origem, dados_destino, comunicador):
+    
+    def __init__(self, erased, communicator, origin_principles, destiny_principles):
 
-        self.dados_origem = dados_origem
-        self.dados_destino = dados_destino
-        self.comunicador = comunicador
-        self.principios_encontrados_tratados = None
-        self.principios_nencontrados_tratados = None
+        self.__erased = erased
+        self.__communicator = communicator
+        self.__origin_principles = origin_principles
+        self.__destiny_principles = destiny_principles
+        self.__principles_found = []
+        self.__principles_not_found = []
 
-    def inicia_principios_ativos(self, apagado):
+    def start_principles(self):
 
-        iterador = IteradorSql()
-        iterador.conexao_origem(self.dados_origem)
-        iterador.conexao_destino(self.dados_destino)
-        principios_origem = iterador.select_principio_ativo_origem()
-        principios_destino = iterador.select_principio_ativo_destino()
+        if self.__erased is True:
+            self.__remove_erased()
 
-        if apagado['apagado'] == 'sim':
-            principios_origem = self.remove_apagado(principios_origem)
+        self.__search_principles()
+        self.__principles_treatment()
 
-        principios = self.procura_principios(principios_origem, principios_destino)
-        self.principios_encontrados_tratados = self.tratamento_principios(principios['principios_encontrados'])
-        self.principios_nencontrados_tratados = self.tratamento_principios(principios['principios_nencontrados'])
-        principio_ativo_log = iterador.insert_principios(self.principios_nencontrados_tratados)
+    def __remove_erased(self):
 
-        return principio_ativo_log
-
-    @staticmethod
-    def remove_apagado(principios):
-
-        for registro in principios:
-            if registro['apagado'] == 'S':
-                principios.remove(registro)
+        for principle in self.__origin_principles:
+            if principle['apagado'] == 'S':
+                self.__origin_principles.remove(principle)
             else:
                 continue
 
-        return principios
+    def __search_principles(self):
 
-    def procura_principios(self, principios_origem, principios_destino):
+        for principle in self.__origin_principles:
+            new_id = self.__return_principle(principle['descricao'])
 
-        principios_encontrados = []
-        principios_nencontrados = []
-
-        for principio in principios_origem:
-            descricao = principio['descricao']
-            novo_id = self.retorna_principio_ativo(descricao, principios_destino)
-            if novo_id:
-                principio.update({'novo_id': novo_id, 'existe': 1})
-                principios_encontrados.append(principio)
+            if new_id:
+                principle.update({'novo_id': new_id, 'existe': 1})
+                self.__principles_found.append(principle)
             else:
-                principio.update({'novo_id': None, 'existe': 0})
-                principios_nencontrados.append(principio)
+                principle.update({'novo_id': None, 'existe': 0})
+                self.__principles_not_found.append(principle)
 
-        return {'principios_encontrados': principios_encontrados,
-                'principios_nencontrados': principios_nencontrados}
+    def __return_principle(self, origin_description):
 
-    @staticmethod
-    def retorna_principio_ativo(descricao_origem, principios):
+        for principle in self.__destiny_principles:
+            destiny_description = principle['descricao']
+            principle_id = int(principle['id_principio_ativo'])
 
-        for principio in principios:
-            descricao_destino = principio['descricao']
-            principio_id = int(principio['id_principio_ativo'])
-            if descricao_origem == descricao_destino:
-                return principio_id
+            if origin_description == destiny_description:
+                return principle_id
             else:
                 continue
 
-    def tratamento_principios(self, principios):
+    def __principles_treatment(self):
 
-        for principio in principios:
-            principio.update({'comunicador': self.comunicador})
+        for principle in self.__principles_not_found:
+            principle.update({'comunicador': self.__communicator})
 
-        return principios
+    def get_principles_found(self):
+        return self.__principles_found
 
-    def retorna_principios_tratados(self):
-        return self.principios_encontrados_tratados
+    def get_principles_not_found(self):
+        return self.__principles_not_found

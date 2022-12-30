@@ -956,16 +956,18 @@ class Ui:
         principle_id = self.principle_id_entry.get()
         zeros = int(self.zeros_spinbox.get())
 
-        erased = {'apagado': 'nao'}
+        erased = False
 
-        product_update = {'fabricante_por_cnpj': 'nao',
-                          'fabricante_por_id': 'nao',
-                          'principio_por_desc': 'nao',
-                          'principio_por_id': 'nao',
-                          'classe_terapeutica_por_desc': 'nao',
-                          'classe_terapeutica_por_padrao': 'nao',
-                          'remover_produtos_barras_zerados': 'nao',
-                          'quantidade_zeros_barras': zeros}
+        selected_groups = self.get_groups()
+
+        product_options = {'fabricante_por_cnpj': False,
+                           'fabricante_por_id': False,
+                           'principio_por_desc': False,
+                           'principio_por_id': False,
+                           'classe_terapeutica_por_desc': False,
+                           'classe_terapeutica_por_padrao': False,
+                           'remover_produtos_barras_zerados': False,
+                           'quantidade_zeros_barras': zeros}
 
         module_marker = {'fabricante': 'nao',
                          'principio_ativo': 'nao',
@@ -986,7 +988,7 @@ class Ui:
 
         # MARKERS
         if self.sel_erased.get():
-            erased.update({'apagado': 'sim'})
+            erased = True
 
         if self.sel_manufacturer_cnpj.get():
             module_marker.update({'fabricante': 'sim'})
@@ -1022,8 +1024,29 @@ class Ui:
         if self.sel_accounts_receivable.get():
             module_marker.update({'receber': 'sim'})
 
+        if self.sel_productbar.get():
+            product_options.update({'remover_produtos_barras_zerados': 'sim'})
+
+        if self.sel_manufacturer_cnpj.get():
+            product_options.update({'fabricante_por_cnpj': 'sim'})
+
+        if self.sel_manufacturer_id.get():
+            product_options.update({'fabricante_por_id': 'sim'})
+
+        if self.sel_principle_desc.get():
+            product_options.update({'principio_por_desc': 'sim'})
+
+        if self.sel_principle_id.get():
+            product_options.update({'principio_por_id': 'sim'})
+
         # START PROCESS
-        run.start_process(erased, communicator, module_marker)
+        run.start_process(erased, 
+                          communicator, 
+                          module_marker, 
+                          selected_groups, 
+                          product_options, 
+                          manufacturer_id, 
+                          principle_id)
 
         # GET LOGS
         self.__logs = run.get_logs()
@@ -1042,60 +1065,33 @@ class Ui:
         self.progress_bar()
 
         # PRINCIPLE
+        if self.sel_principle_desc.get():
 
             self.log(method='Processamento de Principios Ativos Iniciado.')
-            principle = PrincipioAtivo(dados_origem=self.db_origin,
-                                       dados_destino=self.db_destiny,
-                                       comunicador=communicator)
-            principle_log = principle.inicia_principios_ativos(erased)
-            
-            principles_found = principle.retorna_principios_tratados()
-            if principle_log:
+            if self._logs['principle_logs']:
+
+                principle_log = self.__logs['principle_logs']
                 for principle in principle_log:
-                    self.log(error_register=principle['registro_erro'], 
-                             error_return=principle['retorno_erro'])
+                    self.log(error_register=principle['error_register'], 
+                             error_return=principle['error_return'])
             self.log(method='Processamento de Principios Ativos Finalizado.')
         self.progress_bar()
 
         # PRODUCT
-
-            selected_groups = self.get_groups()
-            self.log(method='Processamento de Produtos Iniciado.')
-            product = Produto(dados_origem=self.db_origin,
-                              dados_destino=self.db_destiny,
-                              comunicador=communicator,
-                              fabricantes_encontrados_tratados=manufacturers_found,
-                              principios_encontrados_tratados=principles_found,
-                              id_fabricante=manufacturer_id,
-                              id_principio=principle_id,
-                              grupos_selecionados=selected_groups)
-
-            if self.sel_productbar.get():
-                product_update.update({'remover_produtos_barras_zerados': 'sim'})
-
-            if self.sel_manufacturer_cnpj.get():
-                product_update.update({'fabricante_por_cnpj': 'sim'})
-
-            if self.sel_manufacturer_id.get():
-                product_update.update({'fabricante_por_id': 'sim'})
-
-            if self.sel_principle_desc.get():
-                product_update.update({'principio_por_desc': 'sim'})
-
-            if self.sel_principle_id.get():
-                product_update.update({'principio_por_id': 'sim'})
-
-            product_log = product.inicia_produtos(marcador_produto=product_update, apagado=erased)
+        if self.sel_product.get():
             
-            product_ids = product.retorna_produtos_ids()
-            if product_log:
+            self.log(method='Processamento de Produtos Iniciado.')
+            if self.__logs['product_logs']:
+
+                product_log = self.__logs['product_logs']
                 for product in product_log:
-                    self.log(error_register=product['registro_erro'], error_return=product['retorno_erro'])
+                    self.log(error_register=product['error_register'], 
+                             error_return=product['error_return'])
             self.log(method='Processamento de Produtos Finalizado.')
         self.progress_bar()
 
         # BARS
-
+        if self.sel_bars.get():
             self.log(method='Processamento de Barras Adicionais Iniciado.')
             bars = BarrasAdicional(dados_origem=self.db_origin,
                                    dados_destino=self.db_destiny,
@@ -1110,7 +1106,7 @@ class Ui:
         self.progress_bar()
 
         # STOCK
-
+        if self.sel_stock.get():
             self.log(method='Processamento de Estoque Iniciado.')
             stock = Estoque(dados_origem=self.db_origin,
                             dados_destino=self.db_destiny,
@@ -1127,7 +1123,7 @@ class Ui:
         self.progress_bar()
 
         # PARTITION
-
+        if self.sel_partition.get():
             self.log(method='Processamento de Lotes Iniciado.')
             partition = Lote(dados_origem=self.db_origin,
                              dados_destino=self.db_destiny,
@@ -1144,7 +1140,7 @@ class Ui:
         self.progress_bar()
 
         # PRICE
-
+        if self.sel_price.get():
             self.log(method='Processamento de Preço Filial Iniciado.')
             price = PrecoFilial(dados_origem=self.db_origin,
                                 dados_destino=self.db_destiny,
@@ -1161,7 +1157,7 @@ class Ui:
         self.progress_bar()
 
         # SUPPLIER
-
+        if self.sel_suppliers.get():
             selected_suppliers = self.get_suppliers()
 
             self.log(method='Processamento de Fornecedores Iniciado.')
@@ -1181,7 +1177,7 @@ class Ui:
 
         # BILLS TO PAY
 
-
+        if self.sel_bills.get():
             self.log(method='Processamento de Pagar Iniciado.')
             bills = Pagar(dados_origem=self.db_origin,
                           dados_destino=self.db_destiny,
@@ -1200,7 +1196,7 @@ class Ui:
         self.progress_bar()
 
         # COMPANY/CUSTOMERS
-
+        if self.sel_companies.get():
             selected_companies = self.get_companies()
             self.log(method='Processamento de Empresas Iniciado.')
             company = Empresa(dados_origem=self.db_origin,
@@ -1228,7 +1224,7 @@ class Ui:
             self.log(method='Processamento de Clientes Finalizado.')
 
         # ACCOUNTS RECEIVABLE
-
+        if self.sel_accounts_receivable.get():
             self.log(method='Processamento do Receber Iniciado.')
             accounts = Receber(dados_origem=self.db_origin,
                                dados_destino=self.db_destiny,
