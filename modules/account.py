@@ -1,80 +1,67 @@
 class Account:
+
     def __init__(self,
-                 dados_origem,
-                 dados_destino,
-                 filial_id_origem,
-                 filial_id_destino,
-                 empresas_selecionadas,
-                 clientes_selecionados,
-                 comunicador):
+                 erased,
+                 communicator,
+                 origin_branch_id,
+                 destiny_branch_id,
+                 origin_accounts):
 
-        self.dados_origem = dados_origem
-        self.dados_destino = dados_destino
-        self.filial_id_origem = filial_id_origem
-        self.filial_id_destino = filial_id_destino
-        self.empresas_selecionadas = empresas_selecionadas
-        self.clientes_selecionados = clientes_selecionados
-        self.comunicador = comunicador
+        self.__erased = erased
+        self.__communicator = communicator
+        self.__origin_branch_id = origin_branch_id
+        self.__destiny_branch_id = destiny_branch_id
+        self.__origin_accounts = origin_accounts
 
-    def inicia_receber(self, apagado):
+    def start_account(self):
 
-        iterador = IteradorSql()
-        iterador.conexao_origem(self.dados_origem)
-        iterador.conexao_destino(self.dados_destino)
-        receber = iterador.select_receber(self.clientes_selecionados)
+        if self.__erased is True:
+            self.__remove_erased()
 
-        if apagado['apagado'] == 'sim':
-            receber = self.remove_apagado(receber)
+        self.__acount_treatment()
 
-        receber_tratado = self.trata_receber(receber)
-        receber_log = iterador.insert_receber(receber_tratado)
+    def __remove_erased(self):
 
-        return receber_log
-
-    def trata_receber(self, receber):
-
-        for registro in receber[:]:
-            id_filial = int(registro['id_filial'])
-            if id_filial != self.filial_id_origem:
-                receber.remove(registro)
-            else:
-                datas = {'data_venda': registro['data_venda'],
-                         'vencimento': registro['vencimento'],
-                         'data_baixa': registro['data_baixa'],
-                         'data_cadastro': registro['data_cadastro'],
-                         'data_alteracao': registro['data_alteracao']}
-
-                datas_tratadas = self.trata_campo_data(datas)
-
-                registro.update({'data_venda': datas_tratadas['data_venda']})
-                registro.update({'vencimento': datas_tratadas['vencimento']})
-                registro.update({'data_baixa': datas_tratadas['data_baixa']})
-                registro.update({'data_cadastro': datas_tratadas['data_cadastro']})
-                registro.update({'data_alteracao': datas_tratadas['data_alteracao']})
-                registro.update({'id_filial': self.filial_id_destino})
-                registro.update({'comunicador': self.comunicador})
-
-        return receber
-
-    @staticmethod
-    def remove_apagado(receber):
-
-        for registro in receber:
-            if registro['apagado'] == 'S':
-                receber.remove(registro)
+        for account in self.__origin_accounts:
+            if account['apagado'] == 'S':
+                self.__origin_accounts.remove(account)
             else:
                 continue
 
-        return receber
+    def __acount_treatment(self):
 
-    @staticmethod
-    def trata_campo_data(datas):
+        for account in self.__origin_accounts[:]:
+            branch_id = int(account['id_filial'])
 
-        for chave, data in datas.items():
-            if data is None:
+            if branch_id != self.__origin_branch_id:
+                self.__origin_accounts.remove(account)
+            else:
+                dates = {'data_venda': account['data_venda'],
+                         'vencimento': account['vencimento'],
+                         'data_baixa': account['data_baixa'],
+                         'data_cadastro': account['data_cadastro'],
+                         'data_alteracao': account['data_alteracao']}
+
+                treated_dates = self.__dates_treatment(dates)
+
+                account.update({'data_venda': treated_dates['data_venda']})
+                account.update({'vencimento': treated_dates['vencimento']})
+                account.update({'data_baixa': treated_dates['data_baixa']})
+                account.update({'data_cadastro': treated_dates['data_cadastro']})
+                account.update({'data_alteracao': treated_dates['data_alteracao']})
+                account.update({'id_filial': self.__destiny_branch_id})
+                account.update({'comunicador': self.__communicator})
+
+    def __dates_treatment(self, dates):
+
+        for key, date in dates.items():
+            if date is None:
                 pass
             else:
-                data_formatada = data.strftime('%Y-%m-%d')
-                datas.update({chave: data_formatada})
+                formatted_date = date.strftime('%Y-%m-%d')
+                dates.update({key: formatted_date})
 
-        return datas
+        return dates
+
+    def get_accounts(self):
+        return self.__origin_accounts

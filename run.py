@@ -5,6 +5,14 @@ from modules.manufacturer import Manufacturer
 from modules.principle import Principle
 from modules.product import Product
 from modules.bar import Bar
+from modules.stock import Stock
+from modules.partition import Partition
+from modules.price import Price
+from modules.supplier import Supplier
+from modules.bill import Bill
+from modules.company import Company
+from modules.customer import Customer
+from modules.account import Account
 
 
 class AccessDatabase(TypedDict):
@@ -85,7 +93,11 @@ class Run():
     def get_logs(self):
         return self.__logs
 
-    def start_process(self, erased, communicator, module_marker, selected_groups, product_options, manufacturer_id, principle_id):
+    def start_process(self, erased, communicator, module_marker, selected_groups, selected_suppliers, selected_companies, product_options, manufacturer_id, principle_id, origin_branch_id, destiny_branch_id):
+
+        product_table = {'tabela': 'produto'}
+        manufacturer_table = {'tabela': 'fabricante'}
+        principle_table = {'tabela': 'principio_ativo'}
 
         # MANUFACTURER
         if module_marker['fabricante'] == 'sim':
@@ -121,10 +133,6 @@ class Run():
 
         # PRODUCT
         if module_marker['produto'] == 'sim':
-
-            product_table = {'tabela': 'produto'}
-            manufacturer_table = {'tabela': 'fabricante'}
-            principle_table = {'tabela': 'principio_ativo'}
 
             origin_products = self.__origin_repository.select_product()
             products_comparison = self.__destiny_repository.select_product_comparison()
@@ -172,104 +180,132 @@ class Run():
             self.__bar_log = self.__destiny_repository.insert_bar(selected_bars)
 
         # STOCK
-        if self.sel_stock.get():
+        if module_marker['estoque'] == 'sim':
 
-            stock = Estoque(dados_origem=self.db_origin,
-                            dados_destino=self.db_destiny,
-                            filial_id_origem=origin_branch_id,
-                            filial_id_destino=destiny_branch_id,
-                            comunicador=communicator,
-                            produtos_ids=product_ids)
-            stock_log = stock.inicia_estoque(erased)
+            origin_stock = self.__origin_repository.select_stock()
 
+            stock = Stock(erased=erased,
+                          communicator=communicator,
+                          products_id=products_id,
+                          products_found= products_found,
+                          products_after_insert = products_after_insert,
+                          origin_stock=origin_stock,
+                          origin_branch_id=origin_branch_id, 
+                          destiny_branch_id=destiny_branch_id)
 
+            stock.start_stock()
+            selected_stock = stock.get_stock()
+            self.__stock_log = self.__destiny_repository.insert_stock(selected_stock)
 
         # PARTITION
-        if self.sel_partition.get():
+        if module_marker['lote'] == 'sim':
 
-            partition = Lote(dados_origem=self.db_origin,
-                             dados_destino=self.db_destiny,
-                             filial_id_origem=origin_branch_id,
-                             filial_id_destino=destiny_branch_id,
-                             comunicador=communicator,
-                             produtos_ids=product_ids)
-            partition_log = partition.inicia_lotes(erased)
+            origin_partition = self.__origin_repository.select_partition()
 
+            partition = Partition(erased=erased,
+                                  communicator=communicator,
+                                  products_id=products_id,
+                                  products_found=products_found,
+                                  products_after_insert=products_after_insert,
+                                  origin_partition=origin_partition,
+                                  origin_branch_id=origin_branch_id,
+                                  destiny_branch_id=destiny_branch_id)
+
+            partition.start_partition()
+            selected_partition = partition.get_partition()
+            self.__partition_log = self.__destiny_repository.insert_partition(selected_partition)
 
         # PRICE
-        if self.sel_price.get():
+        if module_marker['preco'] == 'sim':
 
-            price = PrecoFilial(dados_origem=self.db_origin,
-                                dados_destino=self.db_destiny,
-                                filial_id_origem=origin_branch_id,
-                                filial_id_destino=destiny_branch_id,
-                                comunicador=communicator,
-                                produtos_ids=product_ids)
-            price_log = price.inicia_precos_filial(erased)
+            origin_price = self.__origin_repository.select_price()
+
+            price = Price(erased=erased,
+                          communicator=communicator,
+                          products_id=products_id,
+                          products_found=products_found,
+                          products_after_insert=products_after_insert,
+                          origin_price=origin_price,
+                          origin_branch_id=origin_branch_id,
+                          destiny_branch_id=destiny_branch_id)
+
+            price.start_price()
+            selected_price = price.get_price()
+            self.__price_log = self.__destiny_repository.insert_price(selected_price)
 
 
         # SUPPLIER
-        if self.sel_suppliers.get():
+        if module_marker['fornecedor'] == 'sim':
             selected_suppliers = self.get_suppliers()
+            origin_suppliers = self.__origin_repository.select_origin_supplier(selected_suppliers)
+            destiny_suppliers = self.__destiny_repository.select_destiny_supplier()
 
-            supplier = Fornecedor(dados_origem=self.db_origin,
-                                  dados_destino=self.db_destiny,
-                                  fornecedores_selecionados=selected_suppliers,
-                                  comunicador=communicator)
-            supplier_log = supplier.inicia_fornecedores(erased)
+            supplier = Supplier(erased=erased,
+                                communicator=communicator,
+                                origin_suppliers=origin_suppliers,
+                                destiny_suppliers=destiny_suppliers)
 
-            suppliers_found = supplier.retorna_fornecedores_tratados()
-            suppliers_after_insert = supplier.retorna_fornecedores_pos_insert()
-
+            supplier.start_supplier()
+            suppliers_found = supplier.get_suppliers_found()
+            suppliers_not_found = supplier.get_suppliers_not_found()
+            self.__supplier_log = self.__destiny_repository.insert_supplier(suppliers_not_found)
+            suppliers_after_insert = self.__destiny_repository.select_supplier_after_insert()
 
         # BILLS TO PAY
-        if self.sel_bills.get():
+        if module_marker['pagar'] == 'sim':
 
-            bills = Pagar(dados_origem=self.db_origin,
-                          dados_destino=self.db_destiny,
-                          filial_id_origem=origin_branch_id,
-                          filial_id_destino=destiny_branch_id,
-                          fornecedores_encontrados=suppliers_found,
-                          fornecedores_selecionados=selected_suppliers,
-                          fornecedores_pos_insert=suppliers_after_insert,
-                          comunicador=communicator)
-            bills_log = bills.inicia_pagar(erased)
+            origin_bills = self.__destiny_repository.select_bill(selected_suppliers)
 
+            bills = Bill(erased=erased,
+                         communicator=communicator,
+                         origin_bills=origin_bills,
+                         origin_branch_id=origin_branch_id,
+                         destiny_branch_id=destiny_branch_id,
+                         suppliers_found=suppliers_found,
+                         suppliers_after_insert=suppliers_after_insert)
+
+            bills.start_bill()
+            selected_bill = bills.get_bills()
+            self._bill_log = self.__destiny_repository.insert_bill(selected_bill)
 
         # COMPANY/CUSTOMERS
-        if self.sel_companies.get():
-            selected_companies = self.get_companies()
+        if module_marker['empresa'] == 'sim':
 
-            company = Empresa(dados_origem=self.db_origin,
-                              dados_destino=self.db_destiny,
-                              empresas_selecionadas=selected_companies,
-                              comunicador=communicator)
-            company_log = company.inicia_empresas(erased)
+            origin_companies = self.__destiny_repository.select_company(selected_companies)
 
+            company = Company(erased=erased,
+                              communicator=communicator,
+                              origin_companies=origin_companies)
 
+            company.start_company()
+            companies = company.get_companies()
+            self.__company_log = self.__destiny_repository.insert_company(companies)
 
-            customer = Cliente(dados_origem=self.db_origin,
-                               dados_destino=self.db_destiny,
-                               empresas_selecionadas=selected_companies,
-                               comunicador=communicator)
-            customer_log = customer.inicia_clientes(erased)
+            origin_customers = self.__destiny_repository.select_customer(selected_companies)
 
-            selected_customers = customer.retorna_clientes_ids()
+            customer = Customer(erased=erased,
+                                communicator=communicator,
+                                origin_customers=origin_customers)
 
+            customer.start_customer()
+            customers = customer.get_customers()
+            self.__customer_log = self.__destiny_repository.insert_customer(customers)
+            selected_customers_id = customer.get_customers_id()
 
         # ACCOUNTS RECEIVABLE
-        if self.sel_accounts_receivable.get():
+        if module_marker['receber'] == 'sim':
 
-            accounts = Receber(dados_origem=self.db_origin,
-                               dados_destino=self.db_destiny,
-                               filial_id_origem=origin_branch_id,
-                               filial_id_destino=destiny_branch_id,
-                               empresas_selecionadas=selected_companies,
-                               clientes_selecionados=selected_customers,
-                               comunicador=communicator)
-            accounts_log = accounts.inicia_receber(erased)
+            origin_accounts = self.__destiny_repository.select_account(selected_customers_id)
 
+            account = Account(erased=erased,
+                               communicator=communicator,
+                               origin_branch_id=origin_branch_id,
+                               destiny_branch_id=destiny_branch_id,
+                               origin_accounts=origin_accounts)
 
+            account.start_account()
+            accounts = account.get_accounts()
+            self.__account_log = self.__destiny_repository.insert_account(accounts)
 
         # LOGS
         self.__logs.update({'manufacturer_logs': self.__manufacturer_log,

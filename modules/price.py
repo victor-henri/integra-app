@@ -1,116 +1,107 @@
 class Price:
-    def __init__(self, dados_origem, dados_destino, comunicador, filial_id_origem, filial_id_destino, produtos_ids):
 
-        self.dados_origem = dados_origem
-        self.dados_destino = dados_destino
-        self.comunicador = comunicador
-        self.filial_id_origem = filial_id_origem
-        self.filial_id_destino = filial_id_destino
-        self.produtos_ids = produtos_ids
+    def __init__(self,
+                 erased,
+                 communicator,
+                 products_id,
+                 products_found,
+                 products_after_insert,
+                 origin_price,
+                 origin_branch_id,
+                 destiny_branch_id):
 
-    def inicia_precos_filial(self, apagado):
+        self.__erased = erased
+        self.__communicator = communicator
+        self.__products_id = products_id
+        self.__products_found = products_found
+        self.__products_after_insert = products_after_insert
+        self.__origin_price = origin_price
+        self.__origin_branch_id = origin_branch_id
+        self.__destiny_branch_id = destiny_branch_id
+        self.__selected_prices = []
 
-        iterador = IteradorSql()
-        iterador.conexao_origem(self.dados_origem)
-        iterador.conexao_destino(self.dados_destino)
-        precos = iterador.select_preco_filial()
+    def start_price(self):
 
-        if apagado['apagado'] == 'sim':
-            precos = self.remove_apagado(precos)
+        if self.__erased is True:
+            self.__remove_erased()
 
-        id_produtos = self.produtos_ids['id_produtos']
-        produtos_encontrados = self.produtos_ids['produtos_encontrados']
+        self.__extract_selected_data()
+        self.__price_treatment()
 
-        precos_filial_selecionados = self.separa_precos_selecionados(id_produtos, precos)
-        precos_filial_tratados = self.tratamento_precos_filial(produtos_encontrados, precos_filial_selecionados)
-        preco_filial_log = iterador.insert_precos_filial(precos_filial_tratados)
+    def __remove_erased(self):
 
-        return preco_filial_log
-
-    @staticmethod
-    def remove_apagado(precos):
-
-        for registro in precos:
-            if registro['apagado'] == 'S':
-                precos.remove(registro)
+        for price in self.__origin_price:
+            if price['apagado'] == 'S':
+                self.__origin_price.remove(price)
             else:
                 continue
 
-        return precos
+    def __extract_selected_data(self):
 
-    def separa_precos_selecionados(self, id_produtos, precos):
+        for price in self.__origin_price:
+            product_id = int(price['id_produto'])
+            price_branch_id = int(price['id_filial'])
 
-        precos_selecionados = []
-
-        for registro in precos:
-            produto_id = int(registro['id_produto'])
-            preco_filial = int(registro['id_filial'])
-            if produto_id in id_produtos and preco_filial == self.filial_id_origem:
-                precos_selecionados.append(registro)
+            if product_id in self.__products_id and price_branch_id == self.__origin_branch_id:
+                self.__selected_prices.append(price)
             else:
                 continue
 
-        return precos_selecionados
+    def __price_treatment(self):
 
-    def tratamento_precos_filial(self, produtos_encontrados, precos):
+        for price in self.__selected_prices[:]:
+            old_id = int(price['id_produto'])
+            id_found = self.__return_new_id(old_id)
 
-        iterador = IteradorSql()
-        iterador.conexao_destino(self.dados_destino)
-        tabela_produto = {'tabela': 'produto'}
-        produtos_pos_insert = iterador.consulta_pos_insert(tabela_produto)
-
-        for preco in precos[:]:
-            antigo_id = int(preco['id_produto'])
-            id_encontrado = self.compara_produto(antigo_id, produtos_encontrados)
-            if id_encontrado is None:
-                novo_id = self.busca_id_atual(antigo_id, produtos_pos_insert)
-                preco.update({'id_produto_ant': antigo_id})
-                preco.update({'id_produto': novo_id})
+            if id_found is None:
+                new_id = self.__return_id_after_insert(old_id)
+                price.update({'id_produto_ant': old_id})
+                price.update({'id_produto': new_id})
             else:
-                precos.remove(preco)
+                self.__selected_prices.remove(price)
 
-            datas = {'inicio': preco['inicio_promocao'],
-                     'final': preco['final_promocao']}
+            dates = {'inicio': price['inicio_promocao'],
+                     'final': price['final_promocao']}
 
-            datas_tratadas = self.trata_campo_data(datas)
+            treated_dates = self.__dates_treatment(dates)
 
-            preco.update({'inicio_promocao': datas_tratadas['inicio']})
-            preco.update({'final_promocao': datas_tratadas['final']})
-            preco.update({'id_filial': self.filial_id_destino})
-            preco.update({'comunicador': self.comunicador})
+            price.update({'inicio_promocao': treated_dates['inicio']})
+            price.update({'final_promocao': treated_dates['final']})
+            price.update({'id_filial': self.__destiny_branch_id})
+            price.update({'comunicador': self.__communicator})
 
-        return precos
+    def __return_new_id(self, old_id):
 
-    @staticmethod
-    def compara_produto(antigo_id, produtos):
+        for product in self.__products_found:
+            product_id = int(product['id_produto'])
+            new_id = int(product['novo_id'])
 
-        for produto in produtos:
-            id_produto = int(produto['id_produto'])
-            novo_id = int(produto['novo_id'])
-            if antigo_id == id_produto:
-                return novo_id
+            if old_id == product_id:
+                return new_id
             else:
                 continue
 
-    @staticmethod
-    def busca_id_atual(id_produto_ant, produtos):
+    def __return_id_after_insert(self, product_id):
 
-        for produto in produtos:
-            antigo_id = int(produto['campo_auxiliar'])
-            novo_id = int(produto['id_produto'])
-            if id_produto_ant == antigo_id:
-                return novo_id
+        for product in self.__products_after_insert:
+            old_id = int(product['campo_auxiliar'])
+            new_id = int(product['id_produto'])
+
+            if product_id == old_id:
+                return new_id
             else:
                 continue
 
-    @staticmethod
-    def trata_campo_data(datas):
+    def __dates_treatment(self, dates):
 
-        for chave, data in datas.items():
-            if data is None:
+        for key, date in dates.items():
+            if date is None:
                 pass
             else:
-                data_formatada = data.strftime('%Y-%m-%d')
-                datas.update({chave: data_formatada})
+                formatted_date = date.strftime('%Y-%m-%d')
+                dates.update({key: formatted_date})
 
-        return datas
+        return dates
+
+    def get_price(self):
+        return self.__selected_prices

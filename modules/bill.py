@@ -1,116 +1,104 @@
 class Bill:
+
     def __init__(self,
-                 dados_origem,
-                 dados_destino,
-                 filial_id_origem,
-                 filial_id_destino,
-                 fornecedores_selecionados,
-                 fornecedores_encontrados,
-                 fornecedores_pos_insert,
-                 comunicador):
+                 erased,
+                 communicator,
+                 origin_bills,
+                 origin_branch_id,
+                 destiny_branch_id,
+                 suppliers_found,
+                 suppliers_after_insert):
 
-        self.dados_origem = dados_origem
-        self.dados_destino = dados_destino
-        self.filial_id_origem = filial_id_origem
-        self.filial_id_destino = filial_id_destino
-        self.fornecedores_selecionados = fornecedores_selecionados
-        self.fornecedores_encontrados = fornecedores_encontrados
-        self.fornecedores_pos_insert = fornecedores_pos_insert
-        self.comunicador = comunicador
+        self.__erased = erased
+        self.__communicator = communicator
+        self.__origin_bills = origin_bills
+        self.__origin_branch_id = origin_branch_id
+        self.__destiny_branch_id = destiny_branch_id
+        self.__suppliers_found = suppliers_found
+        self.__suppliers_after_insert = suppliers_after_insert
 
-    def inicia_pagar(self, apagado):
+    def start_bill(self):
 
-        iterador = IteradorSql()
-        iterador.conexao_origem(self.dados_origem)
-        iterador.conexao_destino(self.dados_destino)
-        pagar = iterador.select_pagar(self.fornecedores_selecionados)
+        if self.__erased is True:
+            self.__remove_erased()
 
-        if apagado['apagado'] == 'sim':
-            pagar = self.remove_apagado(pagar)
+        self.__bills_treatment()
+        self.__update_suppliers_id()
 
-        pagar_tratado = self.trata_pagar(pagar)
-        pagar_atualizado = self.atualiza_id_fornecedores(pagar_tratado)
-        pagar_log = iterador.insert_pagar(pagar_atualizado)
+    def __remove_erased(self):
 
-        return pagar_log
-
-    def trata_pagar(self, pagar):
-
-        for registro in pagar[:]:
-            id_filial = int(registro['id_filial'])
-            if id_filial != self.filial_id_origem:
-                pagar.remove(registro)
-            else:
-                datas = {'data_emissao': registro['data_emissao'],
-                         'data_vencimento': registro['data_vencimento'],
-                         'data_pagamento': registro['data_pagamento']}
-
-                datas_tratadas = self.trata_campo_data(datas)
-
-                registro.update({'data_emissao': datas_tratadas['data_emissao']})
-                registro.update({'data_vencimento': datas_tratadas['data_vencimento']})
-                registro.update({'data_pagamento': datas_tratadas['data_pagamento']})
-                registro.update({'id_filial': self.filial_id_destino})
-                registro.update({'comunicador': self.comunicador})
-
-        return pagar
-
-    def atualiza_id_fornecedores(self, pagar):
-
-        for registro in pagar:
-            atual_id = int(registro['id_fornecedor'])
-            novo_id = self.retorna_novoid_fornecedor(atual_id, self.fornecedores_encontrados)
-            if novo_id:
-                registro.update({'id_fornecedor': novo_id})
-            else:
-                id_pos_insert = self.retorna_id_pos_insert(atual_id, self.fornecedores_pos_insert)
-                registro.update({'id_fornecedor': id_pos_insert})
-
-        return pagar
-
-    @staticmethod
-    def remove_apagado(pagar):
-
-        for registro in pagar:
-            if registro['apagado'] == 'S':
-                pagar.remove(registro)
+        for bill in self.__origin_bills:
+            if bill['apagado'] == 'S':
+                self.__origin_bills.remove(bill)
             else:
                 continue
 
-        return pagar
+    def __bills_treatment(self):
 
-    @staticmethod
-    def trata_campo_data(datas):
+        for bill in self.__origin_bills[:]:
+            branch_id = int(bill['id_filial'])
 
-        for chave, data in datas.items():
-            if data is None:
+            if branch_id != self.__origin_branch_id:
+                self.__origin_bills.remove(bill)
+            else:
+                dates = {'data_emissao': bill['data_emissao'],
+                         'data_vencimento': bill['data_vencimento'],
+                         'data_pagamento': bill['data_pagamento']}
+
+                treated_dates = self.__dates_treatment(dates)
+
+                bill.update({'data_emissao': treated_dates['data_emissao']})
+                bill.update({'data_vencimento': treated_dates['data_vencimento']})
+                bill.update({'data_pagamento': treated_dates['data_pagamento']})
+                bill.update({'id_filial': self.__destiny_branch_id})
+                bill.update({'comunicador': self.__communicator})
+
+    def __dates_treatment(self, dates):
+
+        for key, date in dates.items():
+            if date is None:
                 pass
-            elif data == '0000-00-00':
+            elif date == '0000-00-00':
                 pass
             else:
-                data_formatada = data.strftime('%Y-%m-%d')
-                datas.update({chave: data_formatada})
+                formatted_date = date.strftime('%Y-%m-%d')
+                dates.update({key: formatted_date})
 
-        return datas
+        return dates
 
-    @staticmethod
-    def retorna_novoid_fornecedor(atual_id, fornecedores):
+    def __update_suppliers_id(self):
 
-        for fornecedor in fornecedores:
-            fornecedor_id = int(fornecedor['id_fornecedor'])
-            novo_id = int(fornecedor['novo_id'])
-            if atual_id == fornecedor_id:
-                return novo_id
+        for bill in self.__origin_bills:
+            current_id = int(bill['id_fornecedor'])
+            new_id = self.__return_supplier_new_id(current_id)
+
+            if new_id:
+                bill.update({'id_fornecedor': new_id})
+            else:
+                id_after_insert = self.__return_id_after_insert(current_id)
+                bill.update({'id_fornecedor': id_after_insert})
+
+    def __return_supplier_new_id(self, current_id):
+
+        for supplier in self.__suppliers_found:
+            supplier_id = int(supplier['id_fornecedor'])
+            new_id = int(supplier['novo_id'])
+
+            if current_id == supplier_id:
+                return new_id
             else:
                 continue
 
-    @staticmethod
-    def retorna_id_pos_insert(atual_id, fornecedores):
+    def __return_id_after_insert(self, current_id):
 
-        for fornecedor in fornecedores:
-            fornecedor_id = int(fornecedor['id_fornecedor'])
-            fornecedor_id_antigo = int(fornecedor['campo_auxiliar'])
-            if atual_id == fornecedor_id_antigo:
-                return fornecedor_id
+        for supplier in self.__suppliers_after_insert:
+            supplier_id = int(supplier['id_fornecedor'])
+            old_id = int(supplier['campo_auxiliar'])
+
+            if current_id == old_id:
+                return supplier_id
             else:
                 continue
+
+    def get_bills(self):
+        return self.__origin_bills

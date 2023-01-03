@@ -1,83 +1,59 @@
 class Supplier():
-    def __init__(self, dados_origem, dados_destino, fornecedores_selecionados, comunicador):
 
-        self.dados_origem = dados_origem
-        self.dados_destino = dados_destino
-        self.fornecedores_selecionados = fornecedores_selecionados
-        self.comunicador = comunicador
-        self.fornecedores_pos_insert = None
-        self.fornecedores_encontrados_tratados = None
-        self.fornecedores_nencontrados_tratados = None
+    def __init__(self, erased, communicator, origin_suppliers, destiny_suppliers):
+        self.__erased = erased
+        self.__communicator = communicator
+        self.__origin_suppliers = origin_suppliers
+        self.__destiny_suppliers = destiny_suppliers
+        self.__suppliers_found = []
+        self.__suppliers_not_found = []
 
-    def inicia_fornecedores(self, apagado):
+    def start_supplier(self):
 
-        iterador = IteradorSql()
-        iterador.conexao_origem(self.dados_origem)
-        iterador.conexao_destino(self.dados_destino)
-        fornecedores_origem = iterador.select_fornecedor_origem(self.fornecedores_selecionados)
-        fornecedores_destino = iterador.select_fornecedor_destino()
+        if self.__erased is True:
+            self.__remove_erased()
 
-        if apagado['apagado'] == 'sim':
-            fornecedores_origem = self.remove_apagado(fornecedores_origem)
+        self.__search_suppliers()
+        self.__suppliers_treatment()
 
-        fornecedores = self.procura_fornecedores(fornecedores_origem, fornecedores_destino)
-        self.fornecedores_encontrados_tratados = self.trata_fornecedores(fornecedores['fornecedores_encontrados'])
-        self.fornecedores_nencontrados_tratados = self.trata_fornecedores(fornecedores['fornecedores_nencontrados'])
+    def __remove_erased(self):
 
-        fornecedores_log = iterador.insert_fornecedor(self.fornecedores_nencontrados_tratados)
-        self.fornecedores_pos_insert = iterador.consulta_fornecedor_pos_insert()
-
-        return fornecedores_log
-
-    def procura_fornecedores(self, fornecedores_origem, fornecedores_destino):
-
-        fornecedores_encontrados = []
-        fornecedores_nencontrados = []
-
-        for fornecedor in fornecedores_origem:
-            cnpj = fornecedor['cnpj']
-            novo_id = self.retorna_fornecedor(cnpj, fornecedores_destino)
-            if novo_id:
-                fornecedor.update({'novo_id': novo_id})
-                fornecedores_encontrados.append(fornecedor)
-            else:
-                fornecedor.update({'novo_id': None})
-                fornecedores_nencontrados.append(fornecedor)
-
-        return {'fornecedores_encontrados': fornecedores_encontrados,
-                'fornecedores_nencontrados': fornecedores_nencontrados}
-
-    def trata_fornecedores(self, fornecedores):
-
-        for fornecedor in fornecedores:
-            fornecedor.update({'comunicador': self.comunicador})
-
-        return fornecedores
-
-    @staticmethod
-    def remove_apagado(fornecedores):
-
-        for registro in fornecedores:
-            if registro['apagado'] == 'S':
-                fornecedores.remove(registro)
+        for supplier in self.__origin_suppliers:
+            if supplier['apagado'] == 'S':
+                self.__origin_suppliers.remove(supplier)
             else:
                 continue
 
-        return fornecedores
+    def __search_suppliers(self):
 
-    @staticmethod
-    def retorna_fornecedor(cnpj_origem, fornecedores):
+        for supplier in self.__origin_suppliers:
+            new_id = self.__return_supplier(supplier['cnpj'])
 
-        for fornecedor in fornecedores:
-            cnpj_destino = fornecedor['cnpj']
-            fornecedor_id = int(fornecedor['id_fornecedor'])
-            if cnpj_origem == cnpj_destino:
-                return fornecedor_id
+            if new_id:
+                supplier.update({'novo_id': new_id})
+                self.__suppliers_found.append(supplier)
+            else:
+                supplier.update({'novo_id': None})
+                self.__suppliers_not_found.append(supplier)
+
+    def __return_supplier(self, origin_cnpj):
+
+        for supplier in self.__destiny_suppliers:
+            destiny_cnpj = supplier['cnpj']
+            supplier_id = int(supplier['id_fornecedor'])
+
+            if origin_cnpj == destiny_cnpj:
+                return supplier_id
             else:
                 continue
 
-    def retorna_fornecedores_tratados(self):
-        return self.fornecedores_encontrados_tratados
+    def __suppliers_treatment(self):
 
-    def retorna_fornecedores_pos_insert(self):
-        return self.fornecedores_pos_insert
+        for supplier in self.__suppliers_not_found:
+            supplier.update({'comunicador': self.__communicator})
+
+    def get_suppliers_found(self):
+        return self.__suppliers_found
+
+    def get_suppliers_not_found(self):
+        return self.__suppliers_not_found

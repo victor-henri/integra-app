@@ -190,8 +190,6 @@ class RepositoryMariaDb(RepositoryInterface):
         return suppliers
 
     def query_tables(self, table_data) -> list[dict]:
-        # Destino
-        # consulta_produto_pos_insert
 
         if table_data['tabela'] == 'produto':
             self.__cursor.execute(sqls.SELECT_PRODUCT_AFTER_INSERT)

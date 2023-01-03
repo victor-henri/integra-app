@@ -1,102 +1,93 @@
 class Customer:
-    def __init__(self, dados_origem, dados_destino, empresas_selecionadas, comunicador):
 
-        self.dados_origem = dados_origem
-        self.dados_destino = dados_destino
-        self.empresas_selecionadas = empresas_selecionadas
-        self.comunicador = comunicador
-        self.clientes_selecionados = None
+    def __init__(self, erased, communicator, origin_customers):
 
-    def inicia_clientes(self, apagado):
+        self.__erased = erased
+        self.__communicator = communicator
+        self.__origin_customers = origin_customers
+        self.__selected_customers_id = ()
 
-        iterador = IteradorSql()
-        iterador.conexao_origem(self.dados_origem)
-        iterador.conexao_destino(self.dados_destino)
-        clientes = iterador.select_cliente(self.empresas_selecionadas)
+    def start_customer(self):
 
-        if apagado['apagado'] == 'sim':
-            clientes = self.remove_apagado(clientes)
+        if self.__erased is True:
+            self.__remove_erased()
 
-        clientes_tratados = self.trata_clientes(clientes)
-        self.clientes_selecionados = self.separa_clientes_ids(clientes_tratados)
-        clientes_log = iterador.insert_cliente(clientes_tratados)
+        self.__customer_treatment()
+        self.__extract_customers_id()
 
-        return clientes_log
+    def __remove_erased(self):
 
-    def trata_clientes(self, clientes):
-
-        for cliente in clientes:
-            datas = {'data_nascimento': cliente['data_nascimento'],
-                     'data_cadastro': cliente['data_cadastro'],
-                     'data_alteracao': cliente['data_alteracao']}
-
-            campos_especiais = {'nome': cliente['nome'],
-                                'endereco': cliente['endereco']}
-
-            datas_tratadas = self.trata_campo_data(datas)
-            campos_tratados = self.trata_campo_especial(campos_especiais)
-
-            cliente.update({'data_nascimento': datas_tratadas['data_nascimento']})
-            cliente.update({'data_cadastro': datas_tratadas['data_cadastro']})
-            cliente.update({'data_alteracao': datas_tratadas['data_alteracao']})
-            cliente.update({'nome': campos_tratados['nome']})
-            cliente.update({'endereco': campos_tratados['endereco']})
-            cliente.update({'comunicador': self.comunicador})
-
-        return clientes
-
-    @staticmethod
-    def remove_apagado(clientes):
-
-        for registro in clientes:
-            if registro['apagado'] == 'S':
-                clientes.remove(registro)
+        for customer in self.__origin_customers:
+            if customer['apagado'] == 'S':
+                self.__origin_customers.remove(customer)
             else:
                 continue
 
-        return clientes
+    def __customer_treatment(self):
 
-    @staticmethod
-    def trata_campo_data(datas):
+        for customer in self.__origin_customers:
+            dates = {'data_nascimento': customer['data_nascimento'],
+                     'data_cadastro': customer['data_cadastro'],
+                     'data_alteracao': customer['data_alteracao']}
 
-        for chave, data in datas.items():
-            if data is None:
+            other_fields = {'nome': customer['nome'],
+                            'endereco': customer['endereco']}
+
+            treated_dates = self.__dates_treatment(dates)
+            treated_fields = self.__fields_treatment(other_fields)
+
+            customer.update({'data_nascimento': treated_dates['data_nascimento']})
+            customer.update({'data_cadastro': treated_dates['data_cadastro']})
+            customer.update({'data_alteracao': treated_dates['data_alteracao']})
+            customer.update({'nome': treated_fields['nome']})
+            customer.update({'endereco': treated_fields['endereco']})
+            customer.update({'comunicador': self.__communicator})
+
+    def __dates_treatment(self, dates):
+
+        for key, date in dates.items():
+            if date is None:
                 pass
             else:
-                data_formatada = data.strftime('%Y-%m-%d')
-                datas.update({chave: data_formatada})
-        return datas
+                formatted_date = date.strftime('%Y-%m-%d')
+                dates.update({key: formatted_date})
 
-    @staticmethod
-    def trata_campo_especial(campos_especiais):
+        return dates
 
-        caracteres = ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p',
+    def __fields_treatment(self, other_fields):
+
+        characters = ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p',
                       'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F',
                       'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
                       'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ')
 
-        for chave, campo in campos_especiais.items():
-            if campo is None:
+        for key, field in other_fields.items():
+
+            if field is None:
                 pass
             else:
-                valores = []
-                for caracter in campo:
-                    if caracter in caracteres:
-                        valores.append(caracter)
-                campo_formatado = ''.join(valores)
-                campos_especiais.update({chave: campo_formatado})
-        return campos_especiais
+                values = []
 
-    @staticmethod
-    def separa_clientes_ids(clientes):
+                for caracter in field:
+                    if caracter in characters:
+                        values.append(caracter)
 
-        clientes_selecionados_l = []
+                formatted_field = ''.join(values)
+                other_fields.update({key: formatted_field})
 
-        for cliente in clientes:
-            clientes_selecionados_l.append(cliente['id_cliente'])
-        clientes_selecionados = tuple(clientes_selecionados_l)
+        return other_fields
 
-        return clientes_selecionados
+    def __extract_customers_id(self):
 
-    def retorna_clientes_ids(self):
-        return self.clientes_selecionados
+        temporary_customers = []
+
+        for customer in self.__origin_customers:
+            temporary_customers.append(customer['id_cliente'])
+
+        self.__selected_customers_id = tuple(temporary_customers)
+
+    def get_customers(self):
+        return self.__origin_customers
+
+    def get_customers_id(self):
+        return self.__selected_customers_id

@@ -958,7 +958,9 @@ class Ui:
 
         erased = False
 
+        selected_companies = self.get_companies()
         selected_groups = self.get_groups()
+        selected_suppliers = self.get_suppliers()
 
         product_options = {'fabricante_por_cnpj': False,
                            'fabricante_por_id': False,
@@ -1044,9 +1046,13 @@ class Ui:
                           communicator, 
                           module_marker, 
                           selected_groups, 
+                          selected_suppliers,
+                          selected_companies,
                           product_options, 
                           manufacturer_id, 
-                          principle_id)
+                          principle_id,
+                          origin_branch_id,
+                          destiny_branch_id)
 
         # GET LOGS
         self.__logs = run.get_logs()
@@ -1072,7 +1078,7 @@ class Ui:
 
                 principle_log = self.__logs['principle_logs']
                 for principle in principle_log:
-                    self.log(error_register=principle['error_register'], 
+                    self.log(error_register=principle['error_register'],
                              error_return=principle['error_return'])
             self.log(method='Processamento de Principios Ativos Finalizado.')
         self.progress_bar()
@@ -1085,7 +1091,7 @@ class Ui:
 
                 product_log = self.__logs['product_logs']
                 for product in product_log:
-                    self.log(error_register=product['error_register'], 
+                    self.log(error_register=product['error_register'],
                              error_return=product['error_return'])
             self.log(method='Processamento de Produtos Finalizado.')
         self.progress_bar()
@@ -1093,85 +1099,60 @@ class Ui:
         # BARS
         if self.sel_bars.get():
             self.log(method='Processamento de Barras Adicionais Iniciado.')
-            bars = BarrasAdicional(dados_origem=self.db_origin,
-                                   dados_destino=self.db_destiny,
-                                   comunicador=communicator,
-                                   produtos_ids=product_ids)
-            bars_log = bars.inicia_barras(erased)
-            
-            if bars_log:
-                for bar in bars_log:
-                    self.log(error_register=bar['registro_erro'], error_return=bar['retorno_erro'])
+            if self.__logs['bar_logs']:
+
+                bar_logs = self.__logs['bar_logs']
+                for bar in bar_logs:
+                    self.log(error_register=bar['error_register'],
+                             error_return=bar['error_return'])
             self.log(method='Processamento de Barras Adicionais Finalizado.')
         self.progress_bar()
 
         # STOCK
         if self.sel_stock.get():
             self.log(method='Processamento de Estoque Iniciado.')
-            stock = Estoque(dados_origem=self.db_origin,
-                            dados_destino=self.db_destiny,
-                            filial_id_origem=origin_branch_id,
-                            filial_id_destino=destiny_branch_id,
-                            comunicador=communicator,
-                            produtos_ids=product_ids)
-            stock_log = stock.inicia_estoque(erased)
-            
-            if stock_log:
-                for stock in stock_log:
-                    self.log(error_register=stock['registro_erro'], error_return=stock['retorno_erro'])
+            if self.__logs['stock_logs']:
+
+                stock_logs = self.__logs['stock_logs']
+                for stock in stock_logs:
+                    self.log(error_register=stock['error_register'],
+                             error_return=stock['error_return'])
             self.log(method='Processamento de Estoque Finalizado.')
         self.progress_bar()
 
         # PARTITION
         if self.sel_partition.get():
             self.log(method='Processamento de Lotes Iniciado.')
-            partition = Lote(dados_origem=self.db_origin,
-                             dados_destino=self.db_destiny,
-                             filial_id_origem=origin_branch_id,
-                             filial_id_destino=destiny_branch_id,
-                             comunicador=communicator,
-                             produtos_ids=product_ids)
-            partition_log = partition.inicia_lotes(erased)
+            if self.__logs['partition_logs']:
             
-            if partition_log:
-                for partition in partition_log:
-                    self.log(error_register=partition['registro_erro'], error_return=partition['retorno_erro'])
+                partition_logs = self.__logs['partition_logs']
+                for partition in partition_logs:
+                    self.log(error_register=partition['error_register'],
+                             error_return=partition['error_return'])
                 self.log(method='Processamento de Lotes Finalizado.')
         self.progress_bar()
 
         # PRICE
         if self.sel_price.get():
             self.log(method='Processamento de Preço Filial Iniciado.')
-            price = PrecoFilial(dados_origem=self.db_origin,
-                                dados_destino=self.db_destiny,
-                                filial_id_origem=origin_branch_id,
-                                filial_id_destino=destiny_branch_id,
-                                comunicador=communicator,
-                                produtos_ids=product_ids)
-            price_log = price.inicia_precos_filial(erased)
+            if self.__logs['price_logs']:
             
-            if price_log:
-                for price in price_log:
-                    self.log(error_register=price['registro_erro'], error_return=price['retorno_erro'])
+                price_logs = self.__logs['price_logs']
+                for price in price_logs:
+                    self.log(error_register=price['error_register'],
+                             error_return=price['error_return'])
                 self.log(method='Processamento de Preço Filial Finalizado.')
         self.progress_bar()
 
         # SUPPLIER
         if self.sel_suppliers.get():
-            selected_suppliers = self.get_suppliers()
-
             self.log(method='Processamento de Fornecedores Iniciado.')
-            supplier = Fornecedor(dados_origem=self.db_origin,
-                                  dados_destino=self.db_destiny,
-                                  fornecedores_selecionados=selected_suppliers,
-                                  comunicador=communicator)
-            supplier_log = supplier.inicia_fornecedores(erased)
+            if self.__logs['supplier_logs']:
             
-            suppliers_found = supplier.retorna_fornecedores_tratados()
-            suppliers_after_insert = supplier.retorna_fornecedores_pos_insert()
-            if supplier_log:
-                for supplier in supplier_log:
-                    self.log(error_register=supplier['registro_erro'], error_return=supplier['retorno_erro'])
+                supplier_logs = self.__logs['supplier_logs']
+                for supplier in supplier_logs:
+                    self.log(error_register=supplier['error_register'],
+                             error_return=supplier['error_return'])
             self.log(method='Processamento de Fornecedores Finalizado.')
         self.progress_bar()
 
@@ -1179,19 +1160,12 @@ class Ui:
 
         if self.sel_bills.get():
             self.log(method='Processamento de Pagar Iniciado.')
-            bills = Pagar(dados_origem=self.db_origin,
-                          dados_destino=self.db_destiny,
-                          filial_id_origem=origin_branch_id,
-                          filial_id_destino=destiny_branch_id,
-                          fornecedores_encontrados=suppliers_found,
-                          fornecedores_selecionados=selected_suppliers,
-                          fornecedores_pos_insert=suppliers_after_insert,
-                          comunicador=communicator)
-            bills_log = bills.inicia_pagar(erased)
+            if self.__logs['bill_logs']:
             
-            if bills_log:
-                for bills in bills_log:
-                    self.log(error_register=bills['registro_erro'], error_return=bills['retorno_erro'])
+                bill_logs = self.__logs['bill_logs']
+                for bill in bill_logs:
+                    self.log(error_register=bill['error_register'],
+                             error_return=bill['error_return'])
             self.log(method='Processamento de Pagar Finalizado.')
         self.progress_bar()
 

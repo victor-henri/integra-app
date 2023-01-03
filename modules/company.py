@@ -1,40 +1,30 @@
 class Company:
-    def __init__(self, dados_origem, dados_destino, empresas_selecionadas, comunicador):
 
-        self.dados_origem = dados_origem
-        self.dados_destino = dados_destino
-        self.empresas_selecionadas = empresas_selecionadas
-        self.comunicador = comunicador
+    def __init__(self, erased, communicator, origin_companies):
 
-    def inicia_empresas(self, apagado):
+        self.__erased = erased
+        self.__communicator = communicator
+        self.__origin_companies = origin_companies
 
-        iterador = IteradorSql()
-        iterador.conexao_origem(self.dados_origem)
-        iterador.conexao_destino(self.dados_destino)
-        empresas = iterador.select_empresas(self.empresas_selecionadas)
+    def start_company(self):
 
-        if apagado['apagado'] == 'sim':
-            empresas = self.remove_apagado(empresas)
+        if self.__erased is True:
+            self.__remove_erased()
 
-        empresas_tratadas = self.trata_empresas(empresas)
-        empresas_log = iterador.insert_empresa(empresas_tratadas)
+        self.__company_treatment()
 
-        return empresas_log
+    def __remove_erased(self):
 
-    def trata_empresas(self, empresas):
-
-        for empresa in empresas:
-            empresa.update({'comunicador': self.comunicador})
-
-        return empresas
-
-    @staticmethod
-    def remove_apagado(empresas):
-
-        for registro in empresas:
-            if registro['apagado'] == 'S':
-                empresas.remove(registro)
+        for company in self.__origin_companies:
+            if company['apagado'] == 'S':
+                self.__origin_companies.remove(company)
             else:
                 continue
 
-        return empresas
+    def __company_treatment(self):
+
+        for company in self.__origin_companies:
+            company.update({'comunicador': self.__communicator})
+
+    def get_companies(self):
+        return self.__origin_companies

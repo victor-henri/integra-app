@@ -1,116 +1,108 @@
 class Partition:
-    def __init__(self, dados_origem, dados_destino, comunicador, filial_id_origem, filial_id_destino, produtos_ids):
+    
+    def __init__(self,
+                 erased,
+                 communicator,
+                 products_id,
+                 products_found,
+                 products_after_insert,
+                 origin_partition,
+                 origin_branch_id,
+                 destiny_branch_id):
 
-        self.dados_origem = dados_origem
-        self.dados_destino = dados_destino
-        self.comunicador = comunicador
-        self.filial_id_origem = filial_id_origem
-        self.filial_id_destino = filial_id_destino
-        self.produtos_ids = produtos_ids
+        self.__erased = erased
+        self.__communicator = communicator
+        self.__products_id = products_id
+        self.__products_found = products_found
+        self.__products_after_insert = products_after_insert
+        self.__origin_partition = origin_partition
+        self.__origin_branch_id = origin_branch_id
+        self.__destiny_branch_id = destiny_branch_id
+        self.__selected_partitions = []
 
-    def inicia_lotes(self, apagado):
+    def start_partition(self):
 
-        iterador = IteradorSql()
-        iterador.conexao_origem(self.dados_origem)
-        iterador.conexao_destino(self.dados_destino)
-        lote = iterador.select_lote()
+        if self.__erased is True:
+            self.__remove_erased()
 
-        if apagado['apagado'] == 'sim':
-            lote = self.remove_apagado(lote)
+        self.__extract_selected_data()
+        self.__partition_treatment()
 
-        id_produtos = self.produtos_ids['id_produtos']
-        produtos_encontrados = self.produtos_ids['produtos_encontrados']
+    def __remove_erased(self):
 
-        lotes_selecionados = self.separa_lotes_selecionados(id_produtos, lote)
-        lotes_tratados = self.tratamento_lote(produtos_encontrados, lotes_selecionados)
-        lotes_log = iterador.insert_lote(lotes_tratados)
-
-        return lotes_log
-
-    @staticmethod
-    def remove_apagado(lote):
-
-        for registro in lote:
-            if registro['apagado'] == 'S':
-                lote.remove(registro)
+        for partition in self.__origin_partition:
+            if partition['apagado'] == 'S':
+                self.__origin_partition.remove(partition)
             else:
                 continue
 
-        return lote
+    def __extract_selected_data(self):
 
-    def separa_lotes_selecionados(self, id_produtos, lote):
+        for partition in self.__origin_partition:
+            product_id = int(partition['id_produto'])
+            partition_branch_id = int(partition['id_filial'])
 
-        lotes_selecionados = []
-
-        for registro in lote:
-            id_produto = int(registro['id_produto'])
-            lote_filial = int(registro['id_filial'])
-            if id_produto in id_produtos and lote_filial == self.filial_id_origem:
-                lotes_selecionados.append(registro)
+            if product_id in self.__products_id and partition_branch_id == self.__origin_branch_id:
+                self.__selected_partitions.append(partition)
             else:
                 continue
 
-        return lotes_selecionados
+    def __partition_treatment(self):
 
-    def tratamento_lote(self, produtos_encontrados, lotes):
+        for partition in self.__selected_partitions:
+            old_id = int(partition['id_produto'])
+            id_found = self.__return_new_id(old_id)
 
-        iterador = IteradorSql()
-        iterador.conexao_destino(self.dados_destino)
-        tabela_produto = {'tabela': 'produto'}
-        produtos_pos_insert = iterador.consulta_pos_insert(tabela_produto)
-
-        for lote in lotes:
-            antigo_id = int(lote['id_produto'])
-            id_encontrado = self.compara_produto(antigo_id, produtos_encontrados)
-            if id_encontrado is None:
-                novo_id = self.busca_id_atual(antigo_id, produtos_pos_insert)
-                lote.update({'id_produto_ant': antigo_id})
-                lote.update({'id_produto': novo_id})
+            if id_found is None:
+                new_id = self.__return_id_after_insert(old_id)
+                partition.update({'id_produto_ant': old_id})
+                partition.update({'id_produto': new_id})
             else:
-                lote.update({'id_produto_ant': lote['id_produto']})
-                lote.update({'id_produto': id_encontrado})
+                partition.update({'id_produto_ant': partition['id_produto']})
+                partition.update({'id_produto': id_found})
 
-            datas = {'validade': lote['data_validade'], 'fabricacao': lote['data_fabricacao']}
+            datas = {'validade': partition['data_validade'], 
+                     'fabricacao': partition['data_fabricacao']}
 
-            datas_tratadas = self.trata_campo_data(datas)
+            treated_dates = self.__dates_treatment(datas)
 
-            lote.update({'data_validade': datas_tratadas['validade']})
-            lote.update({'data_fabricacao': datas_tratadas['fabricacao']})
-            lote.update({'id_filial': self.filial_id_destino})
-            lote.update({'comunicador': self.comunicador})
+            partition.update({'data_validade': treated_dates['validade']})
+            partition.update({'data_fabricacao': treated_dates['fabricacao']})
+            partition.update({'id_filial': self.__destiny_branch_id})
+            partition.update({'comunicador': self.__communicator})
 
-        return lotes
+    def __return_new_id(self, old_id):
 
-    @staticmethod
-    def compara_produto(antigo_id, produtos):
+        for product in self.__products_found:
+            product_id = int(product['id_produto'])
+            new_id = int(product['novo_id'])
 
-        for produto in produtos:
-            id_produto = int(produto['id_produto'])
-            novo_id = int(produto['novo_id'])
-            if antigo_id == id_produto:
-                return novo_id
+            if old_id == product_id:
+                return new_id
             else:
                 continue
 
-    @staticmethod
-    def busca_id_atual(id_produto_ant, produtos):
+    def __return_id_after_insert(self, product_id):
 
-        for produto in produtos:
-            antigo_id = int(produto['campo_auxiliar'])
-            novo_id = int(produto['id_produto'])
-            if id_produto_ant == antigo_id:
-                return novo_id
+        for product in self.__products_after_insert:
+            old_id = int(product['campo_auxiliar'])
+            new_id = int(product['id_produto'])
+
+            if product_id == old_id:
+                return new_id
             else:
                 continue
 
-    @staticmethod
-    def trata_campo_data(datas):
+    def __dates_treatment(self, dates):
 
-        for chave, data in datas.items():
-            if data is None:
+        for key, date in dates.items():
+            if date is None:
                 pass
             else:
-                data_formatada = data.strftime('%Y-%m-%d')
-                datas.update({chave: data_formatada})
+                formatted_date = date.strftime('%Y-%m-%d')
+                dates.update({key: formatted_date})
 
-        return datas
+        return dates
+
+    def get_partition(self):
+        return self.__selected_partitions

@@ -9,7 +9,7 @@ class Manufacturer:
         self.__manufacturers_found = []
         self.__manufacturers_not_found = []
 
-    def start_manufacturers(self):
+    def start_manufacturer(self):
 
         if self.__erased is True:
             self.__remove_erased()
@@ -28,10 +28,10 @@ class Manufacturer:
     def __search_manufacturers(self):
 
         for manufacturer in self.__origin_manufacturers:
-            novo_id = self.__return_manufacturer(manufacturer['cnpj'])
+            new_id = self.__return_manufacturer(manufacturer['cnpj'])
 
-            if novo_id:
-                manufacturer.update({'novo_id': novo_id})
+            if new_id:
+                manufacturer.update({'novo_id': new_id})
                 self.__manufacturers_found.append(manufacturer)
             else:
                 manufacturer.update({'novo_id': None})
@@ -39,12 +39,12 @@ class Manufacturer:
 
     def __return_manufacturer(self, origin_cnpj):
 
-        for fabricante in self.__destiny_manufacturers:
-            destiny_cnpj = fabricante['cnpj']
-            id_fabricante = int(fabricante['id_fabricante'])
+        for manufacturer in self.__destiny_manufacturers:
+            destiny_cnpj = manufacturer['cnpj']
+            manufacturer_id = int(manufacturer['id_fabricante'])
 
             if origin_cnpj == destiny_cnpj:
-                return id_fabricante
+                return manufacturer_id
             else:
                 continue
 
