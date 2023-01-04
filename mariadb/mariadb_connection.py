@@ -1,16 +1,6 @@
-from typing import TypedDict, Type
+from typing import Type
 from interfaces.connection import ConnectionInterface
 import pymysql
-
-
-class AccessDatabase(TypedDict):
-    """Typing class
-    """
-    host: str
-    user: str
-    password: str
-    database: str
-    port: int
 
 
 class ConnectionMariaDb(ConnectionInterface):
@@ -24,7 +14,7 @@ class ConnectionMariaDb(ConnectionInterface):
         self.__connection = None
 
 
-    def connect_database(self, access_data: TypedDict[AccessDatabase]) -> dict:
+    def connect_database(self, access_data: dict) -> dict:
         """Database Connection
 
         Returns:

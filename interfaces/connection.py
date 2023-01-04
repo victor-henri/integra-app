@@ -1,20 +1,11 @@
 from abc import ABC, abstractmethod
-from typing import TypedDict, Type
+from typing import Type
 
-
-class AccessDatabase(TypedDict):
-    """Typing class
-    """
-    host: str
-    user: str
-    password: str
-    database: str
-    port: int
 
 class ConnectionInterface(ABC):
 
-    @classmethod @abstractmethod
-    def connect_database(self, access_data: TypedDict[AccessDatabase]) -> dict:
+    @abstractmethod
+    def connect_database(self, access_data: dict) -> dict:
         """Database Connection
 
         Returns:
@@ -25,15 +16,15 @@ class ConnectionInterface(ABC):
         """
         raise Exception('You cannot instance a Abstract Class')
 
-    @classmethod @abstractmethod
+    @abstractmethod
     def __return_error(self, error: Type[Exception]) -> dict:
         raise Exception('You cannot instance a Abstract Class')
 
-    @classmethod @abstractmethod
+    @abstractmethod
     def __return_success(self) -> dict:
         raise Exception('You cannot instance a Abstract Class')
 
-    @classmethod @abstractmethod
+    @abstractmethod
     def get_connection(self) -> Type[object]:
         """Get the connection
 

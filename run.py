@@ -1,4 +1,3 @@
-from typing import TypedDict
 from mariadb.mariadb_connection import ConnectionMariaDb
 from mariadb.mariadb_repository import RepositoryMariaDb
 from modules.manufacturer import Manufacturer
@@ -15,16 +14,6 @@ from modules.customer import Customer
 from modules.account import Account
 
 
-class AccessDatabase(TypedDict):
-    """Typing class
-    """
-    host: str
-    user: str
-    password: str
-    database: str
-    port: int
-
-
 class Run():
 
     def __init__(self):
@@ -32,11 +21,9 @@ class Run():
         self.__origin_repository = None
         self.__destiny_connection = None
         self.__destiny_repository = None
-        self.__manufacturer_log = None
-        self.__principle_log = None
         self.__logs = None
 
-    def connect_origin(self, access_data: TypedDict[AccessDatabase]) -> dict:
+    def connect_origin(self, access_data: dict) -> dict:
 
         connection = ConnectionMariaDb()
         self.__origin_connection = connection.get_connection()
@@ -45,7 +32,7 @@ class Run():
         log = connection.connect_database(access_data)
         return log
 
-    def connect_destiny(self, access_data: TypedDict[AccessDatabase]) -> dict:
+    def connect_destiny(self, access_data: dict) -> dict:
 
         connection = ConnectionMariaDb()
         self.__destiny_connection = connection.get_connection()
@@ -93,14 +80,25 @@ class Run():
     def get_logs(self):
         return self.__logs
 
-    def start_process(self, erased, communicator, module_marker, selected_groups, selected_suppliers, selected_companies, product_options, manufacturer_id, principle_id, origin_branch_id, destiny_branch_id):
+    def start_process(self,
+                      erased,
+                      communicator,
+                      module_marker,
+                      selected_groups,
+                      selected_suppliers,
+                      selected_companies,
+                      product_options,
+                      manufacturer_id,
+                      principle_id,
+                      origin_branch_id,
+                      destiny_branch_id):
 
         product_table = {'tabela': 'produto'}
         manufacturer_table = {'tabela': 'fabricante'}
         principle_table = {'tabela': 'principio_ativo'}
 
         # MANUFACTURER
-        if module_marker['fabricante'] == 'sim':
+        if module_marker['fabricante'] is True:
 
             origin_manufacturers = self.__origin_repository.select_manufacturer()
             destiny_manufacturers = self.__destiny_repository.select_manufacturer()
@@ -110,13 +108,13 @@ class Run():
                                         origin_manufacturers=origin_manufacturers,
                                         destiny_manufacturers=destiny_manufacturers)
 
-            manufacturer.start_manufacturers()
+            manufacturer.start_manufacturer()
             manufacturers_found = manufacturer.get_manufacturers_found()
             manufacturers_not_found = manufacturer.get_manufacturers_not_found()
-            self.__manufacturer_log = self.__destiny_repository.insert_manufacturer(manufacturers_not_found)
+            manufacturer_log = self.__destiny_repository.insert_manufacturer(manufacturers_not_found)
 
         # PRINCIPLE
-        if module_marker['principio_ativo'] == 'sim':
+        if module_marker['principio_ativo'] is True:
 
             origin_principles = self.__origin_repository.select_principle()
             destiny_principles = self.__destiny_repository.select_principle()
@@ -129,10 +127,10 @@ class Run():
             principle.start_principles()
             principles_found = principle.get_principles_found()
             principles_not_found = principle.get_principles_not_found()
-            self.__principle_log = self.__destiny_repository.insert_principle(principles_not_found)
+            principle_log = self.__destiny_repository.insert_principle(principles_not_found)
 
         # PRODUCT
-        if module_marker['produto'] == 'sim':
+        if module_marker['produto'] is True:
 
             origin_products = self.__origin_repository.select_product()
             products_comparison = self.__destiny_repository.select_product_comparison()
@@ -150,7 +148,7 @@ class Run():
 
             product.start_product()
             products_not_found = product.get_products()
-            self.__product_log = self.__destiny_repository.insert_product(products_not_found)
+            product_log = self.__destiny_repository.insert_product(products_not_found)
 
             products_after_insert = self.__destiny_repository.query_tables(product_table)
             manufacturers_after_insert = self.__destiny_repository.query_tables(manufacturer_table)
@@ -164,7 +162,7 @@ class Run():
             products_found = product.get_products_found()
 
         # BARS
-        if module_marker['barras'] == 'sim':
+        if module_marker['barras'] is True:
 
             origin_bars = self.__origin_repository.select_bar()
 
@@ -177,10 +175,10 @@ class Run():
 
             bars.start_bars()
             selected_bars = bars.get_bars()
-            self.__bar_log = self.__destiny_repository.insert_bar(selected_bars)
+            bar_log = self.__destiny_repository.insert_bar(selected_bars)
 
         # STOCK
-        if module_marker['estoque'] == 'sim':
+        if module_marker['estoque'] is True:
 
             origin_stock = self.__origin_repository.select_stock()
 
@@ -195,10 +193,10 @@ class Run():
 
             stock.start_stock()
             selected_stock = stock.get_stock()
-            self.__stock_log = self.__destiny_repository.insert_stock(selected_stock)
+            stock_log = self.__destiny_repository.insert_stock(selected_stock)
 
         # PARTITION
-        if module_marker['lote'] == 'sim':
+        if module_marker['lote'] is True:
 
             origin_partition = self.__origin_repository.select_partition()
 
@@ -213,10 +211,10 @@ class Run():
 
             partition.start_partition()
             selected_partition = partition.get_partition()
-            self.__partition_log = self.__destiny_repository.insert_partition(selected_partition)
+            partition_log = self.__destiny_repository.insert_partition(selected_partition)
 
         # PRICE
-        if module_marker['preco'] == 'sim':
+        if module_marker['preco'] is True:
 
             origin_price = self.__origin_repository.select_price()
 
@@ -231,11 +229,11 @@ class Run():
 
             price.start_price()
             selected_price = price.get_price()
-            self.__price_log = self.__destiny_repository.insert_price(selected_price)
+            price_log = self.__destiny_repository.insert_price(selected_price)
 
 
         # SUPPLIER
-        if module_marker['fornecedor'] == 'sim':
+        if module_marker['fornecedor'] is True:
             selected_suppliers = self.get_suppliers()
             origin_suppliers = self.__origin_repository.select_origin_supplier(selected_suppliers)
             destiny_suppliers = self.__destiny_repository.select_destiny_supplier()
@@ -248,11 +246,11 @@ class Run():
             supplier.start_supplier()
             suppliers_found = supplier.get_suppliers_found()
             suppliers_not_found = supplier.get_suppliers_not_found()
-            self.__supplier_log = self.__destiny_repository.insert_supplier(suppliers_not_found)
+            supplier_log = self.__destiny_repository.insert_supplier(suppliers_not_found)
             suppliers_after_insert = self.__destiny_repository.select_supplier_after_insert()
 
         # BILLS TO PAY
-        if module_marker['pagar'] == 'sim':
+        if module_marker['pagar'] is True:
 
             origin_bills = self.__destiny_repository.select_bill(selected_suppliers)
 
@@ -266,10 +264,10 @@ class Run():
 
             bills.start_bill()
             selected_bill = bills.get_bills()
-            self._bill_log = self.__destiny_repository.insert_bill(selected_bill)
+            bill_log = self.__destiny_repository.insert_bill(selected_bill)
 
         # COMPANY/CUSTOMERS
-        if module_marker['empresa'] == 'sim':
+        if module_marker['empresa'] is True:
 
             origin_companies = self.__destiny_repository.select_company(selected_companies)
 
@@ -279,7 +277,7 @@ class Run():
 
             company.start_company()
             companies = company.get_companies()
-            self.__company_log = self.__destiny_repository.insert_company(companies)
+            company_log = self.__destiny_repository.insert_company(companies)
 
             origin_customers = self.__destiny_repository.select_customer(selected_companies)
 
@@ -289,11 +287,11 @@ class Run():
 
             customer.start_customer()
             customers = customer.get_customers()
-            self.__customer_log = self.__destiny_repository.insert_customer(customers)
+            customer_log = self.__destiny_repository.insert_customer(customers)
             selected_customers_id = customer.get_customers_id()
 
         # ACCOUNTS RECEIVABLE
-        if module_marker['receber'] == 'sim':
+        if module_marker['receber'] is True:
 
             origin_accounts = self.__destiny_repository.select_account(selected_customers_id)
 
@@ -305,12 +303,21 @@ class Run():
 
             account.start_account()
             accounts = account.get_accounts()
-            self.__account_log = self.__destiny_repository.insert_account(accounts)
+            account_log = self.__destiny_repository.insert_account(accounts)
 
         # LOGS
-        self.__logs.update({'manufacturer_logs': self.__manufacturer_log,
-                            'principle_logs': self.__principle_log})
+        self.__logs.update({'manufacturer_logs': manufacturer_log,
+                            'principle_logs': principle_log,
+                            'product_logs': product_log,
+                            'bar_logs': bar_log,
+                            'stock_logs': stock_log,
+                            'partition_logs': partition_log,
+                            'price_logs': price_log,
+                            'supplier_logs': supplier_log,
+                            'bill_logs': bill_log,
+                            'company_logs': company_log,
+                            'customer_logs': customer_log,
+                            'account_logs': account_log})
 
-        iterator = IteratorSql()
-        iterator.connect_destiny(self.db_destiny)
-        iterator.limpa_campo_auxiliar(data_cleaning)
+        # CLEANING
+        self.__destiny_repository.data_cleaning(module_marker)
