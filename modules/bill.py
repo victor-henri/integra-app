@@ -1,4 +1,7 @@
-class Bill:
+from .main_module import MainModule
+
+
+class Bill(MainModule):
 
     def __init__(self,
                  erased,
@@ -20,18 +23,10 @@ class Bill:
     def start_bill(self):
 
         if self.__erased is True:
-            self.__remove_erased()
+            self.__origin_bills = self._remove_erased(self.__origin_bills)
 
         self.__bills_treatment()
         self.__update_suppliers_id()
-
-    def __remove_erased(self):
-
-        for bill in self.__origin_bills:
-            if bill['apagado'] == 'S':
-                self.__origin_bills.remove(bill)
-            else:
-                continue
 
     def __bills_treatment(self):
 

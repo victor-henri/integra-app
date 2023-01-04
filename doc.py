@@ -1,4 +1,4 @@
-informacao_doc = "------------------------------------------------------------------------------Conexões-------------------------------------------------------------------------------- \n\n" \
+INFO_DOC = "------------------------------------------------------------------------------Conexões-------------------------------------------------------------------------------- \n\n" \
                  "Observação: Todos os campos necessitam de preenchimento dos dados. \n\n" \
                  "Se houver algum problema na conexão, a caixa informativa será trocada de 'Desconectado' para 'Falha', e então ao lado \n" \
                  "esquerdo irá trazer um botão com a identificação do erro. \n\n" \

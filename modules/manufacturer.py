@@ -1,29 +1,24 @@
-class Manufacturer:
+from .main_module import MainModule
 
-    def __init__(self, erased, communicator, origin_manufacturers, destiny_manufacturers):
 
-        self.__erased = erased
-        self.__communicator = communicator
-        self.__origin_manufacturers = origin_manufacturers
-        self.__destiny_manufacturers = destiny_manufacturers
+class Manufacturer(MainModule):
+
+    def __init__(self, **kwargs):
+
+        self.__erased = kwargs['erased']
+        self.__communicator = kwargs['communicator']
+        self.__origin_manufacturers = kwargs['origin_manufacturers']
+        self.__destiny_manufacturers = kwargs['destiny_manufacturers']
         self.__manufacturers_found = []
         self.__manufacturers_not_found = []
 
     def start_manufacturer(self):
 
         if self.__erased is True:
-            self.__remove_erased()
+            self.__origin_manufacturers = self._remove_erased(self.__origin_manufacturers)
 
         self.__search_manufacturers()
-        self.__manufacturers_treatment()
-
-    def __remove_erased(self):
-
-        for manufacturer in self.__origin_manufacturers:
-            if manufacturer['apagado'] == 'S':
-                self.__origin_manufacturers.remove(manufacturer)
-            else:
-                continue
+        self._communicator_treatment(self.__communicator, self.__manufacturers_not_found)
 
     def __search_manufacturers(self):
 
@@ -47,11 +42,6 @@ class Manufacturer:
                 return manufacturer_id
             else:
                 continue
-
-    def __manufacturers_treatment(self):
-
-        for manufacturer in self.__manufacturers_not_found:
-            manufacturer.update({'comunicador': self.__communicator})
 
     def get_manufacturers_found(self):
         return self.__manufacturers_found

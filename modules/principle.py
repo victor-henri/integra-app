@@ -1,29 +1,24 @@
-class Principle:
-    
-    def __init__(self, erased, communicator, origin_principles, destiny_principles):
+from .main_module import MainModule
 
-        self.__erased = erased
-        self.__communicator = communicator
-        self.__origin_principles = origin_principles
-        self.__destiny_principles = destiny_principles
+
+class Principle(MainModule):
+
+    def __init__(self, **kwargs):
+
+        self.__erased = kwargs['erased']
+        self.__communicator = kwargs['communicator']
+        self.__origin_principles = kwargs['origin_principles']
+        self.__destiny_principles = kwargs['destiny_principles']
         self.__principles_found = []
         self.__principles_not_found = []
 
-    def start_principles(self):
+    def start_principle(self):
 
         if self.__erased is True:
-            self.__remove_erased()
+            self.__origin_principles = self._remove_erased(self.__origin_principles)
 
         self.__search_principles()
-        self.__principles_treatment()
-
-    def __remove_erased(self):
-
-        for principle in self.__origin_principles:
-            if principle['apagado'] == 'S':
-                self.__origin_principles.remove(principle)
-            else:
-                continue
+        self._communicator_treatment(self.__communicator, self.__principles_not_found)
 
     def __search_principles(self):
 
@@ -47,11 +42,6 @@ class Principle:
                 return principle_id
             else:
                 continue
-
-    def __principles_treatment(self):
-
-        for principle in self.__principles_not_found:
-            principle.update({'comunicador': self.__communicator})
 
     def get_principles_found(self):
         return self.__principles_found
