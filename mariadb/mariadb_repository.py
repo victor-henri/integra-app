@@ -124,7 +124,7 @@ class RepositoryMariaDb(RepositoryInterface):
         return bill
 
     def select_get_products(self) -> list[dict]:
-        self.__cursor.execute('SELECT id_produto, campo_auxiliar FROM produto;')
+        self.__cursor.execute(sqls.SELECT_PRODUCT_IDS)
         product = self.__cursor.fetchall()
 
         return product
@@ -256,12 +256,12 @@ class RepositoryMariaDb(RepositoryInterface):
                     'second_value': stock['estoque']}
 
             if stock['existe'] == 'S':
-                estoque_atual = int(stock['estoque'])
+                current_stock = int(stock['estoque'])
                 try:
                     self.__cursor.execute(sqls.SELECT_UPDATE_STOCK, stock)
-                    estoque_existente = self.__cursor.fetchone()
-                    estoque_existente.update({'estoque': estoque_existente['estoque'] + estoque_atual})
-                    self.__cursor.execute(sqls.UPDATE_STOCK, estoque_existente)
+                    old_stock = self.__cursor.fetchone()
+                    old_stock.update({'estoque': old_stock['estoque'] + current_stock})
+                    self.__cursor.execute(sqls.UPDATE_STOCK, old_stock)
 
                 except UnicodeEncodeError as error:
                     log = self.__unicode_error(data, error)
@@ -486,55 +486,29 @@ class RepositoryMariaDb(RepositoryInterface):
 
         return logs
 
+    # UPDATES
+
     def update_product(self, data_update) -> None:
 
         for register in data_update:
+
             if register['campo'] == 'fabricante':
-                self.__cursor.execute('UPDATE produto '
-                                      'SET id_fabricante = %(valor)s '
-                                      'WHERE id_produto = %(id_produto)s;', register)
-
+                self.__cursor.execute(sqls.UPDATE_MANUFACTURER_IN_PRODUCT, register)
             else:
-                self.__cursor.execute('UPDATE produto '
-                                      'SET id_principio_ativo = %(valor)s '
-                                      'WHERE id_produto = %(id_produto)s;', register)
+                self.__cursor.execute(sqls.UPDATE_PRINCIPLE_IN_PRODUCT, register)
 
-    def data_cleaning(self, cleaning_marker) -> None:
-        # Destino
+    def data_cleaning(self) -> None:
 
-        if cleaning_marker['fabricante'] == 'sim':
-            self.__cursor.execute(sqls.UPDATE_CLEANING_MANUFACTURER)
-
-        if cleaning_marker['principio_ativo'] == 'sim':
-            self.__cursor.execute(sqls.UPDATE_CLEANING_PRINCIPLE)
-
-        if cleaning_marker['produto'] == 'sim':
-            self.__cursor.execute(sqls.UPDATE_CLEANING_PRODUCT)
-
-        if cleaning_marker['barras'] == 'sim':
-            self.__cursor.execute(sqls.UPDATE_CLEANING_BARS)
-
-        if cleaning_marker['estoque'] == 'sim':
-            self.__cursor.execute(sqls.UPDATE_CLEANING_STOCK)
-
-        if cleaning_marker['lote'] == 'sim':
-            self.__cursor.execute(sqls.UPDATE_CLEANING_PARTITION)
-
-        if cleaning_marker['preco_filial'] == 'sim':
-            self.__cursor.execute(sqls.UPDATE_CLEANING_PRICE)
-
-        if cleaning_marker['fornecedor'] == 'sim':
-            self.__cursor.execute(sqls.UPDATE_CLEANING_SUPPLIER)
-
-        if cleaning_marker['pagar'] == 'sim':
-            self.__cursor.execute(sqls.UPDATE_CLEANING_BILL)
-
-        if cleaning_marker['empresa'] == 'sim':
-            self.__cursor.execute(sqls.UPDATE_CLEANING_COMPANY)
-
-        if cleaning_marker['cliente'] == 'sim':
-            self.__cursor.execute(sqls.UPDATE_CLEANING_CUSTOMER)
-            self.__cursor.execute(sqls.UPDATE_CLEANING_CUSTOMER2)
-
-        if cleaning_marker['receber'] == 'sim':
-            self.__cursor.execute(sqls.UPDATE_CLEANING_ACCOUNT)
+        self.__cursor.execute(sqls.UPDATE_CLEANING_MANUFACTURER)
+        self.__cursor.execute(sqls.UPDATE_CLEANING_PRINCIPLE)
+        self.__cursor.execute(sqls.UPDATE_CLEANING_PRODUCT)
+        self.__cursor.execute(sqls.UPDATE_CLEANING_BARS)
+        self.__cursor.execute(sqls.UPDATE_CLEANING_STOCK)
+        self.__cursor.execute(sqls.UPDATE_CLEANING_PARTITION)
+        self.__cursor.execute(sqls.UPDATE_CLEANING_PRICE)
+        self.__cursor.execute(sqls.UPDATE_CLEANING_SUPPLIER)
+        self.__cursor.execute(sqls.UPDATE_CLEANING_BILL)
+        self.__cursor.execute(sqls.UPDATE_CLEANING_COMPANY)
+        self.__cursor.execute(sqls.UPDATE_CLEANING_CUSTOMER)
+        self.__cursor.execute(sqls.UPDATE_CLEANING_CUSTOMER2)
+        self.__cursor.execute(sqls.UPDATE_CLEANING_ACCOUNT)

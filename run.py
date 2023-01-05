@@ -313,5 +313,5 @@ class Run():
             account_log = self.__destiny_repository.insert_account(accounts)
             self.__set_log({'account_logs': account_log})
 
-        # CLEANING
-        self.__destiny_repository.data_cleaning(kwargs['module_marker'])
+        # CLEANING FIELDS
+        self.__destiny_repository.data_cleaning()

@@ -132,100 +132,83 @@ INSERT_ACCOUNT = 'INSERT INTO contas_receber ' \
                  '%(vencimento)s, %(data_baixa)s, %(apagado)s, %(data_cadastro)s, %(data_alteracao)s, ' \
                  '%(usuario_cadastro)s, %(usuario_alteracao)s, %(comunicador)s);'
 
-# query_consulta_pos_insert_fornecedor
 SELECT_SUPPLIER_AFTER_INSERT = 'SELECT id_fornecedor, campo_auxiliar ' \
                                'FROM fornecedor ' \
                                'WHERE campo_auxiliar IS NOT NULL;'
 
-# query_consulta_pos_insert_produto
 SELECT_PRODUCT_AFTER_INSERT = 'SELECT id_produto, campo_auxiliar ' \
                               'FROM produto ' \
                               'WHERE campo_auxiliar IS NOT NULL;'
 
-# query_consulta_pos_insert_fabricante
 SELECT_MANUFACTURER_AFTER_INSERT = 'SELECT id_fabricante, campo_auxiliar ' \
                                    'FROM fabricante ' \
                                    'WHERE campo_auxiliar IS NOT NULL;'
 
-# query_consulta_pos_insert_principio
 SELECT_PRINCIPLE_AFTER_INSERT = 'SELECT id_principio_ativo, campo_auxiliar ' \
                                 'FROM principio_ativo ' \
                                 'WHERE campo_auxiliar IS NOT NULL;'
 
-# query_consulta_comparacao_produto
+SELECT_PRODUCT_IDS = 'SELECT id_produto, campo_auxiliar FROM produto;'
+
 SELECT_PRODUCT_COMPARISON = 'SELECT id_produto, barras FROM produto;'
 
-# query_select_atualizacao_estoque
+UPDATE_MANUFACTURER_IN_PRODUCT = 'UPDATE produto ' \
+                                 'SET id_fabricante = %(valor)s ' \
+                                 'WHERE id_produto = %(id_produto)s;'
+
+UPDATE_PRINCIPLE_IN_PRODUCT = 'UPDATE produto ' \
+                              'SET id_principio_ativo = %(valor)s ' \
+                              'WHERE id_produto = %(id_produto)s;'
+
 SELECT_UPDATE_STOCK = 'SELECT id_produto, estoque FROM estoque WHERE id_produto = %(id_produto)s;'
 
-# query_update_estoque
 UPDATE_STOCK = 'UPDATE estoque SET estoque = %(estoque)s WHERE id_produto = %(id_produto)s;'
 
-# query_update_cliente
 UPDATE_CUSTOMER = 'UPDATE cliente ' \
                   'INNER JOIN empresa ' \
                   'ON cliente.campo_auxiliar2 = empresa.campo_auxiliar ' \
                   'SET cliente.id_empresa = empresa.id_empresa;'
 
-# query_atualiza_receber_cliente
 UPDATE_CUSTOMER_ACCOUNT = 'UPDATE contas_receber ' \
                           'INNER JOIN cliente ' \
                           'ON contas_receber.campo_auxiliar = cliente.campo_auxiliar ' \
                           'SET contas_receber.id_cliente = cliente.id_cliente;'
 
-# query_atualiza_receber_empresa
 UPDATE_COMPANY_ACCOUNT = 'UPDATE contas_receber ' \
                          'INNER JOIN cliente ' \
                          'ON contas_receber.id_cliente = cliente.id_cliente ' \
                          'SET contas_receber.id_empresa = cliente.id_empresa;'
 
-# query_select_grporigem_sapagado
 SELECT_GROUP_FILTERED = 'SELECT id_grupo, descricao FROM grupo WHERE apagado = "N" ORDER BY id_grupo;'
 
-# query_select_grporigem_capagado
 SELECT_GROUP_NOT_FILTERED = 'SELECT id_grupo, descricao FROM grupo ORDER BY id_grupo;'
 
-# query_select_listagem_empresa
 SELECT_LISTING_COMPANY = 'SELECT id_empresa, nome_fantasia FROM empresa ORDER BY id_empresa;'
 
-# query_select_listagem_fornecedor
 SELECT_LISTING_SUPPLIER = 'SELECT id_fornecedor, razao_social FROM fornecedor ORDER BY id_fornecedor;'
 
-# query_update_limpeza_fabricante
 UPDATE_CLEANING_MANUFACTURER = 'UPDATE fabricante SET campo_auxiliar = NULL;'
 
-# query_update_limpeza_principio_ativo
 UPDATE_CLEANING_PRINCIPLE = 'UPDATE principio_ativo SET campo_auxiliar = NULL;'
 
-# query_update_limpeza_produto
 UPDATE_CLEANING_PRODUCT = 'UPDATE produto SET campo_auxiliar = NULL;'
 
-# query_update_limpeza_barras
 UPDATE_CLEANING_BARS = 'UPDATE barras_adicional SET campo_auxiliar = NULL;'
 
-# query_update_limpeza_estoque
 UPDATE_CLEANING_STOCK = 'UPDATE estoque SET campo_auxiliar = NULL;'
 
-# query_update_limpeza_lote
 UPDATE_CLEANING_PARTITION = 'UPDATE lote SET campo_auxiliar = NULL;'
 
-# query_update_limpeza_preco_filial
 UPDATE_CLEANING_PRICE = 'UPDATE preco_filial SET campo_auxiliar = NULL;'
 
-# query_update_limpeza_fornecedor
 UPDATE_CLEANING_SUPPLIER = 'UPDATE fornecedor SET campo_auxiliar = NULL;'
 
-# query_update_limpeza_pagar
 UPDATE_CLEANING_BILL = 'UPDATE contas_pagar SET campo_auxiliar = NULL;'
 
-# query_update_limpeza_empresa
 UPDATE_CLEANING_COMPANY = 'UPDATE empresa SET campo_auxiliar = NULL;'
 
-# query_update_limpeza_cliente
 UPDATE_CLEANING_CUSTOMER = 'UPDATE cliente SET campo_auxiliar = NULL;'
 
-# query_update_limpeza_cliente2
 UPDATE_CLEANING_CUSTOMER2 = 'UPDATE cliente SET campo_auxiliar2 = NULL;'
 
-# query_update_limpeza_receber
 UPDATE_CLEANING_ACCOUNT = 'UPDATE contas_receber SET campo_auxiliar = NULL;'

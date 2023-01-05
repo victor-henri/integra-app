@@ -164,5 +164,5 @@ class RepositoryInterface(ABC):
         pass
 
     @abstractmethod
-    def data_cleaning(self, cleaning_marker) -> None:
+    def data_cleaning(self) -> None:
         pass

@@ -641,7 +641,8 @@ class Ui:
         # BINDS
         self.groups_origin_checkboxtreeview.bind("<Double-1>", self.double_click)
 
-    # Métodos de Binds.
+    # BIND METHODS
+
     @staticmethod
     def focus_out(event):
         event.widget.destroy()
@@ -693,7 +694,8 @@ class Ui:
             self.groups_origin_checkboxtreeview.item(iid_selecionado, values=valor_atual)
         event.widget.destroy()
 
-    # Métodos de conexão.
+    # CONNECTION METHODS
+
     def __origin(self):
 
         db_origin: dict = {'host': self.ip_origin_entry.get(),
@@ -805,7 +807,8 @@ class Ui:
             logging.warning("| %s", error_return)
             logging.warning(separator)
 
-    # Métodos de listagem automática e exibição dos dados ao conectar.
+    # LISTING METHODS
+
     def __origin_groups(self):
 
         index: int = 0
@@ -924,7 +927,8 @@ class Ui:
         except Exception as error:
             print(f"Exception in method suppliers_listing: {error}")
 
-    # Métodos de marcação de todos os registros na Interface.
+    # TAG METHODS
+
     def __tag_all_companies(self):
 
         for iid in self.iid_companies:
@@ -940,7 +944,8 @@ class Ui:
         for iid in self.__iid_origin_groups:
             self.groups_origin_checkboxtreeview.change_state(item=iid, state='checked')
 
-    # Métodos de coleta dos registros selecionados na Interface.
+    # COLLECT METHODS
+
     def __get_companies(self):
 
         companies: int = []
@@ -974,7 +979,6 @@ class Ui:
 
         return selected_groups
 
-    # Métodos de retorno de dados da Interface.
     def __return_destiny_communicator(self):
 
         branch_id: str = str(self.id_destiny_entry.get())
@@ -1005,7 +1009,8 @@ class Ui:
     def __return_destiny_branch_id(self):
         return self.id_destiny_entry.get()
 
-    # Métodos de troca automática de estado dos botões.
+    # SWAP BUTTONS METHODS
+
     def __swap_manufacturer(self):
 
         if self.sel_manufacturer_cnpj.get():
@@ -1048,11 +1053,9 @@ class Ui:
             self.partition_checkbutton.configure(state=tk.DISABLED)
             self.price_checkbutton.configure(state=tk.DISABLED)
 
-    # Método de incremento da barra de progresso
     def __progress_bar(self):
         self.progressbar['value'] += 5
 
-    # Método de execução
     def __start(self):
 
        # PRE STARTUP
@@ -1153,7 +1156,7 @@ class Ui:
         run.start_process(**options)
 
         # PROCESS LOGS
-        all_logs = run.get_log() # pylint: disable=unsubscriptable-object
+        all_logs = run.get_log()
 
         if self.sel_manufacturer_cnpj.get():
             self.__log(method='Processamento de Fabricantes Iniciado.')
