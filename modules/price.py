@@ -1,4 +1,7 @@
-class Price:
+from .main_module import MainModule
+
+
+class Price(MainModule):
 
     def __init__(self,
                  erased,
@@ -18,38 +21,21 @@ class Price:
         self.__origin_price = origin_price
         self.__origin_branch_id = origin_branch_id
         self.__destiny_branch_id = destiny_branch_id
-        self.__selected_prices = []
+        self.__selected_data = []
 
     def start_price(self):
 
         if self.__erased is True:
-            self.__remove_erased()
+            self.__origin_price = self._remove_erased(self.__origin_price)
 
-        self.__extract_selected_data()
+        self.__selected_data = self._extract_data(registers=self.__origin_price,
+                                                  products_id=self.__products_id,
+                                                  origin_branch_id=self.__origin_branch_id)
         self.__price_treatment()
-
-    def __remove_erased(self):
-
-        for price in self.__origin_price:
-            if price['apagado'] == 'S':
-                self.__origin_price.remove(price)
-            else:
-                continue
-
-    def __extract_selected_data(self):
-
-        for price in self.__origin_price:
-            product_id = int(price['id_produto'])
-            price_branch_id = int(price['id_filial'])
-
-            if product_id in self.__products_id and price_branch_id == self.__origin_branch_id:
-                self.__selected_prices.append(price)
-            else:
-                continue
 
     def __price_treatment(self):
 
-        for price in self.__selected_prices[:]:
+        for price in self.__selected_data[:]:
             old_id = int(price['id_produto'])
             id_found = self.__return_new_id(old_id)
 
@@ -58,7 +44,7 @@ class Price:
                 price.update({'id_produto_ant': old_id})
                 price.update({'id_produto': new_id})
             else:
-                self.__selected_prices.remove(price)
+                self.__selected_data.remove(price)
 
             dates = {'inicio': price['inicio_promocao'],
                      'final': price['final_promocao']}
@@ -104,4 +90,4 @@ class Price:
         return dates
 
     def get_price(self):
-        return self.__selected_prices
+        return self.__selected_data

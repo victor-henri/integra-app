@@ -1,4 +1,7 @@
-class Stock:
+from .main_module import MainModule
+
+
+class Stock(MainModule):
 
     def __init__(self,
                  erased,
@@ -18,38 +21,21 @@ class Stock:
         self.__origin_stock = origin_stock
         self.__origin_branch_id = origin_branch_id
         self.__destiny_branch_id = destiny_branch_id
-        self.__selected_stocks = []
+        self.__selected_data = []
 
     def start_stock(self):
 
         if self.__erased is True:
-            self.__remove_erased()
+            self.__origin_stock = self._remove_erased(self.__origin_stock)
 
-        self.__extract_selected_data()
+        self.__selected_data = self._extract_data(registers=self.__origin_stock,
+                                                  products_id=self.__products_id,
+                                                  origin_branch_id=self.__origin_branch_id)
         self.__stock_treatment()
-
-    def __remove_erased(self):
-
-        for stock in self.__origin_stock:
-            if stock['apagado'] == 'S':
-                self.__origin_stock.remove(stock)
-            else:
-                continue
-
-    def __extract_selected_data(self):
-
-        for stock in self.__origin_stock:
-            product_id = int(stock['id_produto'])
-            stock_branch_id = int(stock['id_filial'])
-
-            if product_id in self.__products_id and stock_branch_id == self.__origin_branch_id:
-                self.__selected_stocks.append(stock)
-            else:
-                continue
 
     def __stock_treatment(self):
 
-        for stock in self.__selected_stocks:
+        for stock in self.__selected_data:
             old_id = int(stock['id_produto'])
             id_found = self.__return_new_id(old_id)
 
@@ -110,4 +96,4 @@ class Stock:
         return dates
 
     def get_stock(self):
-        return self.__selected_stocks
+        return self.__selected_data

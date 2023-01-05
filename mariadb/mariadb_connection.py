@@ -1,14 +1,10 @@
 from typing import Type
-from interfaces.connection import ConnectionInterface
 import pymysql
+from interfaces.connection import ConnectionInterface
 
 
 class ConnectionMariaDb(ConnectionInterface):
-    """_summary_
-
-    Args:
-        ConnectionInterface (_type_): _description_
-    """
+    """Connection generator class - pymysql object"""
 
     def __init__(self):
         self.__connection = None
@@ -48,9 +44,5 @@ class ConnectionMariaDb(ConnectionInterface):
         return {'return': 'Connected'}
 
     def get_connection(self) -> Type[object]:
-        """Get the connection
-
-        Returns:
-            Object: Pymysql object connection
-        """
+        """Get connection from pymysql object"""
         return self.__connection

@@ -1,4 +1,7 @@
-class Customer:
+from .main_module import MainModule
+
+
+class Customer(MainModule):
 
     def __init__(self, erased, communicator, origin_customers):
 
@@ -10,18 +13,10 @@ class Customer:
     def start_customer(self):
 
         if self.__erased is True:
-            self.__remove_erased()
+            self.__origin_customers = self._remove_erased(self.__origin_customers)
 
         self.__customer_treatment()
         self.__extract_customers_id()
-
-    def __remove_erased(self):
-
-        for customer in self.__origin_customers:
-            if customer['apagado'] == 'S':
-                self.__origin_customers.remove(customer)
-            else:
-                continue
 
     def __customer_treatment(self):
 

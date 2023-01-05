@@ -3,12 +3,12 @@ from .main_module import MainModule
 
 class Manufacturer(MainModule):
 
-    def __init__(self, **kwargs):
+    def __init__(self, erased, communicator, origin_manufacturers, destiny_manufacturers):
 
-        self.__erased = kwargs['erased']
-        self.__communicator = kwargs['communicator']
-        self.__origin_manufacturers = kwargs['origin_manufacturers']
-        self.__destiny_manufacturers = kwargs['destiny_manufacturers']
+        self.__erased = erased
+        self.__communicator = communicator
+        self.__origin_manufacturers = origin_manufacturers
+        self.__destiny_manufacturers = destiny_manufacturers
         self.__manufacturers_found = []
         self.__manufacturers_not_found = []
 
@@ -18,7 +18,8 @@ class Manufacturer(MainModule):
             self.__origin_manufacturers = self._remove_erased(self.__origin_manufacturers)
 
         self.__search_manufacturers()
-        self._communicator_treatment(self.__communicator, self.__manufacturers_not_found)
+        self.__manufacturers_not_found = self._communic_treatment(self.__communicator,
+                                                                  self.__manufacturers_not_found)
 
     def __search_manufacturers(self):
 

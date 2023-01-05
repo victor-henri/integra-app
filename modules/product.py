@@ -1,7 +1,8 @@
 from datetime import datetime
+from .main_module import MainModule
 
 
-class Product:
+class Product(MainModule):
 
     def __init__(self,
                  erased,
@@ -33,7 +34,7 @@ class Product:
     def start_product(self):
 
         if self.__erased is True:
-            self.__remove_erased()
+            self.__origin_products = self._remove_erased(self.__origin_products)
 
         self.__extract_selected_products()
 
@@ -55,14 +56,6 @@ class Product:
 
         self.__product_treatment()
         self.__data_selection()
-
-    def __remove_erased(self):
-
-        for product in self.__origin_products:
-            if product['apagado'] == 'S':
-                self.__origin_products.remove(product)
-            else:
-                continue
 
     def __extract_selected_products(self):
 

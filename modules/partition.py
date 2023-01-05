@@ -1,5 +1,8 @@
-class Partition:
-    
+from .main_module import MainModule
+
+
+class Partition(MainModule):
+
     def __init__(self,
                  erased,
                  communicator,
@@ -18,38 +21,21 @@ class Partition:
         self.__origin_partition = origin_partition
         self.__origin_branch_id = origin_branch_id
         self.__destiny_branch_id = destiny_branch_id
-        self.__selected_partitions = []
+        self.__selected_data = []
 
     def start_partition(self):
 
         if self.__erased is True:
-            self.__remove_erased()
+            self.__origin_partition = self._remove_erased(self.__origin_partition)
 
-        self.__extract_selected_data()
+        self.__selected_data = self._extract_data(registers=self.__origin_partition,
+                                                  products_id=self.__products_id,
+                                                  origin_branch_id=self.__origin_branch_id)
         self.__partition_treatment()
-
-    def __remove_erased(self):
-
-        for partition in self.__origin_partition:
-            if partition['apagado'] == 'S':
-                self.__origin_partition.remove(partition)
-            else:
-                continue
-
-    def __extract_selected_data(self):
-
-        for partition in self.__origin_partition:
-            product_id = int(partition['id_produto'])
-            partition_branch_id = int(partition['id_filial'])
-
-            if product_id in self.__products_id and partition_branch_id == self.__origin_branch_id:
-                self.__selected_partitions.append(partition)
-            else:
-                continue
 
     def __partition_treatment(self):
 
-        for partition in self.__selected_partitions:
+        for partition in self.__selected_data:
             old_id = int(partition['id_produto'])
             id_found = self.__return_new_id(old_id)
 
@@ -105,4 +91,4 @@ class Partition:
         return dates
 
     def get_partition(self):
-        return self.__selected_partitions
+        return self.__selected_data

@@ -1,4 +1,7 @@
-class Account:
+from .main_module import MainModule
+
+
+class Account(MainModule):
 
     def __init__(self,
                  erased,
@@ -16,17 +19,9 @@ class Account:
     def start_account(self):
 
         if self.__erased is True:
-            self.__remove_erased()
+            self.__origin_accounts = self._remove_erased(self.__origin_accounts)
 
         self.__acount_treatment()
-
-    def __remove_erased(self):
-
-        for account in self.__origin_accounts:
-            if account['apagado'] == 'S':
-                self.__origin_accounts.remove(account)
-            else:
-                continue
 
     def __acount_treatment(self):
 

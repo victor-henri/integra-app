@@ -1150,7 +1150,7 @@ class Ui:
         options.update({'selected_suppliers': self.__get_suppliers()})
 
         # START PROCESS
-        run.start_process(options)
+        run.start_process(**options)
 
         # PROCESS LOGS
         all_logs = run.get_log() # pylint: disable=unsubscriptable-object

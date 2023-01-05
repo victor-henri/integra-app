@@ -5,19 +5,14 @@ import sqls
 
 
 class RepositoryMariaDb(RepositoryInterface):
-    """_summary_
-
-    Args:
-        RepositoryInterface (_type_): _description_
-    """
+    """Repository class with all operations in mariadb database"""
 
     def __init__(self, connection: Type[ConnectionInterface]):
         self.__connection = connection
         self.__cursor = None
 
     def create_cursor(self) -> None:
-        """Creates a cursor with the connection object.
-        """
+        """Creates a cursor with the connection object"""
         self.__cursor = self.__connection.cursor()
 
     def __unicode_error(self, data: dict, error: UnicodeEncodeError) -> dict:
@@ -39,15 +34,12 @@ class RepositoryMariaDb(RepositoryInterface):
     # SELECTS
 
     def select_manufacturer(self) -> list[dict]:
-
         self.__cursor.execute(sqls.SELECT_MANUFACTURER)
         manufacturer = self.__cursor.fetchall()
 
         return manufacturer
 
     def select_principle(self) -> list[dict]:
-        # Origem
-
         self.__cursor.execute(sqls.SELECT_PRINCIPLE)
         principle = self.__cursor.fetchall()
 
@@ -66,124 +58,96 @@ class RepositoryMariaDb(RepositoryInterface):
         return group
 
     def select_product(self) -> list[dict]:
-        # Origem
         self.__cursor.execute(sqls.SELECT_PRODUCT)
         product = self.__cursor.fetchall()
 
         return product
 
     def select_stock(self) -> list[dict]:
-        # Origem
         self.__cursor.execute(sqls.SELECT_STOCK)
         stock = self.__cursor.fetchall()
 
         return stock
 
     def select_partition(self) -> list[dict]:
-        # Origem
-
         self.__cursor.execute(sqls.SELECT_PARTITION)
         partition = self.__cursor.fetchall()
 
         return partition
 
     def select_price(self) -> list[dict]:
-        # Origem
-
         self.__cursor.execute(sqls.SELECT_PRICE)
         price = self.__cursor.fetchall()
 
         return price
 
     def select_bar(self) -> list[dict]:
-        # Origem
         self.__cursor.execute(sqls.SELECT_BAR)
         bars = self.__cursor.fetchall()
 
         return bars
 
     def select_company(self, selected_companies) -> list[dict]:
-        # Origem
         self.__cursor.execute(sqls.SELECT_COMPANY, (selected_companies,))
         company = self.__cursor.fetchall()
 
         return company
 
     def select_customer(self, selected_companies) -> list[dict]:
-        # Origem
         self.__cursor.execute(sqls.SELECT_CUSTOMER, (selected_companies,))
         customer = self.__cursor.fetchall()
 
         return customer
 
     def select_account(self, selected_customers) -> list[dict]:
-        # Origem
-
         self.__cursor.execute(sqls.SELECT_ACCOUNT, (selected_customers,))
         account = self.__cursor.fetchall()
 
         return account
 
     def select_origin_supplier(self, selected_suppliers) -> list[dict]:
-        # Origem
         self.__cursor.execute(sqls.SELECT_SUPPLIER_ORIGIN, (selected_suppliers,))
         supplier = self.__cursor.fetchall()
 
         return supplier
 
     def select_destiny_supplier(self) -> list[dict]:
-        # Destino
         self.__cursor.execute(sqls.SELECT_SUPPLIER_DESTINY)
         supplier = self.__cursor.fetchall()
 
         return supplier
 
     def select_bill(self, selected_suppliers) -> list[dict]:
-        # Origem
-
         self.__cursor.execute(sqls.SELECT_BILL, (selected_suppliers,))
         bill = self.__cursor.fetchall()
 
         return bill
 
     def select_get_products(self) -> list[dict]:
-        # Destino
-        # select_produto_pos_insert
-
         self.__cursor.execute('SELECT id_produto, campo_auxiliar FROM produto;')
         product = self.__cursor.fetchall()
 
         return product
 
     def select_product_comparison(self) -> list[dict]:
-        # Destino
-        # consulta_produto_comparacao
-
         self.__cursor.execute(sqls.SELECT_PRODUCT_COMPARISON)
         products = self.__cursor.fetchall()
 
         return products
 
     def select_listing_company(self) -> list[dict]:
-        # Origem
-
         self.__cursor.execute(sqls.SELECT_LISTING_COMPANY)
         company = self.__cursor.fetchall()
 
         return company
 
     def select_listing_supplier(self) -> list[dict]:
-        # Origem
-
         self.__cursor.execute(sqls.SELECT_LISTING_SUPPLIER)
         supplier = self.__cursor.fetchall()
 
         return supplier
 
     def select_supplier_after_insert(self) -> list[dict]:
-        # Destino
-        # consulta_fornecedor_pos_insert
-
         self.__cursor.execute(sqls.SELECT_SUPPLIER_AFTER_INSERT)
         suppliers = self.__cursor.fetchall()
 
@@ -208,7 +172,6 @@ class RepositoryMariaDb(RepositoryInterface):
     # INSERTS
 
     def insert_manufacturer(self, manufacturers) -> list[dict]:
-
         logs: list[dict] = []
 
         for manufacturer in manufacturers:
@@ -233,7 +196,6 @@ class RepositoryMariaDb(RepositoryInterface):
         return logs
 
     def insert_principle(self, principles) -> list[dict]:
-
         logs: list[dict] = []
 
         for principle in principles:
@@ -258,7 +220,6 @@ class RepositoryMariaDb(RepositoryInterface):
         return logs
 
     def insert_product(self, products) -> list[dict]:
-
         logs: list[dict] = []
 
         for product in products:
@@ -286,7 +247,6 @@ class RepositoryMariaDb(RepositoryInterface):
         return logs
 
     def insert_stock(self, stocks) -> list[dict]:
-
         logs: list[dict] = []
 
         for stock in stocks:
@@ -330,7 +290,6 @@ class RepositoryMariaDb(RepositoryInterface):
         return logs
 
     def insert_partition(self, partitions) -> list[dict]:
-
         logs: list[dict] = []
 
         for partition in partitions:
@@ -355,7 +314,6 @@ class RepositoryMariaDb(RepositoryInterface):
         return logs
 
     def insert_price(self, prices) -> list[dict]:
-
         logs: list[dict] = []
 
         for price in prices:
@@ -380,7 +338,6 @@ class RepositoryMariaDb(RepositoryInterface):
         return logs
 
     def insert_bar(self, bars) -> list[dict]:
-
         logs: list[dict] = []
 
         for item in bars:
@@ -405,7 +362,6 @@ class RepositoryMariaDb(RepositoryInterface):
         return logs
 
     def insert_company(self, companies) -> list[dict]:
-
         logs: list[dict] = []
 
         for company in companies:
@@ -430,7 +386,6 @@ class RepositoryMariaDb(RepositoryInterface):
         return logs
 
     def insert_customer(self, customers) -> list[dict]:
-
         logs: list[dict] = []
 
         for customer in customers:
@@ -452,13 +407,11 @@ class RepositoryMariaDb(RepositoryInterface):
                 logs.append(log)
                 continue
 
-        # Atualiza o id_empresa da tabela cliente com os novos ids de empresas inseridas
         self.__cursor.execute(sqls.UPDATE_CUSTOMER)
 
         return logs
 
     def insert_account(self, accounts) -> list[dict]:
-
         logs: list[dict] = []
 
         for account in accounts:
@@ -480,17 +433,12 @@ class RepositoryMariaDb(RepositoryInterface):
                 logs.append(log)
                 continue
 
-        # Atualiza o id_cliente da tabela receber com os novos ids de clientes inseridos a partir do
-        # campo campo_auxiliar que recebeu o id_cliente do banco de origem.
         self.__cursor.execute(sqls.UPDATE_CUSTOMER_ACCOUNT)
-
-        # Atualiza o id_empresa da tabela receber com os novos ids de empresas.
         self.__cursor.execute(sqls.UPDATE_COMPANY_ACCOUNT)
 
         return logs
 
     def insert_supplier(self, suppliers) -> list[dict]:
-
         logs: list[dict] = []
 
         for supplier in suppliers:
@@ -515,7 +463,6 @@ class RepositoryMariaDb(RepositoryInterface):
         return logs
 
     def insert_bill(self, bills) -> list[dict]:
-
         logs: list[dict] = []
 
         for bill in bills:
@@ -540,8 +487,6 @@ class RepositoryMariaDb(RepositoryInterface):
         return logs
 
     def update_product(self, data_update) -> None:
-        # Destino
-        # atualiza_campo_produto_pos_insert
 
         for register in data_update:
             if register['campo'] == 'fabricante':
@@ -553,43 +498,6 @@ class RepositoryMariaDb(RepositoryInterface):
                 self.__cursor.execute('UPDATE produto '
                                       'SET id_principio_ativo = %(valor)s '
                                       'WHERE id_produto = %(id_produto)s;', register)
-
-    # def consulta_pos_insert(self, table_data):
-    #     # Destino
-    #     # consulta_pos_insert
-    #     # Metodo duplicado - remover
-
-    #     if table_data['tabela'] == 'produto':
-    #         self.__cursor.execute(sqls.SELECT_PRODUCT_AFTER_INSERT)
-    #         consulta_pos_insert = self.__cursor.fetchall()
-
-    #     elif table_data['tabela'] == 'fabricante':
-    #         self.__cursor.execute(sqls.SELECT_MANUFACTURER_AFTER_INSERT)
-    #         consulta_pos_insert = self.__cursor.fetchall()
-
-    #     else:
-    #         self.__cursor.execute(sqls.SELECT_PRINCIPLE_AFTER_INSERT)
-    #         consulta_pos_insert = self.__cursor.fetchall()
-
-    #     return consulta_pos_insert
-
-    # def select_fabricante_destino(self):
-    #     # Destino
-    #     # Remover este método
-
-    #     self.__cursor.execute(sqls.query_select_fabricante)
-    #     manufacturer = self.__cursor.fetchall()
-
-    #     return manufacturer
-
-    # def select_principio_ativo_destino(self):
-    #     # Destino
-    #     # Remover este metodo
-
-    #     self.__cursor.execute(sqls.query_select_principio)
-    #     principio_ativo = self.__cursor.fetchall()
-
-    #     return principio_ativo
 
     def data_cleaning(self, cleaning_marker) -> None:
         # Destino

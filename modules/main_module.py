@@ -1,20 +1,48 @@
 class MainModule():
 
     @staticmethod
-    def _remove_erased(items):
+    def _remove_erased(registers):
         """Internal Function to remove erased data"""
 
-        for item in items:
-            if item['apagado'] == 'S':
-                items.remove(item)
+        for register in registers:
+            if register['apagado'] == 'S':
+                registers.remove(register)
             else:
                 continue
-        return items
+
+        return registers
 
     @staticmethod
-    def _communicator_treatment(communicator, items):
+    def _communic_treatment(communicator, registers):
         """Internal Function to update communicator field"""
 
-        for item in items:
-            item.update({'comunicador': communicator})
-        return items
+        for register in registers:
+            register.update({'comunicador': communicator})
+
+        return registers
+
+    @staticmethod
+    def _extract_data(registers, products_id, origin_branch_id=None):
+
+        extract_data = []
+
+        if origin_branch_id is not None:
+
+            for register in registers:
+                product_id = int(register['id_produto'])
+                branch_id = int(register['id_filial'])
+
+                if product_id in products_id and branch_id == origin_branch_id:
+                    extract_data.append(register)
+                else:
+                    continue
+        else:
+            for register in registers:
+                product_id = int(register['id_produto'])
+
+                if product_id in products_id:
+                    extract_data.append(register)
+                else:
+                    continue
+
+        return extract_data

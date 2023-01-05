@@ -1,4 +1,7 @@
-class Bar:
+from .main_module import MainModule
+
+
+class Bar(MainModule):
 
     def __init__(self, erased, communicator, origin_bars, products_id, products_found, products_after_insert):
 
@@ -8,37 +11,20 @@ class Bar:
         self.__products_id = products_id
         self.__products_found = products_found
         self.__products_after_insert = products_after_insert
-        self.__selected_bars = []
+        self.__selected_data = []
 
     def start_bars(self):
 
         if self.__erased is True:
-            self.__remove_erased()
+            self.__origin_bars = self._remove_erased(self.__origin_bars)
 
-        self.__extract_selected_bars()
+        self.__selected_data = self._extract_data(registers=self.__origin_bars,
+                                                  products_id=self.__products_id)
         self.__bars_treatment()
-
-    def __remove_erased(self):
-
-        for bars in self.__origin_bars:
-            if bars['apagado'] == 'S':
-                self.__origin_bars.remove(bars)
-            else:
-                continue
-
-    def __extract_selected_bars(self):
-
-        for bars in self.__origin_bars:
-            product_id = int(bars['id_produto'])
-
-            if product_id in self.__products_id:
-                self.__selected_bars.append(bars)
-            else:
-                continue
 
     def __bars_treatment(self):
 
-        for bars in self.__selected_bars:
+        for bars in self.__selected_data:
             old_id = int(bars['id_produto'])
             id_found = self.__return_new_id(old_id)
 
@@ -75,4 +61,4 @@ class Bar:
                 continue
 
     def get_bars(self):
-        return self.__selected_bars
+        return self.__selected_data

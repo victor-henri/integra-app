@@ -1,4 +1,7 @@
-class Company:
+from .main_module import MainModule
+
+
+class Company(MainModule):
 
     def __init__(self, erased, communicator, origin_companies):
 
@@ -9,22 +12,10 @@ class Company:
     def start_company(self):
 
         if self.__erased is True:
-            self.__remove_erased()
+            self.__origin_companies = self._remove_erased(self.__origin_companies)
 
-        self.__company_treatment()
-
-    def __remove_erased(self):
-
-        for company in self.__origin_companies:
-            if company['apagado'] == 'S':
-                self.__origin_companies.remove(company)
-            else:
-                continue
-
-    def __company_treatment(self):
-
-        for company in self.__origin_companies:
-            company.update({'comunicador': self.__communicator})
+        self.__origin_companies = self._communic_treatment(communicator=self.__communicator,
+                                                           registers=self.__origin_companies)
 
     def get_companies(self):
         return self.__origin_companies
