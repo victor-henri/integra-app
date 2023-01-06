@@ -816,9 +816,10 @@ class Ui:
 
     def __log(self, method=None, error_register=None, error_return=None):
 
-        logging.basicConfig(filename='log.txt',
-                            level=logging.DEBUG,
-                            format='%(asctime)s:%(message)s')
+        logging.basicConfig(
+            filename='log.txt',
+            level=logging.DEBUG,
+            format='%(asctime)s:%(message)s')
         separator = "| ========================================================================== |"
         indentation = "| "
 
@@ -1089,12 +1090,8 @@ class Ui:
     def __progress_bar(self):
         self.__progressbar['value'] += 5
 
-    def __start(self):
-
-       # PRE STARTUP
-        options = {}
-        erased = False
-        product_options = {'fabricante_por_cnpj': False,
+    def __product_marker(self):
+        product_marker = {'fabricante_por_cnpj': False,
                            'fabricante_por_id': False,
                            'principio_por_desc': False,
                            'principio_por_id': False,
@@ -1102,7 +1099,9 @@ class Ui:
                            'classe_terapeutica_por_padrao': False,
                            'remover_produtos_barras_zerados': False,
                            'quantidade_zeros_barras': int(self.__zeros_spinbox.get())}
+        return product_marker
 
+    def __module_marker(self):
         module_marker = {'fabricante': False,
                          'principio_ativo': False,
                          'produto': False,
@@ -1115,14 +1114,9 @@ class Ui:
                          'empresa': False,
                          'cliente': False,
                          'receber': False}
+        return module_marker
 
-        self.__progressbar['value'] = 0
-        self.__done_message.configure(text="Em Andamento", width=125, foreground='orange')
-        self.__log(method='Integração Iniciada.')
-
-        # MARKERS
-        if self.__sel_erased.get():
-            erased = True
+    def __update_module_marker(self, module_marker):
 
         if self.__sel_manufacturer_cnpj.get():
             module_marker.update({'fabricante': True})
@@ -1158,24 +1152,33 @@ class Ui:
         if self.__sel_accounts_receivable.get():
             module_marker.update({'receber': True})
 
+        return module_marker
+
+    def __update_product_marker(self, product_marker):
         if self.__sel_productbar.get():
-            product_options.update({'remover_produtos_barras_zerados': True})
+            product_marker.update({'remover_produtos_barras_zerados': True})
 
         if self.__sel_manufacturer_cnpj.get():
-            product_options.update({'fabricante_por_cnpj': True})
+            product_marker.update({'fabricante_por_cnpj': True})
 
         if self.__sel_manufacturer_id.get():
-            product_options.update({'fabricante_por_id': True})
+            product_marker.update({'fabricante_por_id': True})
 
         if self.__sel_principle_desc.get():
-            product_options.update({'principio_por_desc': True})
+            product_marker.update({'principio_por_desc': True})
 
         if self.__sel_principle_id.get():
-            product_options.update({'principio_por_id': True})
+            product_marker.update({'principio_por_id': True})
+
+        return product_marker
+
+    def __options(self, erased, module_marker, product_marker):
+
+        options: dict[str, any] = {}
 
         options.update({'erased': erased})
         options.update({'module_marker': module_marker})
-        options.update({'product_options': product_options})
+        options.update({'product_options': product_marker})
         options.update({'communicator': self.__return_destiny_communicator()})
         options.update({'origin_branch_id': int(self.__return_origin_branch_id())})
         options.update({'destiny_branch_id': int(self.__return_destiny_branch_id())})
@@ -1185,12 +1188,33 @@ class Ui:
         options.update({'selected_groups': self.__get_groups()})
         options.update({'selected_suppliers': self.__get_suppliers()})
 
+        return options
+
+    def __start(self):
+
+       # PRE STARTUP
+        erased = False
+        if self.__sel_erased.get():
+            erased = True
+
+        product_marker = self.__product_marker()
+        module_marker = self.__module_marker()
+
+        product_marker = self.__update_product_marker(product_marker)
+        module_marker = self.__update_module_marker(module_marker)
+
+        self.__progressbar['value'] = 0
+        self.__done_message.configure(text="Em Andamento", width=125, foreground='orange')
+        self.__log(method='Integração Iniciada.')
+
         # START PROCESS
+        options = self.__options(erased, module_marker, product_marker)
         run.start_process(**options)
 
         # PROCESS LOGS
         all_logs = run.get_log()
 
+        # MANUFACTURER
         if self.__sel_manufacturer_cnpj.get():
             self.__log(method='Processamento de Fabricantes Iniciado.')
 
