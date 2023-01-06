@@ -29,7 +29,7 @@ class Run():
         log = connection.connect_database(access_data)
         self.__origin_connection = connection.get_connection()
         self.__create_origin_repository()
- 
+
         return log
 
     def connect_destiny(self, access_data: dict) -> dict:
@@ -94,7 +94,7 @@ class Run():
 
             origin_manufacturers = self.__origin_repository.select_manufacturer()
             destiny_manufacturers = self.__destiny_repository.select_manufacturer()
-            
+
             manufacturer = Manufacturer(erased=kwargs['erased'],
                                         communicator=kwargs['communicator'],
                                         origin_manufacturers=origin_manufacturers,
@@ -116,7 +116,7 @@ class Run():
                                   communicator=kwargs['communicator'],
                                   origin_principles=origin_principles,
                                   destiny_principles=destiny_principles)
-                                  
+           
             principle.start_principle()
             principles_found = principle.get_principles_found()
             principles_not_found = principle.get_principles_not_found()
@@ -154,7 +154,7 @@ class Run():
                                                       principles_after_insert)
             self.__destiny_repository.update_product(data_update['manufacturer'])
             self.__destiny_repository.update_product(data_update['principle'])
-            
+
             products_id = product.get_products_id()
             products_found = product.get_products_found()
 
